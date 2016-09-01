@@ -31,7 +31,7 @@ module.exports.handler = vandium(function(event, context, callback) {
         if (err) return callbackLocal(err);
 
         if (result.length === 0) {
-          return callbackLocal(Error('Vendor ' + id + ' does not exist'));
+          return callbackLocal(Error('Vendor ' + event.vendor + ' does not exist'));
         }
 
         return callbackLocal();

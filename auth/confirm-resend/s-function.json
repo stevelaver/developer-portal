@@ -24,7 +24,7 @@
       "apiKeyRequired": false,
       "requestParameters": {},
       "requestTemplates": {
-        "application/json": "{\"email\": \"$input.params('email')\", \"password\": \"$input.params('code')\"}"
+        "application/json": ""
       },
       "responses": "$${endpointResponsesTemplate}"
     }
