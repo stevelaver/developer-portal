@@ -10,10 +10,10 @@ var mysql = require('mysql');
 var request = require('request');
 
 var rds = mysql.createConnection({
-  host: process.env.RDS_FUNCTIONAL_HOST,
-  user: process.env.RDS_FUNCTIONAL_USER,
-  password: process.env.RDS_FUNCTIONAL_PASSWORD,
-  database: process.env.RDS_FUNCTIONAL_DATABASE,
+  host: process.env.FUNC_RDS_HOST,
+  user: process.env.FUNC_RDS_USER,
+  password: process.env.FUNC_RDS_PASSWORD,
+  database: process.env.FUNC_RDS_DATABASE,
   ssl: process.env.RDS_SSL ? 'Amazon RDS' : false,
   multipleStatements: true
 });
@@ -49,7 +49,7 @@ describe('auth', function() {
       function(callback) {
         // 1) Signup
         request.post({
-          url: process.env.API_BASE_URI + '/auth/signup',
+          url: process.env.FUNC_API_BASE_URI + '/auth/signup',
           json: true,
           body: {
             email: userEmail,
@@ -66,7 +66,7 @@ describe('auth', function() {
       function(callback) {
         // 2) Login without confirmation
         request.post({
-          url: process.env.API_BASE_URI + '/auth/login',
+          url: process.env.FUNC_API_BASE_URI + '/auth/login',
           json: true,
           body: {
             email: userEmail,
@@ -82,7 +82,7 @@ describe('auth', function() {
       function(callback) {
         // 3) Resend confirmation
         request.post({
-          url: process.env.API_BASE_URI + '/auth/confirm',
+          url: process.env.FUNC_API_BASE_URI + '/auth/confirm',
           json: true,
           body: {
             email: userEmail,
@@ -98,7 +98,7 @@ describe('auth', function() {
         // 4) Confirm
         // We can't get valid code so we try with some invalid to check that function works and confirm user manually
         request.post({
-          url: process.env.API_BASE_URI + '/auth/confirm/'+process.env.USER_EMAIL+'/000000'
+          url: process.env.FUNC_API_BASE_URI + '/auth/confirm/'+process.env.FUNC_USER_EMAIL+'/000000'
         }, function(err, res, body) {
           expect(err).to.be.null;
           body = JSON.parse(body);
@@ -114,7 +114,7 @@ describe('auth', function() {
       function(callback) {
         // 5) Login
         request.post({
-          url: process.env.API_BASE_URI + '/auth/login',
+          url: process.env.FUNC_API_BASE_URI + '/auth/login',
           json: true,
           body: {
             email: userEmail,
@@ -129,7 +129,7 @@ describe('auth', function() {
       function(token, callback) {
         // 6) Get Profile
         request.get({
-          url: process.env.API_BASE_URI + '/auth/profile',
+          url: process.env.FUNC_API_BASE_URI + '/auth/profile',
           headers: {
             Authorization: token
           }
@@ -144,7 +144,7 @@ describe('auth', function() {
       function(token, callback) {
         // 7) Change password
         request.put({
-          url: process.env.API_BASE_URI + '/auth/profile',
+          url: process.env.FUNC_API_BASE_URI + '/auth/profile',
           headers: {
             Authorization: token
           },
@@ -162,7 +162,7 @@ describe('auth', function() {
       function(callback) {
         // 8) Login with new password
         request.post({
-          url: process.env.API_BASE_URI + '/auth/login',
+          url: process.env.FUNC_API_BASE_URI + '/auth/login',
           json: true,
           body: {
             email: userEmail,
@@ -181,10 +181,10 @@ describe('auth', function() {
     async.waterfall([
       function (callback) {
         request.post({
-          url: process.env.API_BASE_URI + '/auth/forgot',
+          url: process.env.FUNC_API_BASE_URI + '/auth/forgot',
           json: true,
           body: {
-            email: process.env.USER_EMAIL
+            email: process.env.FUNC_USER_EMAIL
           }
         }, function (err, res, body) {
           expect(err).to.be.null;
@@ -195,10 +195,10 @@ describe('auth', function() {
       function (callback) {
         // Check with fake code - as we can't get real one from email so we just test if lambda function works
         request.post({
-          url: process.env.API_BASE_URI + '/auth/forgot/confirm',
+          url: process.env.FUNC_API_BASE_URI + '/auth/forgot/confirm',
           json: true,
           body: {
-            email: process.env.USER_EMAIL,
+            email: process.env.FUNC_USER_EMAIL,
             password: userPassword1,
             code: '000000'
           }

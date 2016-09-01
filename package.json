@@ -25,6 +25,7 @@
     "underscore": "^1.8.3"
   },
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --timeout 0 test/*"
+    "test": "./node_modules/mocha/bin/mocha --timeout 0 test/*",
+    "func": "./node_modules/mocha/bin/mocha --timeout 0 test/functional"
   }
 }
