@@ -16,7 +16,7 @@
     },
     "endpoints": [
         {
-            "path": "auth/forgot/confirm",
+            "path": "auth/forgot/{email}/confirm",
             "method": "POST",
             "type": "AWS",
             "authorizationType": "none",
@@ -24,7 +24,7 @@
             "apiKeyRequired": false,
             "requestParameters": {},
             "requestTemplates": {
-                "application/json": ""
+                "application/json": "{\"email\":\"$input.params('email')\", \"body\":$input.json('$')}"
             },
             "responses": "$${endpointResponsesTemplate}"
         }

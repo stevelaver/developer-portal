@@ -4,7 +4,6 @@ require('dotenv').config();
 var async = require('async');
 var aws = require('aws-sdk');
 var db = require('../../vendor/db');
-var execsql = require('../../execsql');
 var expect = require('chai').expect;
 var mysql = require('mysql');
 var request = require('request');
@@ -27,19 +26,7 @@ var cognito = new aws.CognitoIdentityServiceProvider({region: process.env.REGION
 
 describe('auth', function() {
   before(function(done) {
-    async.waterfall([
-      function(callback) {
-        execsql.execFile(rds, __dirname + '/../../rds-model.sql', function(err) {
-          callback(err);
-        });
-      },
-      function(callback) {
-        execsql.exec(rds, 'INSERT INTO vendors SET id="'+vendor+'", name="test", address="test", email="test";', function(err) {
-          callback(err);
-        });
-      }
-    ],
-    function(err) {
+    rds.query('INSERT INTO vendors SET ?', {id: vendor, name: 'test', address: 'test', email: 'test'}, function(err) {
       done(err);
     });
   });
@@ -181,24 +168,19 @@ describe('auth', function() {
     async.waterfall([
       function (callback) {
         request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/forgot',
-          json: true,
-          body: {
-            email: process.env.FUNC_USER_EMAIL
-          }
+          url: process.env.FUNC_API_BASE_URI + '/auth/forgot/' + process.env.FUNC_USER_EMAIL
         }, function (err, res, body) {
           expect(err).to.be.null;
-          expect(body).to.be.null;
+          expect(body).to.be.empty;
           callback();
         });
       },
       function (callback) {
         // Check with fake code - as we can't get real one from email so we just test if lambda function works
         request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/forgot/confirm',
+          url: process.env.FUNC_API_BASE_URI + '/auth/forgot/' + process.env.FUNC_USER_EMAIL + '/confirm',
           json: true,
           body: {
-            email: process.env.FUNC_USER_EMAIL,
             password: userPassword1,
             code: '000000'
           }
@@ -215,7 +197,7 @@ describe('auth', function() {
   after(function(done) {
     async.waterfall([
       function(callback) {
-        execsql.exec(rds, 'DELETE FROM vendors WHERE id="' + vendor + '";', function() {
+        rds.query('DELETE FROM vendors WHERE id=?', vendor, function() {
           callback();
         });
       },

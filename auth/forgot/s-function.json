@@ -16,7 +16,7 @@
     },
     "endpoints": [
         {
-            "path": "auth/forgot",
+            "path": "auth/forgot/{email}",
             "method": "POST",
             "type": "AWS",
             "authorizationType": "none",
@@ -24,9 +24,9 @@
             "apiKeyRequired": false,
             "requestParameters": {},
             "requestTemplates": {
-                "application/json": ""
+                "application/json": "{\"email\": \"$input.params('email')\"}"
             },
-            "responses": "$${endpointResponsesTemplate}"
+            "responses": "$${endpointResponseNoContent}"
         }
     ],
     "events": [],

@@ -22,5 +22,29 @@
         "application/json": ""
       }
     }
+  },
+  "endpointResponseNoContent": {
+    "400": {
+      "statusCode": "400"
+    },
+    "401": {
+      "statusCode": "401"
+    },
+    "404": {
+      "statusCode": "404"
+    },
+    "409": {
+      "statusCode": "409"
+    },
+    "default": {
+      "statusCode": "204",
+      "responseParameters": {},
+      "responseModels": {
+        "application/json": "Empty"
+      },
+      "responseTemplates": {
+        "application/json": ""
+      }
+    }
   }
 }
