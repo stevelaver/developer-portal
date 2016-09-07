@@ -17,8 +17,8 @@ var rds = mysql.createConnection({
   multipleStatements: true
 });
 
-const vendor = 'v' + Math.random();
-const userEmail = 'e' + Math.random() + '@test.com';
+const vendor = 'v' + Date.now();
+const userEmail = 'u' + Date.now() + '@test.com';
 const userPassword1 = 'uiOU.-jfdksfj88';
 const userPassword2 = 'uiOU.-jfdksfj89';
 
@@ -94,8 +94,8 @@ describe('auth', function() {
           callback();
         });
       },function(callback) {
-        cognito.adminConfirmSignUp({UserPoolId: process.env.COGNITO_USER_POOL_ID, Username: userEmail}, function() {
-          callback();
+        cognito.adminConfirmSignUp({UserPoolId: process.env.COGNITO_USER_POOL_ID, Username: userEmail}, function(err) {
+          callback(err);
         });
       },
       function(callback) {
