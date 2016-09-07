@@ -356,6 +356,8 @@ describe('vendor', function() {
             async.each(data.Contents, function(file, callbackLocal) {
               s3.deleteObject({ Bucket: process.env.S3_BUCKET_ICONS, Key: file.Key }, callbackLocal);
             }, callback);
+          } else {
+            callback();
           }
         });
       }
