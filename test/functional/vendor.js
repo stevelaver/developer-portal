@@ -352,7 +352,7 @@ describe('vendor', function() {
         // Clear icons from s3
         var s3 = new aws.S3();
         s3.listObjects({ Bucket: process.env.S3_BUCKET_ICONS, Prefix: appId1 + '/' }, function(err, data) {
-          if (data.Contents) {
+          if (data.hasOwnProperty('Contents')) {
             async.each(data.Contents, function(file, callbackLocal) {
               s3.deleteObject({ Bucket: process.env.S3_BUCKET_ICONS, Key: file.Key }, callbackLocal);
             }, callback);
