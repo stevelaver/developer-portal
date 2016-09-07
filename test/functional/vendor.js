@@ -318,7 +318,7 @@ describe('vendor', function() {
             Authorization: token
           }
         }, function(err, res, body) {
-          expect(err).to.be.null;console.log(body);
+          expect(err).to.be.null;
           body = JSON.parse(body);
           expect(body).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
