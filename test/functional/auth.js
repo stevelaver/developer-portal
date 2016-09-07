@@ -109,7 +109,7 @@ describe('auth', function() {
           }
         }, function(err, res, body) {
           expect(err).to.be.null;
-          expect(body).to.have.property('token');
+          expect(body, JSON.stringify(body)).to.have.property('token');
           callback(null, body.token);
         });
       },
