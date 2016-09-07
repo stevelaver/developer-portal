@@ -14,10 +14,11 @@ module.exports.handler = vandium(function(event, context, callback) {
 
   db.connect();
   db.getPublishedApp(event.appId, function(err, app) {
+    if (err) return dbCloseCallback(err);
     app.icon = {
       32: process.env.ICONS_PUBLIC_FOLDER + '/' + app.id + '/' + app.current_version + '-32.png',
       64: process.env.ICONS_PUBLIC_FOLDER + '/' + app.id + '/' + app.current_version + '-64.png'
     };
-    return dbCloseCallback(err, app);
+    return dbCloseCallback(null, app);
   });
 });

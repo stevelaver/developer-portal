@@ -66,18 +66,24 @@ module.exports = {
       + 'av.long_description, av.license_url, av.documentation_url, av.required_memory, av.process_timeout,'
       + 'av.encryption, av.default_bucket, av.default_bucket_stage, av.forward_token, av.ui_options,'
       + 'av.test_configuration, av.configuration_schema, av.networking, av.actions, av.fees, av.limits, av.logger,'
-      + 'a.is_approved FROM `apps` AS `a` LEFT JOIN `app_versions` `av` ON (`a`.`current_version` = `av`.`version`) '
-      + 'LEFT JOIN `vendors` v ON (`a`.`vendor_id` = `v`.`id`)'
-      + 'WHERE `a`.`id` = ?;', id, function(err, result) {
+      + 'a.is_approved FROM apps AS a LEFT JOIN app_versions av ON (a.current_version = av.version) '
+      + 'LEFT JOIN vendors v ON (a.vendor_id = v.id)'
+      + 'WHERE a.id = ? AND a.is_approved = 1 AND a.current_version IS NOT NULL;', id, function(err, result) {
         if (err) return callback(err);
         if (result.length === 0) {
-          return callback(Error('App ' + id + ' does not exist or was not published yet'));
+          return callback(Error('App ' + id + ' does not exist'));
         }
         return callback(err, formatAppOutput(result[0]));
       });
   },
 
   listAllPublishedApps: function(offset, limit, callback) {
+    if (!offset) {
+      offset = 0;
+    }
+    if (!limit) {
+      limit = 100;
+    }
     db.query('SELECT a.id, a.vendor_id, av.name, a.current_version, av.type, av.short_description ' +
       'FROM apps AS a LEFT JOIN app_versions av ON (a.id = av.app_id AND a.current_version = av.version) ' +
       'WHERE a.is_approved = 1 AND a.current_version IS NOT NULL ' +

@@ -6,8 +6,8 @@ var vandium = require('vandium');
 
 vandium.validation({
   appId: vandium.types.string().required(),
-  offset: vandium.types.number().default(0),
-  limit: vandium.types.number().default(100)
+  offset: vandium.types.number().integer().default(0).allow(''),
+  limit: vandium.types.number().integer().default(100).allow('')
 });
 
 module.exports.handler = vandium(function(event, context, callback) {

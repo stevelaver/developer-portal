@@ -74,7 +74,7 @@ CREATE TABLE `app_versions` (
   `logger` enum('standard','gelf') NOT NULL DEFAULT 'standard',
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`app_id`,`version`),
-  CONSTRAINT `app_versions_ibfk_1` FOREIGN KEY (`app_id`) REFERENCES `apps` (`id`)
+  CONSTRAINT `app_versions_ibfk_1` FOREIGN KEY (`app_id`) REFERENCES `apps` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SET foreign_key_checks = 1;

@@ -136,6 +136,12 @@ module.exports = {
   },
 
   listAppsForVendor: function(vendor, offset, limit, callback) {
+    if (!offset) {
+      offset = 0;
+    }
+    if (!limit) {
+      limit = 100;
+    }
     db.query('SELECT a.id, a.vendor_id, a.name, a.current_version, a.type, a.short_description ' +
       'FROM apps AS a ' +
       'WHERE a.vendor_id = ?' +
@@ -146,6 +152,12 @@ module.exports = {
   },
 
   listAppVersions: function(id, offset, limit, callback) {
+    if (!offset) {
+      offset = 0;
+    }
+    if (!limit) {
+      limit = 100;
+    }
     db.query('SELECT * FROM app_versions WHERE app_id = ? ' +
       'ORDER BY created_time LIMIT ? OFFSET ?;', [id, limit, offset], function(err, result) {
       if (err) return callback(err);
