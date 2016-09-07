@@ -114,6 +114,18 @@ describe('auth', function() {
         });
       },
       function(token, callback) {
+        // 6.1) Get Profile without auth token should fail
+        request.get({
+          url: process.env.FUNC_API_BASE_URI + '/auth/profile'
+        }, function(err, res, body) {
+          expect(err).to.be.null;
+          body = JSON.parse(body);
+          expect(body).to.have.property('message');
+          expect(body.message).to.equal('Unauthorized');
+          callback(null, token);
+        });
+      },
+      function(token, callback) {
         // 6) Get Profile
         request.get({
           url: process.env.FUNC_API_BASE_URI + '/auth/profile',
@@ -125,6 +137,18 @@ describe('auth', function() {
           body = JSON.parse(body);
           expect(body).to.have.property('vendor');
           expect(body.vendor).to.equal(vendor);
+          callback(null, token);
+        });
+      },
+      function(token, callback) {
+        // 7.1) Change password without auth token should fail
+        request.put({
+          url: process.env.FUNC_API_BASE_URI + '/auth/profile'
+        }, function(err, res, body) {
+          expect(err).to.be.null;
+          body = JSON.parse(body);
+          expect(body).to.have.property('message');
+          expect(body.message).to.equal('Unauthorized');
           callback(null, token);
         });
       },
