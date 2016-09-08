@@ -101,8 +101,8 @@ Account needs to be confirmed by code from confirmation email sent on his email 
 ### Change password [PUT /auth/profile]
 
 + Attributes
-    + old_password (required)
-    + new_password (required)
+    + oldPassword (required)
+    + newPassword (required)
 
 + Request
 
@@ -112,33 +112,27 @@ Account needs to be confirmed by code from confirmation email sent on his email 
     + Body
 
             {
-                "old_password": "old password",
-                "new_password": "new password"
+                "oldPassword": "old password",
+                "newPassword": "new password"
             }
             
 + Response 204 (application/json)
 
-### Forgot password [POST /auth/forgot]
+### Forgot password [POST /auth/forgot/{email}]
 
 Sends email with confirmation code which has to be used in the next API call
 
-+ Attributes
-    + email (required)
++ Parameters
+    + email
 
-+ Request
-
-    + Body
-
-            {
-                "email": "john@keboola.com"
-            }
-            
 + Response 204 (application/json)
 
-### Forgot password confirmation [POST /auth/forgot/confirm]
+### Forgot password confirmation [POST /auth/forgot/{email}/confirm]
+
++ Parameters
+    + email
 
 + Attributes
-    + email (required)
     + code (required)
     + password (required)
 
@@ -147,7 +141,6 @@ Sends email with confirmation code which has to be used in the next API call
     + Body
 
             {
-                "email": "john@keboola.com",
                 "code": "your code from email",
                 "password": "new password"
             }
