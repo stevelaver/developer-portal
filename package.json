@@ -8,15 +8,9 @@
     "type": "git",
     "url": "https://github.com/keboola/developer-portal.git"
   },
-  "main": "server.js",
-  "dependencies": {
-    "serverless": "^1.0.0-beta.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "chai": "*",
     "mocha": "*"
-  },
-  "scripts": {
-    "sls": "./node_modules/serverless/bin/serverless"
   }
 }

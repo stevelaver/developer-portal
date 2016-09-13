@@ -38,9 +38,10 @@ node_modules
 #SERVERLESS
 admin.env
 .env
+**/env.yml
 **/event.json
 **/event-*.json
-**/serverless.env.yaml
+**/.serverless
 
 #Ignore _meta folder
 _meta

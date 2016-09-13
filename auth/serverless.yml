@@ -1,0 +1,107 @@
+custom: ${file(./env.yml)}
+
+service: "${self:custom.servicePrefix}-auth"
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  stage: dev
+  region: us-east-1
+  timeout: 30
+  memory: 256
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+      - "s3:PutObject"
+      - "s3:GetObject"
+      - "s3:ReplicateObject"
+      Resource:
+        - "arn:aws:s3:::${self:custom.appIconsBucket}/*"
+    - Effect: "Allow"
+      Action:
+        - "ses:SendEmail"
+      Resource:
+        - "*"
+    - Effect: "Allow"
+      Action:
+        - "cognito-identity:*"
+        - "cognito-idp:*"
+      Resource:
+        - "${self:custom.cognitoPoolArn}"
+
+include:
+  - lib
+  - node_modules
+  - .env
+exclude:
+  - package.json
+
+
+functions:
+  authorizer:
+    handler: authorizer.authorizer
+  confirm:
+    handler: auth.confirm
+    events:
+      - http:
+        method: post
+        path: auth/confirm/{email}/{code}
+        cors: true
+      - http:
+        method: get
+        path: auth/confirm/{email}/{code}
+        cors: true
+  confirmResend:
+    handler: auth.confirmResend
+    events:
+      - http:
+        method: post
+        path: auth/confirm
+        cors: true
+  forgot:
+    handler: auth.forgot
+    events:
+      - http:
+        method: post
+        path: auth/forgot/{email}
+        cors: true
+  forgotConfirm:
+    handler: auth.forgotConfirm
+    events:
+      - http:
+        method: post
+        path: auth/forgot/{email}/confirm
+        cors: true
+  login:
+    handler: auth.login
+    events:
+      - http:
+        method: post
+        path: auth/login
+        cors: true
+  profile:
+    handler: auth.profile
+    events:
+      - http:
+        path: auth/profile
+        method: get
+        authorizer: authorizer
+        cors: true
+  profileChange:
+      handler: auth.profileChange
+      events:
+        - http:
+          path: auth/profile
+          method: put
+          authorizer: authorizer
+          cors: true
+  signup:
+    handler: auth.signup
+    events:
+      - http:
+        method: post
+        path: auth/signup
+        cors: true
+
+resources:
+  Resources:
