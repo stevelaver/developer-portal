@@ -1,0 +1,595 @@
+FORMAT: 1A
+HOST: https://kw5ugqgvx9.execute-api.us-east-1.amazonaws.com/dev
+
+# Keboola Developer Portal
+
+
+## Auth [/auth]
+
+User auth is handled by jwt tokens. Token is returned on login call and needs 
+to be passed in HTTP header `Authorization: {your token}`.
+
+### Create account [POST /auth/signup]
+
+Anyone can create account but needs to know to which vendor he belongs. New vendors
+must request vendor account using support@keboola.com first. User accounts are
+approved manually so user needs to wait for approval before he proceeds.
+
++ Attributes
+    + name (required)
+    + email (required)
+    + password (required) - must contain at least 8 characters and at least one lowercase letter, one uppercase letter, one number and one special character
+    + vendor (required)
+
++ Request (application/json)
+
+        {
+            "name": "John Doe",
+            "email": "john@keboola.com",
+            "password": "superSecret",
+            "vendor": "keboola"
+        }
+
++ Response 204
+
+### Confirm account [GET /auth/confirm/{email}/{code}]
+
+Account needs to be confirmed by code from confirmation email sent on his email address.
+
++ Parameters
+    + email (required)
+    + code (required)
+
++ Response 204
+
+### Resend confirmation code [POST /auth/confirm]
+
++ Attributes
+    + email (required)
+    + password (required)
+
++ Request (application/json)
+
+        {
+            "email": "john@keboola.com",
+            "password": "superSecret"
+        }
+
++ Response 204
+
+### Login [POST /auth/login]
+
++ Attributes
+    + email (required)
+    + password (required) - must contain at least 8 characters
+    
++ Request (application/json)
+
+        {
+            "email": "john@keboola.com",
+            "password": "superSecret"
+        }
+
++ Response 200 (application/json)
+
+    + Body
+    
+            {
+                "token": "{your token}",
+                "expires": "2016-08-12T09:25:56Z"
+            }
+            
+### Get user profile [GET /auth/profile]
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+            
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "bd5a108d-f44f-4d0e-b9ce-e0a9ef29be45",
+                "email": "john@keboola.com",
+                "name": "John Doe",
+                "vendor": "keboola"
+            }
+            
+### Change password [PUT /auth/profile]
+
++ Attributes
+    + oldPassword (required)
+    + newPassword (required)
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+    + Body
+
+            {
+                "oldPassword": "old password",
+                "newPassword": "new password"
+            }
+            
++ Response 204 (application/json)
+
+### Forgot password [POST /auth/forgot/{email}]
+
+Sends email with confirmation code which has to be used in the next API call
+
++ Parameters
+    + email
+
++ Response 204 (application/json)
+
+### Forgot password confirmation [POST /auth/forgot/{email}/confirm]
+
++ Parameters
+    + email
+
++ Attributes
+    + code (required)
+    + password (required)
+
++ Request
+
+    + Body
+
+            {
+                "code": "your code from email",
+                "password": "new password"
+            }
+            
++ Response 204 (application/json)
+            
+## Apps [/vendor/apps]
+
+Manual approval from Keboola is required before an app is allowed to be published.
+Apps can be created and updated freely before requesting approval.
+
+App needs to have 32px and 64px icons in png format uploaded to S3. You get 
+pre-signed urls from `/apps/{appId}/icons` API call.
+
+Apps are automatically versioned after each change. You can rollback to previous
+version any time.
+
+### Create app [POST /vendor/apps]
+
++ Attributes
+    + id (required) - Identifier of the app
+    + name (required) - Do not use the word `extractor` or `writer` in your app
+    + type (required) - One of: `reader`, `application`, `writer`
+    + imageUrl (optional) - Currently supported are DockerHub (public and private) and Quay (public, private)
+    + imageTag (optional) - Tag of the image in the Docker repository; typically `latest` or `master` or `1.0.0`
+    + shortDescription (optional) - One sentence describing your app or the app you are integrating
+    + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
+    + licenseUrl (optional) - Can be included in your public source repository
+    + documentationUrl (optional) - Instructions to help end-user configure the application (linked from application configuration page) and payment information (if any)
+    + requiredMemory (optional) - Maximum memory your image will use
+    + processTimeout (optional) - Maximum processing time in seconds
+    + encryption (optional, boolean) - All parameter attributes with keys prefixed by `#` will be encrypted. If you pass sensitive data in configuration (credentials, tokens), it is encouraged to turn the encryption on
+        + Default: `false`
+    + defaultBucket (optional, boolean) - All tables should be uploaded to a pregenerated bucket
+        + Default: `false`
+    + defaultBucketStage (optional, enum[string])
+        + Members
+            + `in`
+            + `out`
+        + Default: `in`
+    + forwardToken (optional, boolean) - Application needs Storage API token and its details
+    + uiOptions (optional, array) - Which UI helpers to use
+        + Members
+            + `tableInput`
+            + `tableOutput`
+            + `fileInput`
+            + `fileOutput`
+            + `excludeFromNewList`
+    + testConfiguration (optional) - JSON configuration to test the application
+    + configurationSchema (optional) - JSON schema describing the configuration
+    + networking (optional, enum[string]) - If the app downloads or uploads the client data to the Internet
+        + Members
+            + `dataIn` - eg. for readers
+            + `dataOut` - eg. for writers
+    + actions (optional, array) - List of supported actions
+        + Default: `run`
+    + fees (optional, boolean) - Using the component in KBC implies additional fees
+        + Default: `false`
+    + limits (optional) - Description of service or usage limits. Define what is maximum expected usage of your component. This may vary depending on the memory/time limits, API usage limits and other factors.
+    + logger (optional, enum[string]) - Specify a way to log events from your application
+        + Members
+            + `standard`
+            + `gelf`
+        + Default: `standard`
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "id": "ex-adwords",
+                "name": "AdWords Reports",
+                "shortDescription": "Reads reports defined by awql queries"
+            }
+
++ Response 201
+
+
+### Update app [PATCH /vendor/apps/{appId}]
+
++ Parameters
+    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Attributes
+    + name (required) - Do not use the word `extractor` or `writer` in your app
+    + type (required) - One of: `reader`, `application`, `writer`
+    + imageUrl (optional) - Currently supported are DockerHub (public and private) and Quay (public, private)
+    + imageTag (optional) - Tag of the image in the Docker repository; typically `latest` or `master` or `1.0.0`
+    + shortDescription (optional) - One sentence describing your app or the app you are integrating
+    + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
+    + licenseUrl (optional) - Can be included in your public source repository
+    + documentationUrl (optional) - Instructions to help end-user configure the application (linked from application configuration page) and payment information (if any)
+    + requiredMemory (optional) - Maximum memory your image will use
+    + processTimeout (optional) - Maximum processing time in seconds
+    + encryption (optional, boolean) - All parameter attributes with keys prefixed by `#` will be encrypted. If you pass sensitive data in configuration (credentials, tokens), it is encouraged to turn the encryption on
+        + Default: `false`
+    + defaultBucket (optional, boolean) - All tables should be uploaded to a pregenerated bucket
+        + Default: `false`
+    + defaultBucketStage (optional, enum[string])
+        + Members
+            + `in`
+            + `out`
+        + Default: `in`
+    + forwardToken (optional, boolean) - Application needs Storage API token and its details
+    + uiOptions (optional, array) - Which UI helpers to use
+        + Members
+            + `tableInput`
+            + `tableOutput`
+            + `fileInput`
+            + `fileOutput`
+            + `excludeFromNewList`
+    + testConfiguration (optional) - JSON configuration to test the application
+    + configurationSchema (optional) - JSON schema describing the configuration
+    + networking (optional, enum[string]) - If the app downloads or uploads the client data to the Internet
+        + Members
+            + `dataIn` - eg. for readers
+            + `dataOut` - eg. for writers
+    + actions (optional, array) - List of supported actions
+        + Default: `run`
+    + fees (optional, boolean) - Using the component in KBC implies additional fees
+        + Default: `false`
+    + limits (optional) - Description of service or usage limits. Define what is maximum expected usage of your component. This may vary depending on the memory/time limits, API usage limits and other factors.
+    + logger (optional, enum[string]) - Specify a way to log events from your application
+        + Members
+            + `standard`
+            + `gelf`
+        + Default: `standard`
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "id": "ex-adwords",
+                "name": "AdWords Reports",
+                "shortDescription": "Reads reports defined by awql queries"
+            }
+
++ Response 204
+
+
+### Generate links for icons upload [POST /vendor/apps/{appId}/icons]
+
+API call generates pre-signed urls to S3 where you can upload app icons.
+
++ Parameters
+    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "32": "https://dev-portal-icons.s3.amazonaws.com/keboola.ex-adwords-v2-32.png?AWSAccessKeyId=%7BaccessKey%7D&Content-Type=image%2Fpng&Expires=1471018587&Signature=%7Bsignature%7D&x-amz-security-token=%7Btoken%7D",
+                "64": "https://dev-portal-icons.s3.amazonaws.com/keboola.ex-adwords-v2-64.png?AWSAccessKeyId=%7BaccessKey%7D&Content-Type=image%2Fpng&Expires=1471018587&Signature=%7Bsignature%7D&x-amz-security-token=%7Btoken%7D",
+                "expires": "2016-08-12T16:16:27Z"
+            }
+
+### List all vendor apps [GET /vendor/apps?offset=0&limit=100]
+
++ Parameters
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 100
+
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola.ex-adwords",
+                    "version": 2,
+                    "name": "Google Adwords Reports",
+                    "type": "reader",
+                    "createdOn": "2016-09-09T09:26:15.000Z",
+                    "createdBy": "keboola.dev.portal.test@gmail.com",
+                    "isApproved": true
+                }
+            ]
+
+### Get app detail [GET /vendor/apps/{appId}]
+
++ Parameters
+    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "keboola.ex-adwords",
+                "name": "Google Adwords Reports",
+                "version": 2,
+                "type": "reader",
+                "imageUrl": "https://quay.io/repository/keboola/adwords-extractor",
+                "imageTag": "latest",
+                "shortDescription": "Advertise with Google Ads",
+                "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
+                "icon": {
+                    "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                    "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png"
+                },
+                "licenseUrl": "https://github.com/keboola/adwords-extractor/LICENSE",
+                "documentationUrl": "https://github.com/keboola/adwords-extractor/README",
+                "requiredMemory": null,
+                "processTimeout": null,
+                "encryption": true,
+                "defaultBucket": false,
+                "defaultBucketStage": "in",
+                "forwardToken": false,
+                "uiOptions": [
+                    "genericUI",
+                    "genericDockerUI-authorization"
+                ],
+                "testConfiguration": null,
+                "configurationSchema": null,
+                "networking": "dataIn",
+                "actions": [],
+                "fees": false,
+                "limits": null,
+                "logger": "standard",
+                "isApproved": true,
+                "createdOn": "2016-09-09T09:26:15.000Z",
+                "createdBy": "keboola.dev.portal.test@gmail.com"
+            }
+
+
+### Request approval [POST /vendor/apps/{appId}/approve]
+
+Request will be sent only if the app has icons uploaded and all these attributes set:
+- name
+- type
+- imageUrl
+- imageTag
+- shortDescription
+- longDescription
+- licenseUrl
+- documentationUrl
+
++ Parameters
+    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 202
+
+
+### List versions [GET /vendor/apps/{appId}/versions?offset=0&limit=100]
+
++ Parameters
+    + appId
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 100
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola.ex-adwords",
+                    "version": "1.0.2",
+                    "name": "AdWords Extractor",
+                    "type": "reader",
+                    "imageUrl": null,
+                    "imageTag": null,
+                    "shortDescription": null,
+                    "longDescription": null,
+                    "licenseUrl": null,
+                    "documentationUrl": null,
+                    "requiredMemory": null,
+                    "processTimeout": null,
+                    "encryption": false,
+                    "defaultBucket": false,
+                    "defaultBucketStage": "in",
+                    "forwardToken": false,
+                    "uiOptions": [],
+                    "testConfiguration": null,
+                    "configurationSchema": null,
+                    "networking": "dataIn",
+                    "actions": [],
+                    "fees": false,
+                    "limits": null,
+                    "logger": "standard"
+                }
+            ]
+
+### Get version detail [GET /vendor/apps/{appId}/versions/{version}]
+
++ Parameters
+    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+    + version
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "keboola.ex-adwords",
+                "version": "1.0.2",
+                "name": "AdWords Extractor",
+                "type": "reader",
+                "imageUrl": null,
+                "imageTag": null,
+                "shortDescription": null,
+                "longDescription": null,
+                "licenseUrl": null,
+                "documentationUrl": null,
+                "requiredMemory": null,
+                "processTimeout": null,
+                "encryption": false,
+                "defaultBucket": false,
+                "defaultBucketStage": "in",
+                "forwardToken": false,
+                "uiOptions": [],
+                "testConfiguration": null,
+                "configurationSchema": null,
+                "networking": "dataIn",
+                "actions": [],
+                "fees": false,
+                "limits": null,
+                "logger": "standard"
+            }
+
+### Rollback version [POST /vendor/apps/{appId}/versions/{version}/rollback]
+
+Takes settings from chosen version and creates new version with it.
+
++ Parameters
+    + appId
+    + version
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
+
+## Public Apps API [/apps]
+
+### List all published apps [GET /apps?offset=0&limit=100]
+
++ Parameters
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 100
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola.ex-adwords",
+                    "vendor": "keboola",
+                    "name": "Google Adwords Reports",
+                    "type": "reader",
+                    "shortDescription": "Advertise with Google Ads",
+                    "version": "1.0.2",
+                    "icon": {
+                        "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                        "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png"
+                    }
+                }
+            ]
+            
+### Get app detail [GET /apps/{appId}]
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "keboola.ex-adwords",
+                "name": "Google Adwords Reports",
+                "vendor": {
+                    "id": "keboola",
+                    "name": "Keboola",
+                    "address": "Křižíkova 488/115, Praha",
+                    "email": "support@keboola.com"
+                },
+                "current_version": "1.0.2",
+                "type": "reader",
+                "imageUrl": "https://quay.io/repository/keboola/adwords-extractor",
+                "imageTag": "latest",
+                "shortDescription": "Advertise with Google Ads",
+                "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
+                "icon": {
+                    "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                    "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png"
+                },
+                "licenseUrl": "https://github.com/keboola/adwords-extractor/LICENSE",
+                "documentationUrl": "https://github.com/keboola/adwords-extractor/README",
+                "requiredMemory": null,
+                "processTimeout": null,
+                "encryption": true,
+                "defaultBucket": false,
+                "defaultBucketStage": "in",
+                "forwardToken": false,
+                "uiOptions": [
+                    "genericUI",
+                    "genericDockerUI-authorization"
+                ],
+                "testConfiguration": null,
+                "configurationSchema": null,
+                "networking": "dataIn",
+                "actions": [],
+                "fees": false,
+                "limits": null,
+                "logger": "standard",
+                "is_approved": true
+            }

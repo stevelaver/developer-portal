@@ -105,3 +105,17 @@ functions:
 
 resources:
   Resources:
+    IconsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.appIconsBucket}
+    Database:
+      Type: AWS::RDS::DBInstance
+      Properties:
+        AllocatedStorage: 1
+        DBInstanceClass: db.t2.micro
+        Engine: MySQL
+        EngineVersion: 5.7
+        DBName: ${self:custom.rdsDatabase}
+        MasterUsername: ${self:custom.rdsUser}
+        MasterUserPassword: ${self:custom.rdsPassword}
