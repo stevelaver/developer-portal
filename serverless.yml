@@ -1,122 +1,232 @@
+---
 custom: ${file(./env.yml)}
 
-service: "${self:custom.servicePrefix}-auth"
-
-provider:
-  name: aws
-  runtime: nodejs4.3
-  stage: dev
-  region: us-east-1
-  timeout: 30
-  memory: 256
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-      - "s3:PutObject"
-      - "s3:GetObject"
-      - "s3:ReplicateObject"
-      Resource:
-        - "arn:aws:s3:::${self:custom.appIconsBucket}/*"
-    - Effect: "Allow"
-      Action:
-        - "ses:SendEmail"
-      Resource:
-        - "*"
-    - Effect: "Allow"
-      Action:
-        - "cognito-identity:*"
-        - "cognito-idp:*"
-      Resource:
-        - "${self:custom.cognitoPoolArn}"
+service: "${self:custom.resourcesStackName}"
 
 package:
+  exclude:
+    - package.json
   include:
     - lib
     - node_modules
     - .env
-  exclude:
-    - package.json
 
+provider:
+  memory: 256
+  name: aws
+  region: us-east-1
+  runtime: nodejs4.3
+  stage: dev
+  timeout: 30
+  iamRoleStatements:
+    -
+      Action:
+        - "s3:PutObject"
+        - "s3:GetObject"
+        - "s3:ReplicateObject"
+      Effect: Allow
+      Resource:
+        - "arn:aws:s3:::${self:custom.appIconsBucket}/*"
+    -
+      Action:
+        - "ses:SendEmail"
+      Effect: Allow
+      Resource:
+        - "*"
+    -
+      Action:
+        - "cognito-identity:*"
+        - "cognito-idp:*"
+      Effect: Allow
+      Resource:
+        - "${self:custom.cognitoPoolArn}"
 
 functions:
-  authorizer:
-    handler: authorizer.authorizer
-  confirm:
-    handler: auth.confirm
+
+  appsApprove:
+    handler: apps-approve.handler
     events:
-      - http:
-          method: post
-          path: auth/confirm/{email}/{code}
-          cors: true
-      - http:
-          method: get
-          path: auth/confirm/{email}/{code}
-          cors: true
-  confirmResend:
-    handler: auth.confirmResend
-    events:
-      - http:
-          method: post
-          path: auth/confirm
-          cors: true
-  forgot:
-    handler: auth.forgot
-    events:
-      - http:
-          method: post
-          path: auth/forgot/{email}
-          cors: true
-  forgotConfirm:
-    handler: auth.forgotConfirm
-    events:
-      - http:
-          method: post
-          path: auth/forgot/{email}/confirm
-          cors: true
-  login:
-    handler: auth.login
-    events:
-      - http:
-          method: post
-          path: auth/login
-          cors: true
-  profile:
-    handler: auth.profile
-    events:
-      - http:
-          path: auth/profile
-          method: get
+      -
+        http:
           authorizer: authorizer
           cors: true
-  profileChange:
-      handler: auth.profileChange
-      events:
-        - http:
-            path: auth/profile
-            method: put
-            authorizer: authorizer
-            cors: true
-  signup:
+          method: post
+          path: "vendor/apps/{appId}/approve"
+  appsCreate:
+    handler: apps-create.handler
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: post
+          path: vendor/apps
+  appsDetail:
+    handler: apps-detail.handler
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: get
+          path: "vendor/apps/{appId}"
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: get
+          path: "vendor/apps/{appId}/versions/{version}"
+  appsIconsLinks:
+    handler: apps-update.handler
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: patch
+          path: "vendor/apps/{appId}"
+  appsIconsUpload:
+    handler: apps-icons.upload
+    events:
+      -
+        s3:
+          bucket: "${self:custom.appIconsBucket}"
+          event: "s3:ObjectCreated:*"
+          suffix: .png
+  appsList:
+    handler: apps-list.handler
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: get
+          path: vendor/apps
+  appsVersionsList:
+    handler: apps-versions.list
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: get
+          path: "vendor/apps/{appId}/versions"
+  appsVersionsRollback:
+    handler: apps-versions.rollback
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: post
+          path: "vendor/apps/{appId}/versions/{version}/rollback"
+
+  authConfirm:
+    handler: auth.confirm
+    events:
+      -
+        http:
+          cors: true
+          method: post
+          path: "auth/confirm/{email}/{code}"
+      -
+        http:
+          cors: true
+          method: get
+          path: "auth/confirm/{email}/{code}"
+  authConfirmResend:
+    handler: auth.confirmResend
+    events:
+      -
+        http:
+          cors: true
+          method: post
+          path: auth/confirm
+  authForgot:
+    handler: auth.forgot
+    events:
+      -
+        http:
+          cors: true
+          method: post
+          path: "auth/forgot/{email}"
+  authForgotConfirm:
+    handler: auth.forgotConfirm
+    events:
+      -
+        http:
+          cors: true
+          method: post
+          path: "auth/forgot/{email}/confirm"
+  authLogin:
+    handler: auth.login
+    events:
+      -
+        http:
+          cors: true
+          method: post
+          path: auth/login
+  authProfile:
+    handler: auth.profile
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: get
+          path: auth/profile
+  authProfileChange:
+    handler: auth.profileChange
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: put
+          path: auth/profile
+  authSignup:
     handler: auth.signup
     events:
-      - http:
+      -
+        http:
+          cors: true
           method: post
           path: auth/signup
-          cors: true
 
-resources:
-  Resources:
-    IconsBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.appIconsBucket}
-    Database:
-      Type: AWS::RDS::DBInstance
-      Properties:
-        AllocatedStorage: 1
-        DBInstanceClass: db.t2.micro
-        Engine: MySQL
-        EngineVersion: 5.7
-        DBName: ${self:custom.rdsDatabase}
-        MasterUsername: ${self:custom.rdsUser}
-        MasterUserPassword: ${self:custom.rdsPassword}
+  authorizer:
+      handler: authorizer.authorizer
+
+  publicDetail:
+    handler: public.detail
+    events:
+      -
+        http:
+          cors: true
+          method: get
+          path: "apps/{appId}"
+  publicList:
+    handler: public.list
+    events:
+      -
+        http:
+          cors: true
+          method: get
+          path: apps
+
+
+#resources:
+#  Resources:
+#    IconsBucket:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: ${self:custom.appIconsBucket}
+#    Database:
+#      Type: AWS::RDS::DBInstance
+#      Properties:
+#        AllocatedStorage: 1
+#        DBInstanceClass: db.t2.micro
+#        Engine: MySQL
+#        EngineVersion: 5.7
+#        DBName: ${self:custom.rdsDatabase}
+#        MasterUsername: ${self:custom.rdsUser}
+#        MasterUserPassword: ${self:custom.rdsPassword}
