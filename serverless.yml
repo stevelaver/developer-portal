@@ -29,12 +29,13 @@ provider:
       Resource:
         - "${self:custom.cognitoPoolArn}"
 
-include:
-  - lib
-  - node_modules
-  - .env
-exclude:
-  - package.json
+package:
+  include:
+    - lib
+    - node_modules
+    - .env
+  exclude:
+    - package.json
 
 
 functions:
@@ -44,64 +45,64 @@ functions:
     handler: auth.confirm
     events:
       - http:
-        method: post
-        path: auth/confirm/{email}/{code}
-        cors: true
+          method: post
+          path: auth/confirm/{email}/{code}
+          cors: true
       - http:
-        method: get
-        path: auth/confirm/{email}/{code}
-        cors: true
+          method: get
+          path: auth/confirm/{email}/{code}
+          cors: true
   confirmResend:
     handler: auth.confirmResend
     events:
       - http:
-        method: post
-        path: auth/confirm
-        cors: true
+          method: post
+          path: auth/confirm
+          cors: true
   forgot:
     handler: auth.forgot
     events:
       - http:
-        method: post
-        path: auth/forgot/{email}
-        cors: true
+          method: post
+          path: auth/forgot/{email}
+          cors: true
   forgotConfirm:
     handler: auth.forgotConfirm
     events:
       - http:
-        method: post
-        path: auth/forgot/{email}/confirm
-        cors: true
+          method: post
+          path: auth/forgot/{email}/confirm
+          cors: true
   login:
     handler: auth.login
     events:
       - http:
-        method: post
-        path: auth/login
-        cors: true
+          method: post
+          path: auth/login
+          cors: true
   profile:
     handler: auth.profile
     events:
       - http:
-        path: auth/profile
-        method: get
-        authorizer: authorizer
-        cors: true
+          path: auth/profile
+          method: get
+          authorizer: authorizer
+          cors: true
   profileChange:
       handler: auth.profileChange
       events:
         - http:
-          path: auth/profile
-          method: put
-          authorizer: authorizer
-          cors: true
+            path: auth/profile
+            method: put
+            authorizer: authorizer
+            cors: true
   signup:
     handler: auth.signup
     events:
       - http:
-        method: post
-        path: auth/signup
-        cors: true
+          method: post
+          path: auth/signup
+          cors: true
 
 resources:
   Resources:

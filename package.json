@@ -8,7 +8,17 @@
     "type": "git",
     "url": "https://github.com/keboola/developer-portal.git"
   },
-  "dependencies": {},
+  "dependencies": {
+    "async": "^2.0.1",
+    "aws-sdk": "^2.6.1",
+    "dotenv": "^2.0.0",
+    "jsonwebtoken": "7.0.0",
+    "jwk-to-pem": "^1.2.5",
+    "moment": "^2.15.0",
+    "mysql": "^2.11.1",
+    "request": "^2.74.0",
+    "vandium": "^3.1.0"
+  },
   "devDependencies": {
     "chai": "*",
     "mocha": "*"
