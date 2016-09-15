@@ -44,7 +44,7 @@ module.exports.authorizer = function(event, context, callback) {
 };
 
 function ValidateToken(pems, event, callback) {
-  var token = event.headers.authorizationToken;
+  var token = event.authorizationToken;
 
   //Fail if the token is not jwt
   var decodedJwt = jwt.decode(token, {complete: true});

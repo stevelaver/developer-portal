@@ -1,6 +1,6 @@
 ---
 custom: ${file(./env.yml)}
-
+  
 service: "${self:custom.resourcesStackName}"
 
 package:
@@ -77,14 +77,14 @@ functions:
           method: get
           path: "vendor/apps/{appId}/versions/{version}"
   appsIconsLinks:
-    handler: apps-update.handler
+    handler: apps-icons.links
     events:
       -
         http:
           authorizer: authorizer
           cors: true
-          method: patch
-          path: "vendor/apps/{appId}"
+          method: post
+          path: "vendor/apps/{appId}/icons"
   appsIconsUpload:
     handler: apps-icons.upload
     events:
@@ -102,6 +102,15 @@ functions:
           cors: true
           method: get
           path: vendor/apps
+  appsUpdate:
+    handler: apps-update.handler
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: patch
+          path: vendor/apps/{appId}
   appsVersionsList:
     handler: apps-versions.list
     events:

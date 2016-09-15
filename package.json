@@ -17,6 +17,7 @@
     "moment": "^2.15.0",
     "mysql": "^2.11.1",
     "request": "^2.74.0",
+    "underscore": "^1.8.3",
     "vandium": "^3.1.0"
   },
   "devDependencies": {

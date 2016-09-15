@@ -196,7 +196,7 @@ module.exports.profile = vandium.createInstance({
     })
   }
 }).handler(function(event, context, callback) {
-  identity.getUser(event.headers.authorizationToken, callback);
+  identity.getUser(event.headers.Authorization, callback);
 });
 
 
@@ -221,7 +221,7 @@ module.exports.profileChange = vandium.createInstance({
   provider.changePassword({
     PreviousPassword: event.body.oldPassword,
     ProposedPassword: event.body.newPassword,
-    AccessToken: event.headers.authorizationToken
+    AccessToken: event.headers.Authorization
   }, function(err) {
     return callback(err);
   });
@@ -291,6 +291,6 @@ module.exports.signup = vandium.createInstance({
     }
   ], function(err) {
     db.destroy();
-    return callback(err, result);
+    return callback(err);
   });
 });

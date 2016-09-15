@@ -47,10 +47,16 @@ module.exports.handler = vandium.createInstance({
 }).handler(function(event, context, callback) {
   var params = event.body;
 
-  db.connect();
+  db.connect({
+    host: process.env.RDS_HOST,
+    user: process.env.RDS_USER,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DATABASE,
+    ssl: process.env.RDS_SSL
+  });
   async.waterfall([
     function (callbackLocal) {
-      identity.getUser(event.headers.authorizationToken, function (err, data) {
+      identity.getUser(event.headers.Authorization, function (err, data) {
         if (err) return callbackLocal(err);
         params.createdBy = data.email;
         return callbackLocal(null, data);

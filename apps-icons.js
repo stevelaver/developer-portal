@@ -18,10 +18,16 @@ module.exports.links = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
-  db.connect();
+  db.connect({
+    host: process.env.RDS_HOST,
+    user: process.env.RDS_USER,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DATABASE,
+    ssl: process.env.RDS_SSL
+  });
   async.waterfall([
     function (callbackLocal) {
-      identity.getUser(event.headers.authorizationToken, callbackLocal);
+      identity.getUser(event.headers.Authorization, callbackLocal);
     },
     function (user, callbackLocal) {
       db.checkAppAccess(event.path.appId, user.vendor, function(err) {
@@ -86,7 +92,13 @@ module.exports.upload = vandium.createInstance().handler(function(event, context
   var appId = key.split('/').shift();
   var size = key.split('/')[1];
 
-  db.connect();
+  db.connect({
+    host: process.env.RDS_HOST,
+    user: process.env.RDS_USER,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DATABASE,
+    ssl: process.env.RDS_SSL
+  });
   var s3 = new aws.S3();
   async.waterfall([
     function(callbackLocal) {
