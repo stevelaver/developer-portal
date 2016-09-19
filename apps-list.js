@@ -1,10 +1,10 @@
 'use strict';
-require('dotenv').config();
 
 var async = require('async');
 var db = require('lib/db');
 var identity = require('lib/identity');
-const vandium = require('vandium');
+
+require('dotenv').config();
 
 module.exports.handler = vandium.createInstance({
   validation: {
@@ -26,7 +26,7 @@ module.exports.handler = vandium.createInstance({
   });
   async.waterfall([
     function (callbackLocal) {
-      identity.getUser(event.headers.Authorization, callbackLocal);
+      identity.getUser(process.env.REGION, event.headers.Authorization, callbackLocal);
     },
     function(user, callbackLocal) {
       db.listAppsForVendor(user.vendor, event.query.offset, event.query.limit, callbackLocal);

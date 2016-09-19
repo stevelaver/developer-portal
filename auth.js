@@ -1,5 +1,4 @@
 'use strict';
-require('dotenv').config();
 
 var async = require('async');
 var aws = require('aws-sdk');
@@ -8,6 +7,7 @@ var moment = require('moment');
 var mysql = require('mysql');
 const vandium = require('vandium');
 
+require('dotenv').config();
 
 /**
  * Confirm
@@ -196,7 +196,7 @@ module.exports.profile = vandium.createInstance({
     })
   }
 }).handler(function(event, context, callback) {
-  identity.getUser(event.headers.Authorization, callback);
+  identity.getUser(process.env.REGION, event.headers.Authorization, callback);
 });
 
 

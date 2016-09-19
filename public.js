@@ -1,10 +1,10 @@
 'use strict';
-require('dotenv').config();
 
 var async = require('async');
 var db = require('lib/db');
 const vandium = require('vandium');
 
+require('dotenv').config();
 
 module.exports.detail = vandium.createInstance({
   validation: {

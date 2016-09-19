@@ -1,9 +1,10 @@
 'use strict';
-require('dotenv').config();
 
 var jwt = require('jsonwebtoken');
 var request = require('request'); 
 var jwkToPem = require('jwk-to-pem');
+
+require('dotenv').config();
 
 var userPoolId = process.env.COGNITO_POOL_ID;
 var region = process.env.REGION;
