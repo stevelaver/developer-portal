@@ -1,4 +1,5 @@
 'use strict';
+require('dotenv').config();
 
 var jwt = require('jsonwebtoken');
 var request = require('request'); 
@@ -9,7 +10,7 @@ var region = process.env.REGION;
 var iss = 'https://cognito-idp.' + region + '.amazonaws.com/' + userPoolId;
 var pems;
 
-exports.handler = function(event, context, callback) {
+module.exports.authorizer = function(event, context, callback) {
   //Download PEM for your UserPool if not already downloaded
   if (!pems) {
     //Download the JWKs and save it as PEM

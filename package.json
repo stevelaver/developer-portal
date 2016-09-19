@@ -8,24 +8,22 @@
     "type": "git",
     "url": "https://github.com/keboola/developer-portal.git"
   },
-  "main": "server.js",
   "dependencies": {
-    "serverless-cognito-manager": "^1.2.0",
-    "serverless-cors-plugin": "^0.4.1",
-    "serverless-mocha-plugin": "^0.5.15"
-  },
-  "devDependencies": {
-    "aws-sdk": "^2.5.3",
     "async": "^2.0.1",
-    "chai": "^3.5.0",
+    "aws-sdk": "^2.6.1",
     "dotenv": "^2.0.0",
-    "mocha": "^3.0.2",
+    "jsonwebtoken": "7.0.0",
+    "jwk-to-pem": "^1.2.5",
+    "moment": "^2.15.0",
     "mysql": "^2.11.1",
     "request": "^2.74.0",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "vandium": "^3.1.0"
   },
-  "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --timeout 0 test/*",
-    "func": "./node_modules/mocha/bin/mocha --timeout 0 test/functional"
+  "devDependencies": {
+    "chai": "*",
+    "mocha": "*",
+    "serverless-offline": "git+https://github.com/dherault/serverless-offline.git/#serverless_v1",
+    "serverless-plugin-write-env-vars": "^1.0.1"
   }
 }

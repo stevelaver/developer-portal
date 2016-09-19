@@ -7,7 +7,7 @@ HOST: https://kw5ugqgvx9.execute-api.us-east-1.amazonaws.com/dev
 ## Auth [/auth]
 
 User auth is handled by jwt tokens. Token is returned on login call and needs 
-to be passed in HTTP header `Authorization: {your token}`. Token has limited 
+to be passed in HTTP header `Authorization: {your token}`. Token has limited
 validity of 1 hour.
 
 ### Create account [POST /auth/signup]
@@ -63,7 +63,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
 + Attributes
     + email (required)
     + password (required) - must contain at least 8 characters
-    
+
 + Request (application/json)
 
         {
@@ -74,12 +74,12 @@ Account needs to be confirmed by code from confirmation email sent on his email 
 + Response 200 (application/json)
 
     + Body
-    
+
             {
                 "token": "{your token}",
                 "expires": "2016-08-12T09:25:56Z"
             }
-            
+
 ### Get user profile [GET /auth/profile]
 
 + Request
@@ -87,7 +87,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
     + Headers
 
             Authorization: {your_token}
-            
+
 + Response 200 (application/json)
 
     + Body
@@ -98,7 +98,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
                 "name": "John Doe",
                 "vendor": "keboola"
             }
-            
+
 ### Change password [PUT /auth/profile]
 
 + Attributes
@@ -116,7 +116,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
                 "oldPassword": "old password",
                 "newPassword": "new password"
             }
-            
+
 + Response 204 (application/json)
 
 ### Forgot password [POST /auth/forgot/{email}]
@@ -145,28 +145,28 @@ Sends email with confirmation code which has to be used in the next API call
                 "code": "your code from email",
                 "password": "new password"
             }
-            
+
 + Response 204 (application/json)
-            
+
 ## Apps [/vendor/apps]
 
 Manual approval from Keboola is required before an app is allowed to be published.
 Apps can be created and updated freely before requesting approval.
 
-App needs to have 32px and 64px icons in png format uploaded to S3. You get 
+App needs to have 32px and 64px icons in png format uploaded to S3. You get
 pre-signed urls from `/apps/{appId}/icons` API call.
 
-Apps are automatically versioned after each change. You can rollback to previous 
+Apps are automatically versioned after each change. You can rollback to previous
 version any time.
 
 ### Create app [POST /vendor/apps]
 
-After the app is created, it's id is prefixed by vendor. E.g. if you identify 
+After the app is created, it's id is prefixed by vendor. E.g. if you identify
 the app as `ex-adwords`, it's identifier for subsequent API calls will be
 `keboola.ex-adwords`.
 
 + Attributes
-    + id (required) - Identifier of the app, allowed characters are unaccented letters, numbers, dashes and underscores 
+    + id (required) - Identifier of the app, allowed characters are unaccented letters, numbers, dashes and underscores
     + name (required) - Do not use the word `extractor` or `writer` in your app
     + type (required) - One of: `reader`, `application`, `writer`
     + imageUrl (optional) - Currently supported are DockerHub (public and private) and Quay (public, private)
@@ -216,7 +216,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
     + Headers
 
             Authorization: {your_token}
-            
+
     + Body
 
             {
@@ -283,9 +283,9 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
     + Headers
 
             Authorization: {your_token}
-            
+
     + Body
-    
+
             {
                 "id": "ex-adwords",
                 "name": "AdWords Reports",
@@ -297,7 +297,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 
 ### Generate links for icons upload [POST /vendor/apps/{appId}/icons]
 
-API call generates pre-signed urls to S3 where you can upload app icons. 
+API call generates pre-signed urls to S3 where you can upload app icons.
 
 + Parameters
     + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
@@ -311,7 +311,7 @@ API call generates pre-signed urls to S3 where you can upload app icons.
 + Response 200 (application/json)
 
     + Body
-    
+
             {
                 "32": "https://dev-portal-icons.s3.amazonaws.com/keboola.ex-adwords-v2-32.png?AWSAccessKeyId=%7BaccessKey%7D&Content-Type=image%2Fpng&Expires=1471018587&Signature=%7Bsignature%7D&x-amz-security-token=%7Btoken%7D",
                 "64": "https://dev-portal-icons.s3.amazonaws.com/keboola.ex-adwords-v2-64.png?AWSAccessKeyId=%7BaccessKey%7D&Content-Type=image%2Fpng&Expires=1471018587&Signature=%7Bsignature%7D&x-amz-security-token=%7Btoken%7D",
@@ -342,7 +342,7 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                     "isApproved": true
                 }
             ]
-            
+
 ### Get app detail [GET /vendor/apps/{appId}]
 
 + Parameters
@@ -422,7 +422,7 @@ Request will be sent only if the app has icons uploaded and all these attributes
         + Default: 0
     + limit (optional) - pagination limit
         + Default: 100
-    
+
 + Request
 
     + Headers
@@ -432,7 +432,7 @@ Request will be sent only if the app has icons uploaded and all these attributes
 + Response 200 (application/json)
 
     + Body
-    
+
             [
                 {
                     "id": "keboola.ex-adwords",
@@ -477,7 +477,7 @@ Request will be sent only if the app has icons uploaded and all these attributes
 + Response 200 (application/json)
 
     + Body
-    
+
             {
                 "id": "keboola.ex-adwords",
                 "version": "1.0.2",
