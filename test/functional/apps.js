@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config();
+require('dotenv').config({path: '.env-test'});
 
 var async = require('async');
 var aws = require('aws-sdk');
@@ -23,7 +23,7 @@ const appName2 = 'a2_' + Date.now();
 const appId1 = vendor+'.'+appName1;
 var token;
 
-describe('vendor', function() {
+describe('apps', function() {
   before(function(done) {
     async.waterfall([
       function(callback) {
@@ -42,8 +42,8 @@ describe('vendor', function() {
         });
       },
       function(callback) {
-        rds.query('DELETE FROM apps WHERE vendor_id=?', vendor, function(err,res) {
-          callback();
+        rds.query('DELETE FROM apps WHERE vendor=?', vendor, function(err) {
+          callback(err);
         });
       }
     ], done);
@@ -66,9 +66,7 @@ describe('vendor', function() {
           }
         }, function(err, res, body) {
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
-          expect(body.id).to.be.equal(appId1);
+          expect(body, JSON.stringify(body)).to.be.null;
           callback();
         });
       },
@@ -87,9 +85,7 @@ describe('vendor', function() {
           }
         }, function(err, res, body) {
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
-          expect(body.id).to.be.equal(vendor+'.'+appName2);
+          expect(body, JSON.stringify(body)).to.be.null;
           callback();
         });
       },
@@ -169,9 +165,7 @@ describe('vendor', function() {
           }
         }, function(err, res, body) {
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
-          expect(body.id).to.be.equal(appId1);
+          expect(body, JSON.stringify(body)).to.be.null;
           callback();
         });
       },
@@ -249,41 +243,12 @@ describe('vendor', function() {
       },
       function(callback) {
         // Manual approval
-        rds.query('UPDATE apps SET is_approved=1 WHERE id=?', appId1, function(err) {
+        rds.query('UPDATE apps SET isApproved=1 WHERE id=?', appId1, function(err) {
           callback(err);
         });
       },
       function(callback) {
-        // Public app profile should not exist
-        request.get({
-          url: process.env.FUNC_API_BASE_URI + '/apps/'+appId1
-        }, function(err, res, body) {
-          body = JSON.parse(body);
-          expect(err).to.be.null;
-          expect(body).to.have.property('errorMessage');
-          callback();
-        });
-      },
-      function(callback) {
-        // Create version
-        request.post({
-          url: process.env.FUNC_API_BASE_URI + '/vendor/apps/' + appId1 + '/versions',
-          headers: {
-            Authorization: token
-          },
-          json: true,
-          body: {
-            version: '1.0.0'
-          }
-        }, function(err, res, body) {
-          expect(err).to.be.null;
-          expect(body).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
-          callback();
-        });
-      },
-      function(callback) {
-        // Public app profile should finally exist
+        // Public app profile should exist now
         request.get({
           url: process.env.FUNC_API_BASE_URI + '/apps/'+appId1
         }, function(err, res, body) {
@@ -305,7 +270,7 @@ describe('vendor', function() {
           body = JSON.parse(body);
           expect(err).to.be.null;
           expect(body).to.not.have.property('errorMessage');
-          expect(body).to.have.length(1);
+          expect(body).to.have.length.above(1);
           callback();
         });
       },
@@ -319,7 +284,7 @@ describe('vendor', function() {
         }, function(err, res, body) {
           expect(err).to.be.null;
           body = JSON.parse(body);
-          expect(body).to.not.have.property('errorMessage');
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
           callback();
         });
@@ -343,7 +308,7 @@ describe('vendor', function() {
   after(function(done) {
     async.waterfall([
       function(callback) {
-        rds.query('DELETE FROM apps WHERE vendor_id=?', vendor, function(err,res) {
+        rds.query('DELETE FROM apps WHERE vendor=?', vendor, function(err,res) {
           callback();
         });
       },

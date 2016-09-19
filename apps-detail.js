@@ -41,6 +41,8 @@ module.exports.handler = vandium.createInstance({
         32: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32,
         64: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64
       };
+      delete app.icon32;
+      delete app.icon64;
       callbackLocal(null, app);
     }
   ], function(err, result) {

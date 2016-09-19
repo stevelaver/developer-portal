@@ -70,7 +70,8 @@ module.exports.handler = vandium.createInstance({
     }
   ], function(err, app) {
     if (err) {
-      return dbCloseCallback(err);
+      db.end();
+      return callback(err);
     }
 
     var ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
@@ -89,7 +90,7 @@ module.exports.handler = vandium.createInstance({
       }
     }, function(errLocal) {
       db.end();
-      return callback(errLocal, result);
+      return callback(errLocal);
     });
   });
 });

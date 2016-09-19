@@ -22,12 +22,14 @@ module.exports.detail = vandium.createInstance({
   });
   async.waterfall([
     function (callbackLocal) {
-      db.getPublishedApp(event.path.appId, function(err, app) {
-        if (err) return dbCloseCallback(err);
+      db.getPublishedApp(event.path.appId, null, function(err, app) {
+        if (err) return callbackLocal(err);
         app.icon = {
           32: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32,
           64: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64
         };
+        delete app.icon32;
+        delete app.icon64;
         return callbackLocal(null, app);
       });
     }
@@ -61,6 +63,8 @@ module.exports.list = vandium.createInstance({
             32: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32,
             64: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64
           };
+          delete app.icon32;
+          delete app.icon64;
         });
         return callbackLocal(null, res);
       });

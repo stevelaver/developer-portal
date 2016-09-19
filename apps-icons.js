@@ -87,6 +87,10 @@ module.exports.upload = vandium.createInstance().handler(function(event, context
     throw Error('Event is missing. See: ' + JSON.stringify(event));
   }
 
+  if (event.Records[0].eventName !== 'ObjectCreated:Put') {
+    return callback();
+  }
+
   var bucket = event.Records[0].s3.bucket.name;
   var key = event.Records[0].s3.object.key;
   var appId = key.split('/').shift();

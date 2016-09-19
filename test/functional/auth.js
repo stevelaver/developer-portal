@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config();
+require('dotenv').config({path: '.env-test'});
 
 var async = require('async');
 var aws = require('aws-sdk');

@@ -1,7 +1,12 @@
 ---
-custom: ${file(./env.yml)}
-  
-service: "${self:custom.resourcesStackName}"
+custom:
+  writeEnvVars: ${file(./env.yml)}
+
+service: "${file(./env.yml):SERVICE_NAME}"
+
+plugins:
+   - serverless-plugin-write-env-vars
+   - serverless-offline
 
 package:
   exclude:
@@ -21,12 +26,10 @@ provider:
   iamRoleStatements:
     -
       Action:
-        - "s3:PutObject"
-        - "s3:GetObject"
-        - "s3:ReplicateObject"
+        - "s3:*"
       Effect: Allow
       Resource:
-        - "arn:aws:s3:::${self:custom.appIconsBucket}/*"
+        - "arn:aws:s3:::${file(./env.yml):S3_BUCKET_ICONS}/*"
     -
       Action:
         - "ses:SendEmail"
@@ -39,7 +42,7 @@ provider:
         - "cognito-idp:*"
       Effect: Allow
       Resource:
-        - "${self:custom.cognitoPoolArn}"
+        - "${file(./env.yml):COGNITO_POOL_ARN}"
 
 functions:
 
@@ -90,8 +93,8 @@ functions:
     events:
       -
         s3:
-          bucket: "${self:custom.appIconsBucket}"
-          event: "s3:ObjectCreated:*"
+          bucket: "${file(./env.yml):S3_BUCKET_ICONS}"
+          event: "s3:ObjectCreated:Put"
           suffix: .png
   appsList:
     handler: apps-list.handler
@@ -228,7 +231,7 @@ functions:
 #    IconsBucket:
 #      Type: AWS::S3::Bucket
 #      Properties:
-#        BucketName: ${self:custom.appIconsBucket}
+#        BucketName: "${file(./env.yml):S3_BUCKET_ICONS}
 #    Database:
 #      Type: AWS::RDS::DBInstance
 #      Properties:
@@ -236,6 +239,6 @@ functions:
 #        DBInstanceClass: db.t2.micro
 #        Engine: MySQL
 #        EngineVersion: 5.7
-#        DBName: ${self:custom.rdsDatabase}
-#        MasterUsername: ${self:custom.rdsUser}
-#        MasterUserPassword: ${self:custom.rdsPassword}
+#        DBName:
+#        MasterUsername: "${file(./env.yml):RDS_USER}
+#        MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}

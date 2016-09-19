@@ -22,6 +22,8 @@
   },
   "devDependencies": {
     "chai": "*",
-    "mocha": "*"
+    "mocha": "*",
+    "serverless-offline": "git+https://github.com/dherault/serverless-offline.git/#serverless_v1",
+    "serverless-plugin-write-env-vars": "^1.0.1"
   }
 }
