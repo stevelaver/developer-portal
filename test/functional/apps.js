@@ -277,7 +277,7 @@ describe('apps', function() {
       function(callback) {
         // Get version
         request.get({
-          url: process.env.FUNC_API_BASE_URI + '/vendor/apps/'+appId1+'/versions/1.0.0',
+          url: process.env.FUNC_API_BASE_URI + '/vendor/apps/'+appId1+'/versions/1',
           headers: {
             Authorization: token
           }
