@@ -84,7 +84,7 @@ describe('db', function() {
 
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?', [appId, vendor], function() {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function() {
           db.connect({
             host: process.env.TEST_RDS_HOST,
             user: process.env.TEST_RDS_USER,
@@ -135,7 +135,7 @@ describe('db', function() {
 
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?', [appId, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
           if (err) throw err;
           db.connect({
             host: process.env.TEST_RDS_HOST,
@@ -163,9 +163,9 @@ describe('db', function() {
 
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?', [appId, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
           if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1', [appId], function(err) {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], function(err) {
             if (err) throw err;
             db.connect({
               host: process.env.TEST_RDS_HOST,
@@ -215,7 +215,7 @@ describe('db', function() {
 
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?;', [appId, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
           if (err) throw err;
           db.connect({
             host: process.env.TEST_RDS_HOST,
@@ -240,9 +240,9 @@ describe('db', function() {
 
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?;', [appId, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
           if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=?;', [appId, 2], function(err) {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=?, name=?;', [appId, 2, 'test'], function(err) {
             if (err) throw err;
             db.connect({
               host: process.env.TEST_RDS_HOST,
