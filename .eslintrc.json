@@ -2,13 +2,13 @@
   "extends": "airbnb",
   "plugins": [],
   "rules": {
-    "func-names": "off",
+    "func-names": 0,
 
     // doesn't work in node v4 :(
-    "strict": "off",
-    "prefer-rest-params": "off",
-    "react/require-extension" : "off",
-    "import/no-extraneous-dependencies" : "off"
+    "strict": 0,
+    "prefer-rest-params": 0,
+    "react/require-extension" : 0,
+    "import/no-extraneous-dependencies" : 0
   },
   "env": {
     "mocha": true
