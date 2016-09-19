@@ -1,5 +1,4 @@
 'use strict';
-
 var async = require('async');
 var aws = require('aws-sdk');
 var db = require('lib/db');
@@ -17,7 +16,7 @@ module.exports.handler = vandium.createInstance({
       authorizationToken: vandium.types.string().required()
     }),
     path: vandium.types.object().keys({
-      appId: vandium.types.string().required().error(new Error('Parameter appId is required'))
+      appId: vandium.types.string().required().error(Error('[422] Parameter appId is required'))
     })
   }
 }).handler(function(event, context, callback) {
@@ -44,7 +43,7 @@ module.exports.handler = vandium.createInstance({
         }
 
         if (data.isApproved) {
-          return callbackLocal(Error('Already approved'));
+          return callbackLocal(Error('[400] Already approved'));
         }
         return callbackLocal(err, data);
       });
@@ -58,13 +57,13 @@ module.exports.handler = vandium.createInstance({
         }
       });
       if (empty.length) {
-        return callbackLocal(Error('App properties ' + empty.join(', ') + ' cannot be empty'));
+        return callbackLocal(Error('[400] App properties ' + empty.join(', ') + ' cannot be empty'));
       }
       if (!app.icon32) {
-        return callbackLocal(Error('App icon of size 32px is missing, upload it first.'));
+        return callbackLocal(Error('[400] App icon of size 32px is missing, upload it first.'));
       }
       if (!app.icon64) {
-        return callbackLocal(Error('App icon of size 64px is missing, upload it first.'));
+        return callbackLocal(Error('[400] App icon of size 64px is missing, upload it first.'));
       }
       return callbackLocal(null, app);
     }

@@ -1,5 +1,4 @@
 'use strict';
-
 var async = require('async');
 var db = require('lib/db');
 var identity = require('lib/identity');

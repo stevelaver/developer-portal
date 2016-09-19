@@ -1,5 +1,4 @@
 'use strict';
-
 var async = require('async');
 var aws = require('aws-sdk');
 var identity = require('lib/identity');
@@ -15,9 +14,9 @@ require('dotenv').config();
 module.exports.confirm = vandium.createInstance({
   validation: {
     path: vandium.types.object().keys({
-      email: vandium.types.string().required().error(new Error("[422] Parameter email is required and should have " +
+      email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have " +
         "format of email address")),
-      code: vandium.types.string().required().error(new Error("[422] Parameter code is required"))
+      code: vandium.types.string().required().error(Error("[422] Parameter code is required"))
     })
   }
 }).handler(function(event, context, callback) {
@@ -70,9 +69,9 @@ module.exports.confirm = vandium.createInstance({
 module.exports.confirmResend = vandium.createInstance({
   validation: {
     body: vandium.types.object().keys({
-      email: vandium.types.string().required().error(new Error("Parameter email is required and should have format " +
+      email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have format " +
         "of email address")),
-      code: vandium.types.string().required().error(new Error("Parameter code is required"))
+      code: vandium.types.string().required().error(Error("[422] Parameter code is required"))
     })
   }
 }).handler(function(event, context, callback) {
@@ -87,7 +86,7 @@ module.exports.confirmResend = vandium.createInstance({
     }
   }, function(err) {
     if (!err || err.code === 'NotAuthorizedException') {
-      return callback(Error('Already confirmed'));
+      return callback(Error('[400] Already confirmed'));
     } else {
       if (err.code === 'UserNotConfirmedException') {
         provider.resendConfirmationCode({
@@ -110,7 +109,7 @@ module.exports.confirmResend = vandium.createInstance({
 module.exports.forgot = vandium.createInstance({
   validation: {
     path: vandium.types.object().keys({
-      email: vandium.types.string().required().error(new Error("Parameter email is required and should have format " +
+      email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have format " +
         "of email address"))
     })
   }
@@ -131,12 +130,12 @@ module.exports.forgot = vandium.createInstance({
 module.exports.forgotConfirm = vandium.createInstance({
   validation: {
     path: vandium.types.object().keys({
-      email: vandium.types.string().required().error(new Error('Parameter email is required and should have format ' +
+      email: vandium.types.string().required().error(Error('[422] Parameter email is required and should have format ' +
         'of email address')),
     }),
     body: vandium.types.object().keys({
-      password: vandium.types.string().required().error(new Error('Parameter password is required')),
-      code: vandium.types.string().required().error(new Error('Parameter code is required'))
+      password: vandium.types.string().required().error(Error('[422] Parameter password is required')),
+      code: vandium.types.string().required().error(Error('[422] Parameter code is required'))
     })
   }
 }).handler(function(event, context, callback) {
@@ -158,9 +157,9 @@ module.exports.forgotConfirm = vandium.createInstance({
 module.exports.login = vandium.createInstance({
   validation: {
     body: vandium.types.object().keys({
-      email: vandium.types.email().required().error(new Error("Parameter email is required and should have format " +
+      email: vandium.types.email().required().error(Error("[422] Parameter email is required and should have format " +
         "of email address")),
-      password: vandium.types.string().required().error(new Error("Parameter password is required"))
+      password: vandium.types.string().required().error(Error("[422] Parameter password is required"))
     })
   }
 }).handler(function(event, context, callback) {
@@ -209,10 +208,10 @@ module.exports.profileChange = vandium.createInstance({
       authorizationToken: vandium.types.string().required()
     }),
     body: vandium.types.object().keys({
-      oldPassword: vandium.types.string().required().error(new Error('Parameter oldPassword is required')),
+      oldPassword: vandium.types.string().required().error(Error('[422] Parameter oldPassword is required')),
       newPassword: vandium.types.string().required().min(8)
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}/)
-        .error(new Error('Parameter newPassword is required, must have at least 8 characters and contain at least one '
+        .error(Error('[422] Parameter newPassword is required, must have at least 8 characters and contain at least one '
           + 'lowercase letter, one uppercase letter, one number and one special character'))
     })
   }
@@ -234,14 +233,14 @@ module.exports.profileChange = vandium.createInstance({
 module.exports.signup = vandium.createInstance({
   validation: {
     body: vandium.types.object().keys({
-      name: vandium.types.string().required().error(new Error('Parameter name is required')),
-      email: vandium.types.email().required().error(new Error('Parameter email is required and should have format ' +
+      name: vandium.types.string().required().error(Error('[422] Parameter name is required')),
+      email: vandium.types.email().required().error(Error('[422] Parameter email is required and should have format ' +
         'of email address')),
       password: vandium.types.string().required().min(8)
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}/)
-        .error(new Error('Parameter password is required, must have at least 8 characters and contain at least one '
+        .error(Error('[422] Parameter password is required, must have at least 8 characters and contain at least one '
           + 'lowercase letter, one uppercase letter, one number and one special character')),
-      vendor: vandium.types.string().required().error(new Error('Parameter vendor is required'))
+      vendor: vandium.types.string().required().error(Error('[422] Parameter vendor is required'))
     })
   }
 }).handler(function(event, context, callback) {
@@ -259,7 +258,7 @@ module.exports.signup = vandium.createInstance({
         if (err) return callbackLocal(err);
 
         if (result.length === 0) {
-          return callbackLocal(Error('Vendor ' + id + ' does not exist'));
+          return callbackLocal(Error('[400] Vendor ' + id + ' does not exist'));
         }
 
         return callbackLocal();

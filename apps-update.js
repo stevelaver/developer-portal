@@ -1,5 +1,4 @@
 'use strict';
-
 var async = require('async');
 var db = require('lib/db');
 var identity = require('lib/identity');
@@ -16,33 +15,33 @@ module.exports.handler = vandium.createInstance({
       appId: vandium.types.string().required()
     },
     body: vandium.types.object().keys({
-      name: vandium.types.string().error(Error('Parameter name must be string')),
+      name: vandium.types.string().error(Error('[422] Parameter name must be string')),
       type: vandium.types.string().valid('reader', 'application', 'writer')
-        .error(Error('Parameter type must be one of: reader, writer, application')),
-      imageUrl: vandium.types.string().uri().error(Error('Parameter imageUrl must be url')),
-      imageTag: vandium.types.string().error(Error('Parameter imageTag must be string')),
-      shortDescription: vandium.types.string().error(Error('Parameter shortDescription must be string')),
-      longDescription: vandium.types.string().error(Error('Parameter longDescription must be string')),
-      licenseUrl: vandium.types.string().uri().error(Error('Parameter licenseUrl must be url')),
-      documentationUrl: vandium.types.string().uri().error(Error('Parameter documentationUrl must be url')),
-      requiredMemory: vandium.types.string().error(Error('Parameter requiredMemory must be string')),
+        .error(Error('[422] Parameter type must be one of: reader, writer, application')),
+      imageUrl: vandium.types.string().uri().error(Error('[422] Parameter imageUrl must be url')),
+      imageTag: vandium.types.string().error(Error('[422] Parameter imageTag must be string')),
+      shortDescription: vandium.types.string().error(Error('[422] Parameter shortDescription must be string')),
+      longDescription: vandium.types.string().error(Error('[422] Parameter longDescription must be string')),
+      licenseUrl: vandium.types.string().uri().error(Error('[422] Parameter licenseUrl must be url')),
+      documentationUrl: vandium.types.string().uri().error(Error('[422] Parameter documentationUrl must be url')),
+      requiredMemory: vandium.types.string().error(Error('[422] Parameter requiredMemory must be string')),
       processTimeout: vandium.types.number().integer().min(1)
-        .error(Error('Parameter processTimeout must be integer bigger than one')),
-      encryption: vandium.types.boolean().error(Error('Parameter encryption must be boolean')),
-      defaultBucket: vandium.types.boolean().error(Error('Parameter defaultBucket must be boolean')),
+        .error(Error('[422] Parameter processTimeout must be integer bigger than one')),
+      encryption: vandium.types.boolean().error(Error('[422] Parameter encryption must be boolean')),
+      defaultBucket: vandium.types.boolean().error(Error('[422] Parameter defaultBucket must be boolean')),
       defaultBucketStage: vandium.types.string().valid('in', 'out')
-        .error(Error('Parameter defaultBucketStage must be one of: in, out')),
-      forwardToken: vandium.types.boolean().error(Error('Parameter forwardToken must be boolean')),
-      uiOptions: vandium.types.array().error(Error('Parameter uiOptions must be array')),
+        .error(Error('[422] Parameter defaultBucketStage must be one of: in, out')),
+      forwardToken: vandium.types.boolean().error(Error('[422] Parameter forwardToken must be boolean')),
+      uiOptions: vandium.types.array().error(Error('[422] Parameter uiOptions must be array')),
       testConfiguration: vandium.types.object(),
       configurationSchema: vandium.types.object(),
       networking: vandium.types.string().valid('dataIn', 'dataOut')
-        .error(Error('Parameter networking must be one of: dataIn, dataOut')),
-      actions: vandium.types.array().error(Error('Parameter actions must be array')),
-      fees: vandium.types.boolean().error(Error('Parameter fees must be boolean')),
-      limits: vandium.types.string().error(Error('Parameter limits must be string')),
+        .error(Error('[422] Parameter networking must be one of: dataIn, dataOut')),
+      actions: vandium.types.array().error(Error('[422] Parameter actions must be array')),
+      fees: vandium.types.boolean().error(Error('[422] Parameter fees must be boolean')),
+      limits: vandium.types.string().error(Error('[422] Parameter limits must be string')),
       logger: vandium.types.string().valid('standard', 'gelf')
-        .error(Error('Parameter logger must be one of: standard, gelf'))
+        .error(Error('[422] Parameter logger must be one of: standard, gelf'))
     })
   }
 }).handler(function(event, context, callback) {

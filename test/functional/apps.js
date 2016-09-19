@@ -114,7 +114,7 @@ describe('apps', function() {
         }, function(err, res, body) {
           body = JSON.parse(body);
           expect(err).to.be.null;
-          expect(body).to.have.lengthOf(2);
+          expect(body, JSON.stringify(body)).to.have.lengthOf(2);
           expect(body[0]).to.have.property('id');
           expect(body[0].id).to.be.oneOf([vendor+'.'+appName1, vendor+'.'+appName2]);
           expect(body[1]).to.have.property('id');

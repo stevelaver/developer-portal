@@ -1,5 +1,4 @@
 'use strict';
-
 var async = require('async');
 var aws = require('aws-sdk');
 var db = require('lib/db');
