@@ -133,7 +133,10 @@ module.exports.forgotConfirm = vandium.createInstance({
         'of email address')),
     }),
     body: vandium.types.object().keys({
-      password: vandium.types.string().required().error(Error('[422] Parameter password is required')),
+      password: vandium.types.string().required().min(8)
+        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
+        .error(Error('[422] Parameter newPassword is required, must have at least 8 characters and contain at least one '
+          + 'lowercase letter, one uppercase letter and one number')),
       code: vandium.types.string().required().error(Error('[422] Parameter code is required'))
     })
   }
@@ -173,6 +176,7 @@ module.exports.login = vandium.createInstance({
     }
   }, function(err, data) {
     if (err) {
+      err.message = '[401] ' + err.message;
       return callback(err);
     }
 
@@ -209,9 +213,9 @@ module.exports.profileChange = vandium.createInstance({
     body: vandium.types.object().keys({
       oldPassword: vandium.types.string().required().error(Error('[422] Parameter oldPassword is required')),
       newPassword: vandium.types.string().required().min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}/)
+        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
         .error(Error('[422] Parameter newPassword is required, must have at least 8 characters and contain at least one '
-          + 'lowercase letter, one uppercase letter, one number and one special character'))
+          + 'lowercase letter, one uppercase letter and one number'))
     })
   }
 }).handler(function(event, context, callback) {
@@ -236,9 +240,9 @@ module.exports.signup = vandium.createInstance({
       email: vandium.types.email().required().error(Error('[422] Parameter email is required and should have format ' +
         'of email address')),
       password: vandium.types.string().required().min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}/)
+        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
         .error(Error('[422] Parameter password is required, must have at least 8 characters and contain at least one '
-          + 'lowercase letter, one uppercase letter, one number and one special character')),
+          + 'lowercase letter, one uppercase letter and one number')),
       vendor: vandium.types.string().required().error(Error('[422] Parameter vendor is required'))
     })
   }
