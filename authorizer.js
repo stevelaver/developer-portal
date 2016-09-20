@@ -2,8 +2,7 @@
 var jwt = require('jsonwebtoken');
 var request = require('request'); 
 var jwkToPem = require('jwk-to-pem');
-
-require('dotenv').config();
+require('dotenv').config({silent: true});
 
 var userPoolId = process.env.COGNITO_POOL_ID;
 var region = process.env.REGION;

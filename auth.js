@@ -4,9 +4,8 @@ var aws = require('aws-sdk');
 var identity = require('lib/identity');
 var moment = require('moment');
 var mysql = require('mysql');
-const vandium = require('vandium');
-
-require('dotenv').config();
+var vandium = require('vandium');
+require('dotenv').config({silent: true});
 
 /**
  * Confirm

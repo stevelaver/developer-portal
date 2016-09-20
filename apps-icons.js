@@ -4,9 +4,8 @@ var aws = require('aws-sdk');
 var db = require('lib/db');
 var identity = require('lib/identity');
 var moment = require('moment');
-const vandium = require('vandium');
-
-require('dotenv').config();
+var vandium = require('vandium');
+require('dotenv').config({silent: true});
 
 module.exports.links = vandium.createInstance({
   validation: {

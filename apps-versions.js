@@ -2,9 +2,8 @@
 var async = require('async');
 var db = require('lib/db');
 var identity = require('lib/identity');
-const vandium = require('vandium');
-
-require('dotenv').config();
+var vandium = require('vandium');
+require('dotenv').config({silent: true});
 
 module.exports.list = vandium.createInstance({
   validation: {
