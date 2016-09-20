@@ -230,16 +230,19 @@ describe('apps', function() {
       },
       function(callback) {
         // Approve should succeed
-        request.post({
-          url: process.env.FUNC_API_BASE_URI + '/vendor/apps/' + appId1 + '/approve',
-          headers: {
-            Authorization: token
-          }
-        }, function(err, res, body) {
-          expect(err).to.be.null;
-          expect(body).to.be.equal('null');
-          callback();
-        });
+        // Wait few seconds if icon handling lambda has delay
+        setTimeout(function() {
+          request.post({
+            url: process.env.FUNC_API_BASE_URI + '/vendor/apps/' + appId1 + '/approve',
+            headers: {
+              Authorization: token
+            }
+          }, function(err, res, body) {
+            expect(err).to.be.null;
+            expect(body).to.be.equal('null');
+            callback();
+          });
+        }, 3000);
       },
       function(callback) {
         // Manual approval
@@ -308,8 +311,8 @@ describe('apps', function() {
   after(function(done) {
     async.waterfall([
       function(callback) {
-        rds.query('DELETE FROM apps WHERE vendor=?', vendor, function(err,res) {
-          callback();
+        rds.query('DELETE FROM apps WHERE vendor=?', vendor, function(err) {
+          callback(err);
         });
       },
       function(callback) {
