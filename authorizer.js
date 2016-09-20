@@ -48,17 +48,17 @@ function ValidateToken(pems, event, callback) {
   //Fail if the token is not jwt
   var decodedJwt = jwt.decode(token, {complete: true});
   if (!decodedJwt) {
-    return callback(Error("[401] Unauthorized"));
+    return callback(Error("Unauthorized"));
   }
 
   //Fail if token is not from your UserPool
   if (decodedJwt.payload.iss != iss) {
-    return callback(Error("[401] Unauthorized"));
+    return callback(Error("Unauthorized"));
   }
 
   //Reject the jwt if it's not an 'Access Token'
   if (decodedJwt.payload.token_use != 'access') {
-    return callback(Error("[401] Unauthorized"));
+    return callback(Error("Unauthorized"));
   }
 
   //Get the kid from the token and retrieve corresponding PEM
@@ -66,14 +66,14 @@ function ValidateToken(pems, event, callback) {
   var pem = pems[kid];
   if (!pem) {
     //Invalid access token
-    return callback(Error("[401] Unauthorized"));
+    return callback(Error("Unauthorized"));
   }
 
   //Verify the signature of the JWT token to ensure it's really coming from your User Pool
   jwt.verify(token, pem, { issuer: iss }, function(err, payload) {
     if(err) {
       console.log(err);
-      return callback(Error("[401] Unauthorized"));
+      return callback(Error("Unauthorized"));
     } else {
       //Valid token. Generate the API Gateway policy for the user
       //Always generate the policy on value of 'sub' claim and not for 'username' because username is reassignable
@@ -397,7 +397,7 @@ AuthPolicy.prototype = (function() {
     build: function() {
       if ((!this.allowMethods || this.allowMethods.length === 0) &&
           (!this.denyMethods || this.denyMethods.length === 0)) {
-        throw new Error("[401] No statements defined for the policy");
+        throw new Error("No statements defined for the policy");
       }
 
       var policy = {};

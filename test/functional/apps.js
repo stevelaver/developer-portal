@@ -304,6 +304,30 @@ describe('apps', function() {
           expect(body[0]).to.have.property('id');
           callback();
         });
+      },
+      function(callback) {
+        // Public app version
+        request.get({
+          url: process.env.FUNC_API_BASE_URI + '/apps/'+appId1+'/versions/1'
+        }, function(err, res, body) {
+          expect(err).to.be.null;
+          body = JSON.parse(body);
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
+          expect(body).to.have.property('id');
+          callback();
+        });
+      },
+      function(callback) {
+        // Public app list versions
+        request.get({
+          url: process.env.FUNC_API_BASE_URI + '/apps/'+appId1+'/versions'
+        }, function(err, res, body) {
+          expect(err).to.be.null;
+          body = JSON.parse(body);
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
+          expect(body).to.have.length.above(0);
+          callback();
+        });
       }
     ], done);
   });

@@ -216,6 +216,11 @@ functions:
           cors: true
           method: get
           path: "apps/{appId}"
+      -
+        http:
+          cors: true
+          method: get
+          path: "apps/{appId}/versions/{version}"
   publicList:
     handler: public.list
     events:
@@ -224,7 +229,14 @@ functions:
           cors: true
           method: get
           path: apps
-
+  publicVersions:
+    handler: public.versions
+    events:
+      -
+        http:
+          cors: true
+          method: get
+          path: "apps/{appId}/versions"
 
 #resources:
 #  Resources:
