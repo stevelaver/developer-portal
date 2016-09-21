@@ -523,9 +523,9 @@ Takes settings from chosen version and creates new version with it.
 
 
 
-## Public Apps API [/apps]
+## Public API [/apps]
 
-### List all published apps [GET /apps?offset=0&limit=100]
+### List published apps [GET /apps?offset=0&limit=100]
 
 + Parameters
     + offset (optional) - pagination offset
@@ -597,4 +597,38 @@ Takes settings from chosen version and creates new version with it.
                 "limits": null,
                 "logger": "standard",
                 "is_approved": true
+            }
+            
+### List vendors [GET /vendors?offset=0&limit=100]
+
++ Parameters
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 100
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola",
+                    "name": "Keboola",
+                    "address": "Křižíkova 488/115, Prague, CZ",
+                    "email": "support@keboola.com"
+                }
+            ]
+            
+### Get vendor detail [GET /vendors/{vendor}]
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "keboola",
+                "name": "Keboola",
+                "address": "Křižíkova 488/115, Prague, CZ",
+                "email": "support@keboola.com"
             }
