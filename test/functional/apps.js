@@ -242,7 +242,7 @@ describe('apps', function() {
             expect(body).to.be.equal('null');
             callback();
           });
-        }, 3000);
+        }, 5000);
       },
       function(callback) {
         // Manual approval

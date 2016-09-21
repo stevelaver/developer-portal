@@ -6,6 +6,8 @@ CREATE TABLE `vendors` (
   `name` varchar(255) NOT NULL,
   `address` varchar(255) NOT NULL,
   `email` varchar(128) NOT NULL,
+  `createdOn` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `isPublic` tinyint(1) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

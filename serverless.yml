@@ -237,6 +237,22 @@ functions:
           cors: true
           method: get
           path: "apps/{appId}/versions"
+  publicVendors:
+    handler: public.vendorsList
+    events:
+      -
+        http:
+          cors: true
+          method: get
+          path: "vendors"
+  publicVendor:
+    handler: public.vendorDetail
+    events:
+      -
+        http:
+          cors: true
+          method: get
+          path: "vendors/{vendor}"
 
 #resources:
 #  Resources:

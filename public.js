@@ -80,9 +80,6 @@ module.exports.list = vandium.createInstance({
 
 module.exports.versions = vandium.createInstance({
   validation: {
-    headers: vandium.types.object().keys({
-      authorizationToken: vandium.types.string().required()
-    }),
     path: {
       appId: vandium.types.string().required()
     },
@@ -117,6 +114,47 @@ module.exports.versions = vandium.createInstance({
       });
     }
   ], function(err, result) {
+    db.end();
+    return callback(err, result);
+  });
+});
+
+module.exports.vendorsList = vandium.createInstance({
+  validation: {
+    query: {
+      offset: vandium.types.number().integer().default(0).allow(''),
+      limit: vandium.types.number().integer().default(100).allow('')
+    }
+  }
+}).handler(function(event, context, callback) {
+  db.connect({
+    host: process.env.RDS_HOST,
+    user: process.env.RDS_USER,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DATABASE,
+    ssl: process.env.RDS_SSL
+  });
+  db.listVendors(event.query.offset, event.query.limit, function(err, result) {
+    db.end();
+    return callback(err, result);
+  });
+});
+
+module.exports.vendorDetail = vandium.createInstance({
+  validation: {
+    path: {
+      vendor: vandium.types.string().required()
+    }
+  }
+}).handler(function(event, context, callback) {
+  db.connect({
+    host: process.env.RDS_HOST,
+    user: process.env.RDS_USER,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DATABASE,
+    ssl: process.env.RDS_SSL
+  });
+  db.getVendor(event.path.vendor, function(err, result) {
     db.end();
     return callback(err, result);
   });
