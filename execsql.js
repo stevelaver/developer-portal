@@ -1,5 +1,5 @@
 var fs = require('fs');
-var _ = require('underscore');
+var _ = require('lodash');
 
 function exec(conn, sql, callback) {
   conn.query(sql, function (err, results) {

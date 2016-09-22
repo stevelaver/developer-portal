@@ -196,10 +196,8 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `excludeFromNewList`
     + testConfiguration (optional) - JSON configuration to test the application
     + configurationSchema (optional) - JSON schema describing the configuration
-    + networking (optional, enum[string]) - If the app downloads or uploads the client data to the Internet
-        + Members
-            + `dataIn` - eg. for readers
-            + `dataOut` - eg. for writers
+    + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
+    + emptyConfiguration (optional) - Default configuration
     + actions (optional, array) - List of supported actions
         + Default: `run`
     + fees (optional, boolean) - Using the component in KBC implies additional fees
@@ -210,6 +208,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `standard`
             + `gelf`
         + Default: `standard`
+    + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
 
 + Request (application/json)
 
@@ -263,10 +262,8 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `excludeFromNewList`
     + testConfiguration (optional) - JSON configuration to test the application
     + configurationSchema (optional) - JSON schema describing the configuration
-    + networking (optional, enum[string]) - If the app downloads or uploads the client data to the Internet
-        + Members
-            + `dataIn` - eg. for readers
-            + `dataOut` - eg. for writers
+    + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
+    + emptyConfiguration (optional) - Default configuration
     + actions (optional, array) - List of supported actions
         + Default: `run`
     + fees (optional, boolean) - Using the component in KBC implies additional fees
@@ -277,6 +274,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `standard`
             + `gelf`
         + Default: `standard`
+    + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
 
 + Request (application/json)
 
@@ -379,11 +377,13 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                 ],
                 "testConfiguration": null,
                 "configurationSchema": null,
-                "networking": "dataIn",
+                "configurationDescription": null,
+                "emptyConfiguration": null,
                 "actions": [],
                 "fees": false,
                 "limits": null,
                 "logger": "standard",
+                "loggerConfiguration": null,
                 "isApproved": true,
                 "createdOn": "2016-09-09T09:26:15.000Z",
                 "createdBy": "keboola.dev.portal.test@gmail.com"
@@ -454,11 +454,13 @@ Request will be sent only if the app has icons uploaded and all these attributes
                     "uiOptions": [],
                     "testConfiguration": null,
                     "configurationSchema": null,
-                    "networking": "dataIn",
+                    "configurationDescription": null,
+                    "emptyConfiguration": null,
                     "actions": [],
                     "fees": false,
                     "limits": null,
-                    "logger": "standard"
+                    "logger": "standard",
+                    "loggerConfiguration": null
                 }
             ]
 
@@ -498,11 +500,13 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 "uiOptions": [],
                 "testConfiguration": null,
                 "configurationSchema": null,
-                "networking": "dataIn",
+                "configurationDescription": null,
+                "emptyConfiguration": null,
                 "actions": [],
                 "fees": false,
                 "limits": null,
-                "logger": "standard"
+                "logger": "standard",
+                "loggerConfiguration": null
             }
 
 ### Rollback version [POST /vendor/apps/{appId}/versions/{version}/rollback]
@@ -591,12 +595,14 @@ Takes settings from chosen version and creates new version with it.
                 ],
                 "testConfiguration": null,
                 "configurationSchema": null,
-                "networking": "dataIn",
+                "configurationDescription": null,
+                "emptyConfiguration": null,
                 "actions": [],
                 "fees": false,
                 "limits": null,
                 "logger": "standard",
-                "is_approved": true
+                "loggerConfiguration": null,
+                "isApproved": true
             }
             
 ### List vendors [GET /vendors?offset=0&limit=100]

@@ -34,13 +34,14 @@ module.exports.handler = vandium.createInstance({
       uiOptions: vandium.types.array().error(Error('[422] Parameter uiOptions must be array')),
       testConfiguration: vandium.types.object(),
       configurationSchema: vandium.types.object(),
-      networking: vandium.types.string().valid('dataIn', 'dataOut')
-        .error(Error('[422] Parameter networking must be one of: dataIn, dataOut')),
+      configurationDescription: vandium.types.string(),
+      emptyConfiguration: vandium.types.object(),
       actions: vandium.types.array().error(Error('[422] Parameter actions must be array')),
       fees: vandium.types.boolean().error(Error('[422] Parameter fees must be boolean')),
       limits: vandium.types.string().error(Error('[422] Parameter limits must be string')),
       logger: vandium.types.string().valid('standard', 'gelf')
-        .error(Error('[422] Parameter logger must be one of: standard, gelf'))
+        .error(Error('[422] Parameter logger must be one of: standard, gelf')),
+      loggerConfiguration: vandium.types.object()
     })
   }
 }).handler(function(event, context, callback) {

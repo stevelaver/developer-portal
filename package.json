@@ -14,10 +14,10 @@
     "dotenv": "^2.0.0",
     "jsonwebtoken": "7.0.0",
     "jwk-to-pem": "^1.2.5",
+    "lodash": "^4.16.1",
     "moment": "^2.15.0",
     "mysql": "^2.11.1",
     "request": "^2.74.0",
-    "underscore": "^1.8.3",
     "vandium": "^3.1.0"
   },
   "devDependencies": {
