@@ -48,15 +48,26 @@ module.exports.handler = vandium.createInstance({
       });
     },
     function(app, callbackLocal) {
-      var required = ['imageUrl', 'imageTag', 'shortDescription', 'longDescription', 'licenseUrl', 'documentationUrl'];
-      var empty = [];
-      required.forEach(function(item) {
-        if (!app[item]) {
-          empty.push(item);
-        }
-      });
-      if (empty.length) {
-        return callbackLocal(Error('[400] App properties ' + empty.join(', ') + ' cannot be empty'));
+      if (!app.repoType) {
+        return callbackLocal(Error('[400] App property repository.type cannot be empty'));
+      }
+      if (!app.repoUri) {
+        return callbackLocal(Error('[400] App property repository.uri cannot be empty'));
+      }
+      if (!app.repoTag) {
+        return callbackLocal(Error('[400] App property repository.tag cannot be empty'));
+      }
+      if (!app.shortDescription) {
+        return callbackLocal(Error('[400] App property shortDescription cannot be empty'));
+      }
+      if (!app.longDescription) {
+        return callbackLocal(Error('[400] App property longDescription cannot be empty'));
+      }
+      if (!app.licenseUrl) {
+        return callbackLocal(Error('[400] App property licenseUrl cannot be empty'));
+      }
+      if (!app.documentationUrl) {
+        return callbackLocal(Error('[400] App property documentationUrl cannot be empty'));
       }
       if (!app.icon32) {
         return callbackLocal(Error('[400] App icon of size 32px is missing, upload it first.'));

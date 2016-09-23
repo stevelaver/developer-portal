@@ -169,8 +169,17 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
     + id (required) - Identifier of the app, allowed characters are unaccented letters, numbers, dashes and underscores
     + name (required) - Do not use the word `extractor` or `writer` in your app
     + type (required) - One of: `reader`, `application`, `writer`
-    + imageUrl (optional) - Currently supported are DockerHub (public and private) and Quay (public, private)
-    + imageTag (optional) - Tag of the image in the Docker repository; typically `latest` or `master` or `1.0.0`
+    + repository (optional, object)
+        + type (enum[string])
+            + Members
+                + `dockerhub`
+                + `dockerhub-private`
+                + `quay`
+                + `quay-private`
+        + username - for private repositories
+        + password - for private repositories
+        + uri - Image uri in the repository, e.g. `keboola/adwords-extractor`
+        + tag (optional) - Tag of the image in the Docker repository; typically `latest` or `master` or `1.0.0`
     + shortDescription (optional) - One sentence describing your app or the app you are integrating
     + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
     + licenseUrl (optional) - Can be included in your public source repository
@@ -235,8 +244,17 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 + Attributes
     + name (required) - Do not use the word `extractor` or `writer` in your app
     + type (required) - One of: `reader`, `application`, `writer`
-    + imageUrl (optional) - Currently supported are DockerHub (public and private) and Quay (public, private)
-    + imageTag (optional) - Tag of the image in the Docker repository; typically `latest` or `master` or `1.0.0`
+    + repository (optional, object)
+        + type (enum[string])
+            + Members
+                + `dockerhub`
+                + `dockerhub-private`
+                + `quay`
+                + `quay-private`
+        + username - for private repositories
+        + password - for private repositories
+        + uri - Image uri in the repository, e.g. `keboola/adwords-extractor`
+        + tag (optional) - Tag of the image in the Docker repository; typically `latest` or `master` or `1.0.0`
     + shortDescription (optional) - One sentence describing your app or the app you are integrating
     + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
     + licenseUrl (optional) - Can be included in your public source repository
@@ -355,8 +373,11 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                 "name": "Google Adwords Reports",
                 "version": 2,
                 "type": "reader",
-                "imageUrl": "https://quay.io/repository/keboola/adwords-extractor",
-                "imageTag": "latest",
+                "repository": {
+                    "type": "quay",
+                    "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                    "tag": "latest",
+                },
                 "shortDescription": "Advertise with Google Ads",
                 "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
                 "icon": {
@@ -395,8 +416,7 @@ API call generates pre-signed urls to S3 where you can upload app icons.
 Request will be sent only if the app has icons uploaded and all these attributes set:
 - name
 - type
-- imageUrl
-- imageTag
+- repository
 - shortDescription
 - longDescription
 - licenseUrl
@@ -439,8 +459,11 @@ Request will be sent only if the app has icons uploaded and all these attributes
                     "version": "1.0.2",
                     "name": "AdWords Extractor",
                     "type": "reader",
-                    "imageUrl": null,
-                    "imageTag": null,
+                    "repository": {
+                        "type": "quay",
+                        "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                        "tag": "latest",
+                    },
                     "shortDescription": null,
                     "longDescription": null,
                     "licenseUrl": null,
@@ -485,8 +508,11 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 "version": "1.0.2",
                 "name": "AdWords Extractor",
                 "type": "reader",
-                "imageUrl": null,
-                "imageTag": null,
+                "repository": {
+                    "type": "quay",
+                    "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                    "tag": "latest",
+                },
                 "shortDescription": null,
                 "longDescription": null,
                 "licenseUrl": null,
@@ -573,8 +599,11 @@ Takes settings from chosen version and creates new version with it.
                 },
                 "current_version": "1.0.2",
                 "type": "reader",
-                "imageUrl": "https://quay.io/repository/keboola/adwords-extractor",
-                "imageTag": "latest",
+                "repository": {
+                    "type": "quay",
+                    "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                    "tag": "latest",
+                },
                 "shortDescription": "Advertise with Google Ads",
                 "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
                 "icon": {

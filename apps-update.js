@@ -17,8 +17,13 @@ module.exports.handler = vandium.createInstance({
       name: vandium.types.string().error(Error('[422] Parameter name must be string')),
       type: vandium.types.string().valid('reader', 'application', 'writer')
         .error(Error('[422] Parameter type must be one of: reader, writer, application')),
-      imageUrl: vandium.types.string().uri().error(Error('[422] Parameter imageUrl must be url')),
-      imageTag: vandium.types.string().error(Error('[422] Parameter imageTag must be string')),
+      repository: vandium.types.object().keys({
+        type: vandium.types.string().valid('dockerhub', 'quay').error(Error("[422] Parameter repository.type must be one of: dockerhub, quay")),
+        username: vandium.types.string().error(Error("[422] Parameter repository.username must be string")),
+        password: vandium.types.string().error(Error("[422] Parameter repository.password must be string")),
+        uri: vandium.types.string().error(Error("[422] Parameter repository.uri must be uri")),
+        tag: vandium.types.string().error(Error("[422] Parameter repository.tag must be string")),
+      }),
       shortDescription: vandium.types.string().error(Error('[422] Parameter shortDescription must be string')),
       longDescription: vandium.types.string().error(Error('[422] Parameter longDescription must be string')),
       licenseUrl: vandium.types.string().uri().error(Error('[422] Parameter licenseUrl must be url')),

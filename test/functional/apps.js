@@ -156,8 +156,11 @@ describe('apps', function() {
           },
           json: true,
           body: {
-            imageUrl: 'https://quay.io/repository/keboola/test-extractor',
-            imageTag: 'latest',
+            repository: {
+              type: 'quaio',
+              uri: 'keboola/test-extractor',
+              tag: 'latest'
+            },
             shortDescription: 'Get your test data',
             longDescription: 'Get your test data with our Test Extractor',
             licenseUrl: 'https://github.com/keboola/test-extractor/blob/master/LICENSE',
@@ -257,7 +260,7 @@ describe('apps', function() {
         }, function(err, res, body) {
           body = JSON.parse(body);
           expect(err).to.be.null;
-          expect(body).to.not.have.property('errorMessage');
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
           callback();
         });
