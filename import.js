@@ -59,10 +59,12 @@ var downloadIcons = function() {
   });
 };
 
+var flags = [];
+var types = [];
+
 var getData = function(callbackMain) {
   fs.readFile(args[0], 'utf8', (err, data) => {
     var result = [];
-    var flags = [];
     if (err) throw err;
     data = JSON.parse(data);
     async.each(data.apis, function(app, callback) {
@@ -153,6 +155,10 @@ var getData = function(callbackMain) {
         };
       }
 
+      if (!_.includes(types, app.type)) {
+        types.push(app.type);
+      }
+
       flags = _.union(flags, app.flags);
       var resApp = {
         id: app.id,
@@ -162,7 +168,7 @@ var getData = function(callbackMain) {
         createdBy: 'support@keboola.com',
         version: 1,
         name: app.name,
-        type: (app.type == 'extractor') ? 'extractor' : ((app.type == 'writer') ? 'writer' : 'application'),
+        type: app.type,
         repository: {
           type: app.repoType,
           uri: _.get(app, 'data.definition.uri', null),
@@ -234,8 +240,8 @@ var saveData = function(data, callbackMain) {
 getData(function(err, res) {
   if (err) {
     throw err;
-  }
-  saveData(res, function() {
+  }console.log(types);
+  //saveData(res, function() {
     process.exit();
-  });
+  //});
 });

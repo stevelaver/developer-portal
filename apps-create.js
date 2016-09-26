@@ -15,8 +15,8 @@ module.exports.handler = vandium.createInstance({
         .error(Error("[422] Parameter id is required, must have between 3 and 50 characters and contain only letters, "
           + "numbers, dashes and underscores")),
       name: vandium.types.string().max(128).required().error(Error("[422] Parameter name is required and may have 128 characters at most")),
-      type: vandium.types.string().valid('extractor', 'application', 'writer').required()
-        .error(Error("[422] Parameter type is required and must be one of: extractor, writer, application")),
+      type: vandium.types.string().valid('extractor', 'application', 'writer', 'other', 'transformation', 'processor').required()
+        .error(Error("[422] Parameter type is required and must be one of: extractor, application, writer, other, transformation, processor")),
       repository: vandium.types.object().keys({
         type: vandium.types.string().valid('dockerhub', 'quay').error(Error("[422] Parameter repository.type must be one of: dockerhub, quay")),
         uri: vandium.types.string().max(128).error(Error("[422] Parameter repository.uri must be uri and may have 128 characters at most")),
