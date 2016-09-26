@@ -133,6 +133,8 @@ functions:
           method: post
           path: "vendor/apps/{appId}/versions/{version}/rollback"
 
+  authEmailTrigger:
+    handler: auth.emailTrigger
   authConfirm:
     handler: auth.confirm
     events:

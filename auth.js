@@ -296,3 +296,26 @@ module.exports.signup = vandium.createInstance({
     return callback(err);
   });
 });
+
+module.exports.emailTrigger = function(event, context, callback) {
+  console.log('Event', event);
+  switch(event.triggerSource) {
+    case 'CustomMessage_SignUp':
+      event.response.emailSubject = 'Welcome to Keboola Developer Portal';
+      event.response.emailMessage = 'Thank you for signing up. Confirm your email using this link: ' +
+        'https://m8pbt5jpi8.execute-api.us-east-1.amazonaws.com/dev/auth/confirm/' + event.userName + '/' +
+        event.request.codeParameter;
+      break;
+    case 'CustomMessage_ForgotPassword':
+      event.response.emailSubject = "Forgot Password to Keboola Developer Portal";
+      event.response.emailMessage = "Your confirmation code is " + event.request.codeParameter;
+      break;
+    case 'CustomMessage_ResendCode':
+      event.response.emailSubject = "Confirmation code for Keboola Developer Portal";
+      event.response.emailMessage = 'Confirm your email using this link: ' +
+        'https://m8pbt5jpi8.execute-api.us-east-1.amazonaws.com/dev/auth/confirm/' + event.userName + '/' +
+        event.request.codeParameter;
+      break;
+  }
+  callback(null, event);
+};
