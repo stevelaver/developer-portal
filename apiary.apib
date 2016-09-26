@@ -168,7 +168,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 + Attributes
     + id (required) - Identifier of the app, allowed characters are unaccented letters, numbers, dashes and underscores
     + name (required) - Do not use the word `extractor` or `writer` in your app
-    + type (required) - One of: `reader`, `application`, `writer`
+    + type (required) - One of: `extractor`, `application`, `writer`
     + repository (optional, object)
         + type (enum[string])
             + Members
@@ -243,7 +243,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 
 + Attributes
     + name (required) - Do not use the word `extractor` or `writer` in your app
-    + type (required) - One of: `reader`, `application`, `writer`
+    + type (required) - One of: `extractor`, `application`, `writer`
     + repository (optional, object)
         + type (enum[string])
             + Members
@@ -352,7 +352,7 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                     "id": "keboola.ex-adwords",
                     "version": 2,
                     "name": "Google Adwords Reports",
-                    "type": "reader",
+                    "type": "extractor",
                     "createdOn": "2016-09-09T09:26:15.000Z",
                     "createdBy": "keboola.dev.portal.test@gmail.com",
                     "isApproved": true
@@ -372,7 +372,7 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                 "id": "keboola.ex-adwords",
                 "name": "Google Adwords Reports",
                 "version": 2,
-                "type": "reader",
+                "type": "extractor",
                 "repository": {
                     "type": "quay",
                     "uri": "https://quay.io/repository/keboola/adwords-extractor",
@@ -458,7 +458,7 @@ Request will be sent only if the app has icons uploaded and all these attributes
                     "id": "keboola.ex-adwords",
                     "version": "1.0.2",
                     "name": "AdWords Extractor",
-                    "type": "reader",
+                    "type": "extractor",
                     "repository": {
                         "type": "quay",
                         "uri": "https://quay.io/repository/keboola/adwords-extractor",
@@ -507,7 +507,7 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 "id": "keboola.ex-adwords",
                 "version": "1.0.2",
                 "name": "AdWords Extractor",
-                "type": "reader",
+                "type": "extractor",
                 "repository": {
                     "type": "quay",
                     "uri": "https://quay.io/repository/keboola/adwords-extractor",
@@ -572,7 +572,7 @@ Takes settings from chosen version and creates new version with it.
                     "id": "keboola.ex-adwords",
                     "vendor": "keboola",
                     "name": "Google Adwords Reports",
-                    "type": "reader",
+                    "type": "extractor",
                     "shortDescription": "Advertise with Google Ads",
                     "version": "1.0.2",
                     "icon": {
@@ -598,7 +598,7 @@ Takes settings from chosen version and creates new version with it.
                     "email": "support@keboola.com"
                 },
                 "current_version": "1.0.2",
-                "type": "reader",
+                "type": "extractor",
                 "repository": {
                     "type": "quay",
                     "uri": "https://quay.io/repository/keboola/adwords-extractor",

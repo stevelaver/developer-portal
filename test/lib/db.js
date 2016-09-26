@@ -222,7 +222,7 @@ describe('db', function() {
           database: process.env.TEST_RDS_DATABASE,
           ssl: process.env.TEST_RDS_SSL
         });
-        db.insertApp({id: appId, vendor: vendor, name: 'test', type: 'reader'}, function() {
+        db.insertApp({id: appId, vendor: vendor, name: 'test', type: 'extractor'}, function() {
           rds.query('SELECT * FROM `apps` WHERE id=?', appId, function (err, res) {
             expect(res).to.have.length(1);
             rds.query('SELECT * FROM `appVersions` WHERE id=?', appId, function (err, res) {
@@ -250,7 +250,7 @@ describe('db', function() {
             database: process.env.TEST_RDS_DATABASE,
             ssl: process.env.TEST_RDS_SSL
           });
-          db.insertApp({id: appId, vendor: vendor, name: 'test', type: 'reader'}, function() {
+          db.insertApp({id: appId, vendor: vendor, name: 'test', type: 'extractor'}, function() {
             expect(function() {
               rds.query('SELECT * FROM `apps` WHERE id=?', appId, function() {});
             }).to.throw(function() {
@@ -409,13 +409,13 @@ describe('db', function() {
     before(function(done) {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="reader";', [appId, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId, vendor], function(err) {
           if (err) throw err;
           rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2, function(err) {
             if (err) throw err;
-            rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="reader";', ['ex-' + Date.now(), vendor2], function(err) {
+            rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', ['ex-' + Date.now(), vendor2], function(err) {
               if (err) throw err;
-              rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="reader";', [appId+'1', vendor], function(err) {
+              rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId+'1', vendor], function(err) {
                 if (err) throw err;
                 db.connect({
                   host: process.env.TEST_RDS_HOST,
@@ -458,7 +458,7 @@ describe('db', function() {
     before(function(done) {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="reader";', [appId, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId, vendor], function(err) {
           if (err) throw err;
           rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'], function(err) {
             if (err) throw err;
@@ -507,7 +507,7 @@ describe('db', function() {
     before(function(done) {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="reader", isApproved=1;', [appId, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor", isApproved=1;', [appId, vendor], function(err) {
           if (err) throw err;
           rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'], function(err) {
             if (err) throw err;
@@ -550,7 +550,7 @@ describe('db', function() {
 
     it('do not show unpublished app', function(done) {
       var appId2 = 'app2' + Date.now();
-      rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="reader", isApproved=0;', [appId2, vendor], function(err) {
+      rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor", isApproved=0;', [appId2, vendor], function(err) {
         if (err) throw err;
         db.getPublishedApp(appId2, null, function(err) {
           expect(err).to.not.be.null;
@@ -568,11 +568,11 @@ describe('db', function() {
     before(function(done) {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="reader", isApproved=1;', [appId1, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId1, vendor], function(err) {
           if (err) throw err;
           rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId1, 'test'], function(err) {
             if (err) throw err;
-            rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="reader", isApproved=1;', [appId2, vendor], function(err) {
+            rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId2, vendor], function(err) {
               if (err) throw err;
               rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId2, 'test'], function(err) {
                 if (err) throw err;
@@ -615,7 +615,7 @@ describe('db', function() {
     before(function(done) {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="reader", isApproved=1;', [appId, vendor], function(err) {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId, vendor], function(err) {
           if (err) throw err;
           rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], function(err) {
             if (err) throw err;

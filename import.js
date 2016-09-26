@@ -59,7 +59,7 @@ var downloadIcons = function() {
   });
 };
 
-var saveData = function(callbackMain) {
+var getData = function(callbackMain) {
   fs.readFile(args[0], 'utf8', (err, data) => {
     var result = [];
     var flags = [];
@@ -111,7 +111,7 @@ var saveData = function(callbackMain) {
           app.vendor = '-unknown-';
         }
       } else {
-        if (_.startsWith(app.id, 'keboola.')) {
+        if (_.startsWith(app.id, 'keboola.') || _.startsWith(app.id, 'ex-') || _.startsWith(app.id, 'wr-') || _.startsWith(app.id, 'ag-')) {
           app.vendor = 'keboola';
         } else {
           app.vendor = '-unknown-';
@@ -122,22 +122,44 @@ var saveData = function(callbackMain) {
         app.flags.push('legacyAngularUI');
       }
 
+      if (_.has(app, 'data.definition.type')) {
+        if (_.startsWith(app.data.definition.type, 'quay')) {
+          app.repoType = 'quay';
+        } else if (_.startsWith(app.data.definition.type, 'dockerhub')) {
+          app.repoType = 'dockerhub';
+        } else if (_.startsWith(app.data.definition.type, 'builder')) {
+          app.repoType = 'builder';
+        } else {
+          app.repoType = null;
+        }
+      }
+
+      app.repoOptions = null;
+      if (app.repoType=='builder') {
+        app.repoOptions = _.get(app, 'data.definition.build_options');
+      }
+      if (_.has(app, 'data.definition.repository.username') && _.has(app, 'data.definition.repository.#password')) {
+        app.repoOptions = {
+          username: app.data.definition.repository.username,
+          '#password': app.data.definition.repository['#password']
+        };
+      }
+
       flags = _.union(flags, app.flags);
       var resApp = {
         id: app.id,
         vendor: app.vendor,
         isApproved: 1,
+        isVisible: !_.includes(app.flags, 'excludeFromNewList'),
         createdBy: 'support@keboola.com',
         version: 1,
         name: app.name,
-        type: (app.type == 'extractor') ? 'reader' : ((app.type == 'writer') ? 'writer' : 'application'),
+        type: (app.type == 'extractor') ? 'extractor' : ((app.type == 'writer') ? 'writer' : 'application'),
         repository: {
-          type: _.has(app, 'data.definition.type') ? app.data.definition.type : null,
-          username: _.has(app, 'data.definition.repository.username') ? app.data.definition.repository.username : null,
-          password: _.has(app, 'data.definition.repository.#password')
-            ? _.get(app, 'data.definition.repository.#password') : _.get(app, 'data.definition.repository.password', null),
+          type: app.repoType,
           uri: _.get(app, 'data.definition.uri', null),
           tag: _.get(app, 'data.definition.tag', null),
+          options: app.repoOptions
         },
         shortDescription: app.description,
         longDescription: app.longDescription,
@@ -149,7 +171,7 @@ var saveData = function(callbackMain) {
         defaultBucket: _.get(app, 'data.default_bucket', false),
         defaultBucketStage: _.get(app, 'data.default_bucket_stage', null),
         forwardToken: _.get(app, 'data.forward_token', false),
-        uiOptions: _.pull(app.flags, '3rdParty', 'encrypt', 'appInfo.fee'),
+        uiOptions: _.pull(app.flags, '3rdParty', 'encrypt', 'appInfo.fee', 'excludeFromNewList'),
         testConfiguration: {},
         configurationSchema: app.configurationSchema,
         configurationDescription: app.configurationDescription,
@@ -164,30 +186,48 @@ var saveData = function(callbackMain) {
         legacyUri: (app.uri != 'https://syrup.keboola.com/docker/' + app.id) ? app.uri : null
       };
       result.push(resApp);
-      var dbApp = db.formatAppInput(resApp);
-      rds.query('INSERT IGNORE INTO apps SET ?', dbApp, function(err, res) {
-        if (err) {
-          console.log(resApp);
-          throw(err);
-        }
-        delete dbApp.vendor;
-        delete dbApp.isApproved;
-        rds.query('INSERT IGNORE INTO appVersions SET ?', dbApp, function(err, res) {
+      callback();
+    }, function(err) {
+      callbackMain(err, result);
+    });
+  });
+};
+
+var saveData = function(data, callbackMain) {
+  async.parallel([
+    function(cb) {
+      rds.query('SET FOREIGN_KEY_CHECKS = 0;TRUNCATE TABLE appVersions;TRUNCATE TABLE apps;', function(err, res) {
+        cb(err);
+      });
+    },
+    function(cb) {
+      async.each(data, function(resApp, callback) {
+        var dbApp = db.formatAppInput(resApp);
+        rds.query('INSERT IGNORE INTO apps SET ?', dbApp, function(err, res) {
           if (err) {
             console.log(resApp);
             throw(err);
           }
-          console.log(app.id);
-          callback();
+          delete dbApp.vendor;
+          delete dbApp.isApproved;
+          rds.query('INSERT IGNORE INTO appVersions SET ?', dbApp, function(err, res) {
+            if (err) {
+              console.log(resApp);
+              throw(err);
+            }
+            callback();
+          });
         });
-      });
-    }, callbackMain);
-  });
+      }, cb);
+    }
+  ], callbackMain);
 };
 
-saveData(function(err, res) {
+getData(function(err, res) {
   if (err) {
     throw err;
   }
-  process.exit();
+  saveData(res, function() {
+    process.exit();
+  });
 });

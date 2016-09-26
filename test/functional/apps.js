@@ -62,7 +62,7 @@ describe('apps', function() {
           body: {
             id: appName1,
             name: appName1,
-            type: 'reader'
+            type: 'extractor'
           }
         }, function(err, res, body) {
           expect(err).to.be.null;
@@ -81,7 +81,7 @@ describe('apps', function() {
           body: {
             id: appName2,
             name: appName2,
-            type: 'reader'
+            type: 'extractor'
           }
         }, function(err, res, body) {
           expect(err).to.be.null;
