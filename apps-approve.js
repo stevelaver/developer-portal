@@ -48,13 +48,13 @@ module.exports.handler = vandium.createInstance({
       });
     },
     function(app, callbackLocal) {
-      if (!app.repoType) {
+      if (!app.repository.type) {
         return callbackLocal(Error('[400] App property repository.type cannot be empty'));
       }
-      if (!app.repoUri) {
+      if (!app.repository.uri) {
         return callbackLocal(Error('[400] App property repository.uri cannot be empty'));
       }
-      if (!app.repoTag) {
+      if (!app.repository.tag) {
         return callbackLocal(Error('[400] App property repository.tag cannot be empty'));
       }
       if (!app.shortDescription) {
