@@ -14,20 +14,20 @@ module.exports.handler = vandium.createInstance({
       id: vandium.types.string().min(3).max(50).regex(/^[a-zA-Z0-9-_]+$/).required()
         .error(Error("[422] Parameter id is required, must have between 3 and 50 characters and contain only letters, "
           + "numbers, dashes and underscores")),
-      name: vandium.types.string().required().error(Error("[422] Parameter name is required")),
+      name: vandium.types.string().max(128).required().error(Error("[422] Parameter name is required and may have 128 characters at most")),
       type: vandium.types.string().valid('reader', 'application', 'writer').required()
         .error(Error("[422] Parameter type is required and must be one of: reader, writer, application")),
       repository: vandium.types.object().keys({
         type: vandium.types.string().valid('dockerhub', 'quay').error(Error("[422] Parameter repository.type must be one of: dockerhub, quay")),
-        username: vandium.types.string().error(Error("[422] Parameter repository.username must be string")),
-        password: vandium.types.string().error(Error("[422] Parameter repository.password must be string")),
-        uri: vandium.types.string().error(Error("[422] Parameter repository.uri must be uri")),
-        tag: vandium.types.string().error(Error("[422] Parameter repository.tag must be string")),
+        username: vandium.types.string().max(128).error(Error("[422] Parameter repository.username must be string and may have 128 characters at most")),
+        password: vandium.types.string().max(128).error(Error("[422] Parameter repository.password must be string and may have 128 characters at most")),
+        uri: vandium.types.string().max(128).error(Error("[422] Parameter repository.uri must be uri and may have 128 characters at most")),
+        tag: vandium.types.string().max(20).error(Error("[422] Parameter repository.tag must be string and may have 20 characters at most")),
       }),
       shortDescription: vandium.types.string().error(Error("[422] Parameter shortDescription must be string")),
       longDescription: vandium.types.string().error(Error("[422] Parameter longDescription must be string")),
-      licenseUrl: vandium.types.string().uri().error(Error("[422] Parameter licenseUrl must be url")),
-      documentationUrl: vandium.types.string().uri().error(Error("[422] Parameter documentationUrl must be url")),
+      licenseUrl: vandium.types.string().max(255).uri().error(Error("[422] Parameter licenseUrl must be url and may have 255 characters at most")),
+      documentationUrl: vandium.types.max(255).string().uri().error(Error("[422] Parameter documentationUrl must be url and may have 255 characters at most")),
       requiredMemory: vandium.types.string().error(Error("[422] Parameter requiredMemory must be string")),
       processTimeout: vandium.types.number().integer().min(1)
         .error(Error("[422] Parameter processTimeout must be integer bigger than one")),
