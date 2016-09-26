@@ -4,6 +4,15 @@ var db = require('./lib/db');
 var vandium = require('vandium');
 require('dotenv').config();
 
+var addIcons = function(app) {
+  app.icon = {
+    32: app.icon32 ? process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32 : null,
+    64: app.icon64 ? process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64 : null
+  };
+  delete app.icon32;
+  delete app.icon64;
+};
+
 module.exports.detail = vandium.createInstance({
   validation: {
     path: {
@@ -25,12 +34,7 @@ module.exports.detail = vandium.createInstance({
         if (err) {
           return callbackLocal(err);
         }
-        app.icon = {
-          32: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32,
-          64: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64
-        };
-        delete app.icon32;
-        delete app.icon64;
+        addIcons(app);
         return callbackLocal(null, app);
       });
     }
@@ -61,14 +65,7 @@ module.exports.list = vandium.createInstance({
         if (err) {
           return callbackLocal(err);
         }
-        res.map(function(app) {
-          app.icon = {
-            32: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32,
-            64: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64
-          };
-          delete app.icon32;
-          delete app.icon64;
-        });
+        res.map(addIcons);
         return callbackLocal(null, res);
       });
     }
@@ -102,14 +99,7 @@ module.exports.versions = vandium.createInstance({
         if (err) {
           return callbackLocal(err);
         }
-        res.map(function(app) {
-          app.icon = {
-            32: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32,
-            64: process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64
-          };
-          delete app.icon32;
-          delete app.icon64;
-        });
+        res.map(addIcons);
         return callbackLocal(null, res);
       });
     }

@@ -111,8 +111,16 @@ var getData = function(callbackMain) {
           app.vendor = '-unknown-';
         }
       } else {
-        if (_.startsWith(app.id, 'keboola.') || _.startsWith(app.id, 'ex-') || _.startsWith(app.id, 'wr-') || _.startsWith(app.id, 'ag-')) {
+        if (_.startsWith(app.id, 'keboola.') || _.startsWith(app.id, 'ex-') || _.startsWith(app.id, 'wr-') || _.startsWith(app.id, 'ag-')
+          || _.startsWith(app.id, 'orchestrator') || _.startsWith(app.id, 'pigeon') || _.startsWith(app.id, 'transformation')
+          || _.startsWith(app.id, 'docker') || _.startsWith(app.id, 'dca') || _.startsWith(app.id, 'rcp')
+          || _.startsWith(app.id, 'kbc-') || _.startsWith(app.id, 'lg-') || _.startsWith(app.id, 'rt-')
+          || _.includes(['gooddata-writer', 'provisioning', 'queue', 'restbox', 'shiny', 'table-importer', 'tde-exporter'], app.id)) {
           app.vendor = 'keboola';
+        } else if (_.startsWith(app.id, 'geneea-')) {
+          app.vendor = 'geneea';
+        } else if (_.startsWith(app.id, 'vokurka.')) {
+          app.vendor = 'vokurka';
         } else {
           app.vendor = '-unknown-';
         }
