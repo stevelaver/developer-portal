@@ -26,7 +26,7 @@ module.exports.handler = vandium.createInstance({
       shortDescription: vandium.types.string().error(Error('[422] Parameter shortDescription must be string')),
       longDescription: vandium.types.string().error(Error('[422] Parameter longDescription must be string')),
       licenseUrl: vandium.types.string().max(255).uri().error(Error("[422] Parameter licenseUrl must be url and may have 255 characters at most")),
-      documentationUrl: vandium.types.max(255).string().uri().error(Error("[422] Parameter documentationUrl must be url and may have 255 characters at most")),
+      documentationUrl: vandium.types.string().max(255).uri().error(Error("[422] Parameter documentationUrl must be url and may have 255 characters at most")),
       requiredMemory: vandium.types.string().error(Error('[422] Parameter requiredMemory must be string')),
       processTimeout: vandium.types.number().integer().min(1)
         .error(Error('[422] Parameter processTimeout must be integer bigger than one')),
