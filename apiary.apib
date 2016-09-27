@@ -173,13 +173,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
         + type (enum[string])
             + Members
                 + `dockerhub`
-                + `dockerhub-private`
                 + `quay`
-                + `quay-private`
-        + username - for private repositories
-        + password - for private repositories
-        + uri - Image uri in the repository, e.g. `keboola/adwords-extractor`
-        + tag (optional) - Tag of the image in the Docker repository; typically `latest` or `master` or `1.0.0`
+                + `builder`
+        + uri (optional) - Image uri in the repository, e.g. `keboola/adwords-extractor`
+        + tag (optional) - Tag of the image in the repository; typically `latest` or `master` or `1.0.0`
+        + options (optional, object) - additional settings, e.g. may contain `username` and `password` for private repositories
     + shortDescription (optional) - One sentence describing your app or the app you are integrating
     + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
     + licenseUrl (optional) - Can be included in your public source repository
@@ -245,13 +243,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
         + type (enum[string])
             + Members
                 + `dockerhub`
-                + `dockerhub-private`
                 + `quay`
-                + `quay-private`
-        + username - for private repositories
-        + password - for private repositories
-        + uri - Image uri in the repository, e.g. `keboola/adwords-extractor`
-        + tag (optional) - Tag of the image in the Docker repository; typically `latest` or `master` or `1.0.0`
+                + `builder`
+        + uri (optional) - Image uri in the repository, e.g. `keboola/adwords-extractor`
+        + tag (optional) - Tag of the image in the repository; typically `latest` or `master` or `1.0.0`
+        + options (optional, object) - additional settings, e.g. may contain `username` and `password` for private repositories
     + shortDescription (optional) - One sentence describing your app or the app you are integrating
     + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
     + licenseUrl (optional) - Can be included in your public source repository
