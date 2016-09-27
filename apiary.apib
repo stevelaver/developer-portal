@@ -657,3 +657,32 @@ Takes settings from chosen version and creates new version with it.
                 "address": "Křižíkova 488/115, Prague, CZ",
                 "email": "support@keboola.com"
             }
+
+
+## Admin API [/admin]
+
+### List users [GET /admin/users]
+
++ Parameters
+    + filter (optional)
+        + Members
+            + enabled - shows only enabled (active) users
+            + disabled - shows only disabled (waiting for approval) users
+            + confirmed - shows only users who confirmed their account
+            + unconfirmed - shows only users who have not confirmed their account
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "email": "test@keboola.com",
+                    "name": "Test User",
+                    "vendor": "keboola",
+                    "createdOn": "2016-08-10T19:02:46.361Z",
+                    "isEnabled": true,
+                    "status": "CONFIRMED",
+                    "id": "aaa3S-eeee-aabb-b9ce-e0a9ef29be45"
+                }
+            ]

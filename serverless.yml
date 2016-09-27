@@ -45,7 +45,15 @@ provider:
         - "${file(./env.yml):COGNITO_POOL_ARN}"
 
 functions:
-
+  adminUsers:
+    handler: admin.users
+    events:
+      -
+        http:
+          #authorizer: authorizer
+          cors: true
+          method: get
+          path: "admin/users"
   appsApprove:
     handler: apps-approve.handler
     events:
