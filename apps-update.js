@@ -28,9 +28,6 @@ module.exports.handler = vandium.createInstance({
         longDescription: vandium.types.string().error(Error('[422] Parameter longDescription must be string')),
         licenseUrl: vandium.types.string().max(255).uri().error(Error("[422] Parameter licenseUrl must be url and may have 255 characters at most")),
         documentationUrl: vandium.types.string().max(255).uri().error(Error("[422] Parameter documentationUrl must be url and may have 255 characters at most")),
-        requiredMemory: vandium.types.string().error(Error('[422] Parameter requiredMemory must be string')),
-        processTimeout: vandium.types.number().integer().min(1)
-          .error(Error('[422] Parameter processTimeout must be integer bigger than one')),
         encryption: vandium.types.boolean().error(Error('[422] Parameter encryption must be boolean')),
         defaultBucket: vandium.types.boolean().error(Error('[422] Parameter defaultBucket must be boolean')),
         defaultBucketStage: vandium.types.string().valid('in', 'out')
@@ -54,6 +51,8 @@ module.exports.handler = vandium.createInstance({
         createdBy: vandium.types.any().forbidden().error(Error("[422] Setting of parameter createdBy is forbidden")),
         version: vandium.types.any().forbidden().error(Error("[422] Setting of parameter version is forbidden")),
         forwardToken: vandium.types.any().forbidden().error(Error("[422] Setting of parameter forwardToken is forbidden")),
+        requiredMemory: vandium.types.any().forbidden().error(Error("[422] Setting of parameter requiredMemory is forbidden")),
+        processTimeout: vandium.types.any().forbidden().error(Error("[422] Setting of parameter processTimeout is forbidden")),
         icon32: vandium.types.any().forbidden().error(Error("[422] Setting of parameter icon32 is forbidden")),
         icon64: vandium.types.any().forbidden().error(Error("[422] Setting of parameter icon64 is forbidden")),
         legacyUri: vandium.types.any().forbidden().error(Error("[422] Setting of parameter legacyUri is forbidden"))
