@@ -9,11 +9,11 @@ module.exports.handler = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        authorizationToken: vandium.types.string().required()
+        Authorization: vandium.types.string().required()
       }),
-      path: {
+      path: vandium.types.object().keys({
         appId: vandium.types.string().required()
-      },
+      }),
       body: vandium.types.object().keys({
         name: vandium.types.string().max(128).error(Error('[422] Parameter name must be string and may have 128 characters at most')),
         type: vandium.types.string().valid('extractor', 'application', 'writer', 'other', 'transformation', 'processor')
