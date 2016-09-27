@@ -7,15 +7,17 @@ require('dotenv').config({silent: true});
 
 module.exports.list = vandium.createInstance({
   validation: {
-    headers: vandium.types.object().keys({
-      authorizationToken: vandium.types.string().required()
-    }),
-    path: {
-      appId: vandium.types.string().required()
-    },
-    query: {
-      offset: vandium.types.number().integer().default(0).allow(''),
-      limit: vandium.types.number().integer().default(100).allow('')
+    schema: {
+      headers: vandium.types.object().keys({
+        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+      }),
+      path: vandium.types.object().keys({
+        appId: vandium.types.string().required()
+      }),
+      query: vandium.types.object().keys({
+        offset: vandium.types.number().integer().default(0).allow(''),
+        limit: vandium.types.number().integer().default(100).allow('')
+      })
     }
   }
 }).handler(function(event, context, callback) {

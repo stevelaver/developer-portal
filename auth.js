@@ -12,11 +12,13 @@ require('dotenv').config({silent: true});
  */
 module.exports.confirm = vandium.createInstance({
   validation: {
-    path: vandium.types.object().keys({
-      email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have " +
-        "format of email address")),
-      code: vandium.types.string().required().error(Error("[422] Parameter code is required"))
-    })
+    schema: {
+      path: vandium.types.object().keys({
+        email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have " +
+          "format of email address")),
+        code: vandium.types.string().required().error(Error("[422] Parameter code is required"))
+      })
+    }
   }
 }).handler(function(event, context, callback) {
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
@@ -67,11 +69,13 @@ module.exports.confirm = vandium.createInstance({
  */
 module.exports.confirmResend = vandium.createInstance({
   validation: {
-    body: vandium.types.object().keys({
-      email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have format " +
-        "of email address")),
-      code: vandium.types.string().required().error(Error("[422] Parameter code is required"))
-    })
+    schema: {
+      body: vandium.types.object().keys({
+        email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have format " +
+          "of email address")),
+        password: vandium.types.string().required().error(Error("[422] Parameter password is required"))
+      })
+    }
   }
 }).handler(function(event, context, callback) {
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
@@ -107,10 +111,12 @@ module.exports.confirmResend = vandium.createInstance({
  */
 module.exports.forgot = vandium.createInstance({
   validation: {
-    path: vandium.types.object().keys({
-      email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have format " +
-        "of email address"))
-    })
+    schema: {
+      path: vandium.types.object().keys({
+        email: vandium.types.string().required().error(Error("[422] Parameter email is required and should have format " +
+          "of email address"))
+      })
+    }
   }
 }).handler(function(event, context, callback) {
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
@@ -128,17 +134,19 @@ module.exports.forgot = vandium.createInstance({
  */
 module.exports.forgotConfirm = vandium.createInstance({
   validation: {
-    path: vandium.types.object().keys({
-      email: vandium.types.string().required().error(Error('[422] Parameter email is required and should have format ' +
-        'of email address')),
-    }),
-    body: vandium.types.object().keys({
-      password: vandium.types.string().required().min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-        .error(Error('[422] Parameter newPassword is required, must have at least 8 characters and contain at least one '
-          + 'lowercase letter, one uppercase letter and one number')),
-      code: vandium.types.string().required().error(Error('[422] Parameter code is required'))
-    })
+    schema: {
+      path: vandium.types.object().keys({
+        email: vandium.types.string().required().error(Error('[422] Parameter email is required and should have format ' +
+          'of email address')),
+      }),
+      body: vandium.types.object().keys({
+        password: vandium.types.string().required().min(8)
+          .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
+          .error(Error('[422] Parameter newPassword is required, must have at least 8 characters and contain at least one '
+            + 'lowercase letter, one uppercase letter and one number')),
+        code: vandium.types.string().required().error(Error('[422] Parameter code is required'))
+      })
+    }
   }
 }).handler(function(event, context, callback) {
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
@@ -158,11 +166,13 @@ module.exports.forgotConfirm = vandium.createInstance({
  */
 module.exports.login = vandium.createInstance({
   validation: {
-    body: vandium.types.object().keys({
-      email: vandium.types.email().required().error(Error("[422] Parameter email is required and should have format " +
-        "of email address")),
-      password: vandium.types.string().required().error(Error("[422] Parameter password is required"))
-    })
+    schema: {
+      body: vandium.types.object().keys({
+        email: vandium.types.email().required().error(Error("[422] Parameter email is required and should have format " +
+          "of email address")),
+        password: vandium.types.string().required().error(Error("[422] Parameter password is required"))
+      })
+    }
   }
 }).handler(function(event, context, callback) {
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
@@ -193,9 +203,11 @@ module.exports.login = vandium.createInstance({
  */
 module.exports.profile = vandium.createInstance({
   validation: {
-    headers: vandium.types.object().keys({
-      authorizationToken: vandium.types.string().required()
-    })
+    schema: {
+      headers: vandium.types.object().keys({
+        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+      })
+    }
   }
 }).handler(function(event, context, callback) {
   identity.getUser(process.env.REGION, event.headers.Authorization, callback);
@@ -207,16 +219,18 @@ module.exports.profile = vandium.createInstance({
  */
 module.exports.profileChange = vandium.createInstance({
   validation: {
-    headers: vandium.types.object().keys({
-      authorizationToken: vandium.types.string().required()
-    }),
-    body: vandium.types.object().keys({
-      oldPassword: vandium.types.string().required().error(Error('[422] Parameter oldPassword is required')),
-      newPassword: vandium.types.string().required().min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-        .error(Error('[422] Parameter newPassword is required, must have at least 8 characters and contain at least one '
-          + 'lowercase letter, one uppercase letter and one number'))
-    })
+    schema: {
+      headers: vandium.types.object().keys({
+        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+      }),
+      body: vandium.types.object().keys({
+        oldPassword: vandium.types.string().required().error(Error('[422] Parameter oldPassword is required')),
+        newPassword: vandium.types.string().required().min(8)
+          .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
+          .error(Error('[422] Parameter newPassword is required, must have at least 8 characters and contain at least one '
+            + 'lowercase letter, one uppercase letter and one number'))
+      })
+    }
   }
 }).handler(function(event, context, callback) {
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
@@ -235,16 +249,18 @@ module.exports.profileChange = vandium.createInstance({
  */
 module.exports.signup = vandium.createInstance({
   validation: {
-    body: vandium.types.object().keys({
-      name: vandium.types.string().required().error(Error('[422] Parameter name is required')),
-      email: vandium.types.email().required().error(Error('[422] Parameter email is required and should have format ' +
-        'of email address')),
-      password: vandium.types.string().required().min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-        .error(Error('[422] Parameter password is required, must have at least 8 characters and contain at least one '
-          + 'lowercase letter, one uppercase letter and one number')),
-      vendor: vandium.types.string().required().error(Error('[422] Parameter vendor is required'))
-    })
+    schema: {
+      body: vandium.types.object().keys({
+        name: vandium.types.string().required().error(Error('[422] Parameter name is required')),
+        email: vandium.types.email().required().error(Error('[422] Parameter email is required and should have format ' +
+          'of email address')),
+        password: vandium.types.string().required().min(8)
+          .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
+          .error(Error('[422] Parameter password is required, must have at least 8 characters and contain at least one '
+            + 'lowercase letter, one uppercase letter and one number')),
+        vendor: vandium.types.string().required().error(Error('[422] Parameter vendor is required'))
+      })
+    }
   }
 }).handler(function(event, context, callback) {
   var db = mysql.createConnection({
@@ -298,7 +314,6 @@ module.exports.signup = vandium.createInstance({
 });
 
 module.exports.emailTrigger = function(event, context, callback) {
-  console.log('Event', event);
   switch(event.triggerSource) {
     case 'CustomMessage_SignUp':
       event.response.emailSubject = 'Welcome to Keboola Developer Portal';

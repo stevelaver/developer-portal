@@ -9,7 +9,7 @@ module.exports.handler = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        authorizationToken: vandium.types.string().required()
+        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
       }),
       body: vandium.types.object().keys({
         id: vandium.types.string().min(3).max(50).regex(/^[a-zA-Z0-9-_]+$/).required()

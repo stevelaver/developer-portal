@@ -13,11 +13,16 @@ var addIcons = function(app) {
   delete app.icon64;
 };
 
+/**
+ * App Detail
+ */
 module.exports.detail = vandium.createInstance({
   validation: {
-    path: {
-      appId: vandium.types.string().required(),
-      version: vandium.types.number().integer()
+    schema: {
+      path: vandium.types.object().keys({
+        appId: vandium.types.string().required(),
+        version: vandium.types.number().integer()
+      })
     }
   }
 }).handler(function(event, context, callback) {
@@ -44,11 +49,17 @@ module.exports.detail = vandium.createInstance({
   });
 });
 
+
+/**
+ * Apps List
+ */
 module.exports.list = vandium.createInstance({
   validation: {
-    query: {
-      offset: vandium.types.number().integer().default(0).allow(''),
-      limit: vandium.types.number().integer().default(100).allow('')
+    schema: {
+      query: vandium.types.object().keys({
+        offset: vandium.types.number().integer().default(0).allow(''),
+        limit: vandium.types.number().integer().default(100).allow('')
+      })
     }
   }
 }).handler(function(event, context, callback) {
@@ -75,14 +86,20 @@ module.exports.list = vandium.createInstance({
   });
 });
 
+
+/**
+ * App Versions
+ */
 module.exports.versions = vandium.createInstance({
   validation: {
-    path: {
-      appId: vandium.types.string().required()
-    },
-    query: {
-      offset: vandium.types.number().integer().default(0).allow(''),
-      limit: vandium.types.number().integer().default(100).allow('')
+    schema: {
+      path: vandium.types.object().keys({
+        appId: vandium.types.string().required()
+      }),
+      query: vandium.types.object().keys({
+        offset: vandium.types.number().integer().default(0).allow(''),
+        limit: vandium.types.number().integer().default(100).allow('')
+      })
     }
   }
 }).handler(function(event, context, callback) {
@@ -109,11 +126,17 @@ module.exports.versions = vandium.createInstance({
   });
 });
 
+
+/**
+ * Vendors List
+ */
 module.exports.vendorsList = vandium.createInstance({
   validation: {
-    query: {
-      offset: vandium.types.number().integer().default(0).allow(''),
-      limit: vandium.types.number().integer().default(100).allow('')
+    schema: {
+      query: vandium.types.object().keys({
+        offset: vandium.types.number().integer().default(0).allow(''),
+        limit: vandium.types.number().integer().default(100).allow('')
+      })
     }
   }
 }).handler(function(event, context, callback) {
@@ -130,10 +153,16 @@ module.exports.vendorsList = vandium.createInstance({
   });
 });
 
+
+/**
+ * Vendor Detail
+ */
 module.exports.vendorDetail = vandium.createInstance({
   validation: {
-    path: {
-      vendor: vandium.types.string().required()
+    schema: {
+      path: vandium.types.object().keys({
+        vendor: vandium.types.string().required()
+      })
     }
   }
 }).handler(function(event, context, callback) {

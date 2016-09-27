@@ -9,7 +9,7 @@ module.exports.handler = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
+        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
       }),
       path: vandium.types.object().keys({
         appId: vandium.types.string().required()

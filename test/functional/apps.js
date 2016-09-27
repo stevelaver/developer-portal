@@ -157,7 +157,7 @@ describe('apps', function() {
           json: true,
           body: {
             repository: {
-              type: 'quaio',
+              type: 'quay',
               uri: 'keboola/test-extractor',
               tag: 'latest'
             },

@@ -76,7 +76,7 @@ describe('auth', function() {
           }
         }, function(err, res, body) {
           expect(err).to.be.null;
-          expect(body).to.be.null;
+          expect(body, JSON.stringify(body)).to.be.null;
           callback();
         });
       },
