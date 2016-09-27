@@ -240,8 +240,8 @@ var saveData = function(data, callbackMain) {
 getData(function(err, res) {
   if (err) {
     throw err;
-  }console.log(types);
-  //saveData(res, function() {
+  }
+  saveData(res, function() {
     process.exit();
-  //});
+  });
 });
