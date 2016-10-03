@@ -7,6 +7,7 @@ service: "${file(./env.yml):SERVICE_NAME}"
 plugins:
    - serverless-plugin-write-env-vars
    - serverless-offline
+   - serverless-run-function-plugin
 
 package:
   exclude:
@@ -54,6 +55,15 @@ functions:
           cors: true
           method: get
           path: "admin/users"
+  adminUserEnable:
+    handler: admin.userEnable
+    events:
+      -
+        http:
+          #authorizer: authorizer
+          cors: true
+          method: post
+          path: "admin/users/{email}/enable"
   appsApprove:
     handler: apps-approve.handler
     events:

@@ -24,7 +24,8 @@
     "chai": "*",
     "mocha": "*",
     "serverless-offline": "git+https://github.com/dherault/serverless-offline.git/#serverless_v1",
-    "serverless-plugin-write-env-vars": "^1.0.1"
+    "serverless-plugin-write-env-vars": "^1.0.1",
+    "serverless-run-function-plugin": "0.0.4"
   },
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --timeout 0 test/*",

@@ -661,6 +661,8 @@ Takes settings from chosen version and creates new version with it.
 
 ## Admin API [/admin]
 
+Management of users and apps designated for Developer Portal staff only
+
 ### List users [GET /admin/users]
 
 + Parameters
@@ -670,6 +672,12 @@ Takes settings from chosen version and creates new version with it.
             + disabled - shows only disabled (waiting for approval) users
             + confirmed - shows only users who confirmed their account
             + unconfirmed - shows only users who have not confirmed their account
+
++ Request
+
+    + Headers
+
+        Authorization: {admin_token}
 
 + Response 200 (application/json)
 
@@ -686,3 +694,16 @@ Takes settings from chosen version and creates new version with it.
                     "id": "aaa3S-eeee-aabb-b9ce-e0a9ef29be45"
                 }
             ]
+
+ ### Enable (i.e. approve) user [POST /admin/users/{email}/enable]
+
++ Parameters
+    + email
+
++ Request
+
+    + Headers
+
+        Authorization: {admin_token}
+
+ + Response 204

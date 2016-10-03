@@ -1,8 +1,73 @@
 'use strict';
 var _ = require('lodash');
+var async = require('async');
 var aws = require('aws-sdk');
 var vandium = require('vandium');
 require('dotenv').config();
+
+
+/**
+ * Enable user
+ */
+module.exports.userEnable = vandium.createInstance({
+  validation: {
+    schema: {
+      path: vandium.types.object().keys({
+        email: vandium.types.email().error(Error('Parameter email must have format of email address'))
+      })
+    }
+  }
+}).handler(function(event, context, callback) {
+
+  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+
+  async.waterfall([
+    function(cb) {
+      provider.adminGetUser({
+        UserPoolId: process.env.COGNITO_POOL_ID,
+        Username: event.path.email
+      }, function(err, data) {
+        if (err) {
+          return cb(err);
+        }
+
+        if (data.Enabled) {
+          return cb(Error('[404] Already Enabled'));
+        }
+
+        return cb(null, data);
+      });
+    },
+    function(user, cb) {
+      provider.adminEnableUser({
+        UserPoolId: process.env.COGNITO_POOL_ID,
+        Username: event.path.email
+      }, function(err) {
+        return err ? cb(err) : cb(null, user);
+      });
+    },
+    function(user, cb) {
+      var vendor = _.get(_.find(user.Attributes, function(o) { return o.Name == 'profile'; }), 'Value', null);
+      var ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
+      ses.sendEmail({
+        Source: process.env.SES_EMAIL,
+        Destination: { ToAddresses: [event.path.email] },
+        Message: {
+          Subject: {
+            Data: 'Welcome to Keboola Developer Portal'
+          },
+          Body: {
+            Text: {
+              Data: 'Your account in Keboola Developer Portal for vendor ' + vendor + 'has been approved'
+            }
+          }
+        }
+      }, function(err) {
+        return cb(err);
+      });
+    }
+  ], callback);
+});
 
 
 /**
