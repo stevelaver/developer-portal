@@ -26,16 +26,23 @@ Application based on Serverless framework utilizing AWS Lamda, API Gateway and C
             --policies PasswordPolicy={MinimumLength=8,RequireUppercase=true,RequireLowercase=true,RequireNumbers=true,RequireSymbols=false} \
             --email-configuration <SES verified email ARN>
         
-8. Create Cognito User Pool Client and save it's id to `env.yml`:
+8. Add attribute to Cognito User Pool:
+
+         aws cognito-idp add-custom-attributes \
+            --user-pool-id <value> \
+            --custom-attributes Name=isAdmin,AttributeDataType=integer,DeveloperOnlyAttribute=false,Mutable=true,Required=false,NumberAttributeConstraints={MinValue=0,MaxValue=1}
+        
+9. Create Cognito User Pool Client and save it's id to `env.yml`:
 
         aws cognito-idp create-user-pool-client \
             --user-pool-id <value> \
             --client-name <value> \
             --no-generate-secret \
+            --read-attributes "custom:isAdmin" \
             --write-attributes "profile" \
             --explicit-auth-flows ADMIN_NO_SRP_AUTH
 
-9. Create Myql 5.7 RDS and save credentials to `env.yml`, e.g.:
+10. Create Myql 5.7 RDS and save credentials to `env.yml`, e.g.:
 
         aws rds create-db-instance \
             --allocated-storage 1 \
@@ -48,7 +55,7 @@ Application based on Serverless framework utilizing AWS Lamda, API Gateway and C
             --master-user-password <value> \
             --publicly-accessible true
         
-10. Create `env.yml` file with following configuration:
+11. Create `env.yml` file with following configuration:
 
         SERVICE_NAME: dev-portal
         REGION: us-east-1
@@ -64,4 +71,4 @@ Application based on Serverless framework utilizing AWS Lamda, API Gateway and C
         S3_BUCKET_ICONS: 
         ICONS_PUBLIC_FOLDER: 
 
-11. Deploy all resources using command `sls deploy`
+12. Deploy all resources using command `sls deploy`

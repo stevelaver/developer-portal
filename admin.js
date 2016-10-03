@@ -31,9 +31,9 @@ module.exports.userEnable = vandium.createInstance({
           return cb(err);
         }
 
-        if (data.Enabled) {
+        /*if (data.Enabled) {
           return cb(Error('[404] Already Enabled'));
-        }
+        }*/
 
         return cb(null, data);
       });
@@ -47,7 +47,7 @@ module.exports.userEnable = vandium.createInstance({
       });
     },
     function(user, cb) {
-      var vendor = _.get(_.find(user.Attributes, function(o) { return o.Name == 'profile'; }), 'Value', null);
+      var vendor = _.get(_.find(user.UserAttributes, function(o) { return o.Name == 'profile'; }), 'Value', null);
       var ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
       ses.sendEmail({
         Source: process.env.SES_EMAIL,
@@ -58,7 +58,7 @@ module.exports.userEnable = vandium.createInstance({
           },
           Body: {
             Text: {
-              Data: 'Your account in Keboola Developer Portal for vendor ' + vendor + 'has been approved'
+              Data: 'Your account in Keboola Developer Portal for vendor ' + vendor + ' has been approved'
             }
           }
         }
