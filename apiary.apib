@@ -13,8 +13,8 @@ validity of 1 hour.
 ### Create account [POST /auth/signup]
 
 Anyone can create account but needs to know to which vendor he belongs. New vendors
-must request vendor account using support@keboola.com first. User accounts are
-approved manually so user needs to wait for approval before he proceeds.
+must request vendor account using *support@keboola.com* first. User accounts are
+enabled manually so user needs to wait for approval before he proceeds.
 
 + Attributes
     + name (required)
@@ -571,7 +571,7 @@ Takes settings from chosen version and creates new version with it.
                     }
                 }
             ]
-            
+
 ### Get app detail [GET /apps/{appId}]
 
 + Response 200 (application/json)
@@ -623,7 +623,7 @@ Takes settings from chosen version and creates new version with it.
                 "loggerConfiguration": null,
                 "isApproved": true
             }
-            
+
 ### List vendors [GET /vendors?offset=0&limit=100]
 
 + Parameters
@@ -644,7 +644,7 @@ Takes settings from chosen version and creates new version with it.
                     "email": "support@keboola.com"
                 }
             ]
-            
+
 ### Get vendor detail [GET /vendors/{vendor}]
 
 + Response 200 (application/json)
@@ -663,13 +663,13 @@ Takes settings from chosen version and creates new version with it.
 
 Management of users and apps designated for Developer Portal staff only
 
-### List users [GET /admin/users]
+### List users [GET /admin/users?filter={filter}]
 
 + Parameters
     + filter (optional)
         + Members
             + enabled - shows only enabled (active) users
-            + disabled - shows only disabled (waiting for approval) users
+            + disabled - shows only disabled (waiting for enable) users
             + confirmed - shows only users who confirmed their account
             + unconfirmed - shows only users who have not confirmed their account
 
@@ -677,7 +677,7 @@ Management of users and apps designated for Developer Portal staff only
 
     + Headers
 
-        Authorization: {admin_token}
+            Authorization: {admin_token}
 
 + Response 200 (application/json)
 
@@ -695,7 +695,8 @@ Management of users and apps designated for Developer Portal staff only
                 }
             ]
 
-### Enable (i.e. approve) user [POST /admin/users/{email}/enable]
+
+### Enable user [POST /admin/users/{email}/enable]
 
 + Parameters
     + email
@@ -704,6 +705,61 @@ Management of users and apps designated for Developer Portal staff only
 
     + Headers
 
-        Authorization: {admin_token}
+            Authorization: {admin_token}
 
- + Response 204
++ Response 204
+
+### Make user admin [POST /admin/users/{email}/admin]
+
++ Parameters
+    + email
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 204
+
+### List apps [GET /admin/apps?filter={filter}]
+
++ Parameters
+    + filter (optional)
+        + Members
+            + unapproved
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "ag-forecastio",
+                    "version": 1,
+                    "name": "Forecast.io Augmentation",
+                    "type": "extractor",
+                    "createdOn": "2016-09-26T16:02:57.000Z",
+                    "createdBy": "support@keboola.com",
+                    "isApproved": false
+                }
+            ]
+
+### Approve app [POST /admin/apps/{id}/approve]
+
++ Parameters
+    + id
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 204

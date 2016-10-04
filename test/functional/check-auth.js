@@ -17,8 +17,8 @@ var checkAuth = function(err, res, body, callback) {
   callback();
 };
 
-describe('check-auth', function() {
-  it('check if all endpoints have auth required', function(done) {
+describe('check if all endpoints have auth required', function() {
+  it('check apps', function(done) {
     async.parallel([
       function(callback) {
         // Get profile
@@ -83,6 +83,41 @@ describe('check-auth', function() {
       function(callback) {
         // Get version
         request.get({url: process.env.FUNC_API_BASE_URI + '/vendor/apps/app/versions/1'}, function(err, res, body) {
+          checkAuth(err, res, body, callback);
+        });
+      }
+    ], done);
+  });
+
+  it('check admin', function(done) {
+    async.parallel([
+      function(callback) {
+        // List users
+        request.get({url: process.env.FUNC_API_BASE_URI + '/admin/users'}, function(err, res, body) {
+          checkAuth(err, res, body, callback);
+        });
+      },
+      function(callback) {
+        // Enable user
+        request.post({url: process.env.FUNC_API_BASE_URI + '/admin/users/test@test.com/enable'}, function(err, res, body) {
+          checkAuth(err, res, body, callback);
+        });
+      },
+      function(callback) {
+        // Make user admin
+        request.post({url: process.env.FUNC_API_BASE_URI + '/admin/users/test@test.com/admin'}, function(err, res, body) {
+          checkAuth(err, res, body, callback);
+        });
+      },
+      function(callback) {
+        // List apps
+        request.get({url: process.env.FUNC_API_BASE_URI + '/admin/apps'}, function(err, res, body) {
+          checkAuth(err, res, body, callback);
+        });
+      },
+      function(callback) {
+        // Approve app
+        request.post({url: process.env.FUNC_API_BASE_URI + '/admin/apps/appId/approve'}, function(err, res, body) {
           checkAuth(err, res, body, callback);
         });
       }
