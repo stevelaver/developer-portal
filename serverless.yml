@@ -44,8 +44,19 @@ provider:
       Effect: Allow
       Resource:
         - "${file(./env.yml):COGNITO_POOL_ARN}"
+    -
+      Action:
+        - "cloudwatchlogs:*"
+      Effect: Allow
+      Resource:
+        - "*"
 
 functions:
+  authorizer:
+    handler: authorizer.authorizer
+  logger:
+      handler: logger.handler
+
   adminAppApprove:
     handler: admin.appApprove
     events:
@@ -251,9 +262,6 @@ functions:
           cors: true
           method: post
           path: auth/signup
-
-  authorizer:
-      handler: authorizer.authorizer
 
   publicDetail:
     handler: public.detail

@@ -4,6 +4,7 @@ var async = require('async');
 var aws = require('aws-sdk');
 var db = require('lib/db');
 var identity = require('lib/identity');
+var log = require('lib/log');
 var vandium = require('vandium');
 require('dotenv').config();
 
@@ -23,6 +24,7 @@ module.exports.appApprove = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('adminAppApprove', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,
@@ -95,6 +97,7 @@ module.exports.apps = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('adminApps', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,
@@ -131,7 +134,7 @@ module.exports.userAdmin = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
-
+  log.start('adminUserAdmin', event);
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   async.waterfall([
     function (cb) {
@@ -187,7 +190,7 @@ module.exports.userEnable = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
-
+  log.start('adminUserEnable', event);
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   async.waterfall([
     function (cb) {
@@ -258,7 +261,7 @@ module.exports.users = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
-
+  log.start('adminUsers', event);
   var filter = '';
   switch (event.query.filter) {
     case 'enabled':

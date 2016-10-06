@@ -3,7 +3,7 @@ require('dotenv').config({path: '.env-test', silent: true});
 var _ = require('lodash');
 var async = require('async');
 var aws = require('aws-sdk');
-var db = require('./lib/db');
+var db = require('../lib/db');
 var fs = require('fs');
 var mysql = require('mysql');
 var request = require('request');

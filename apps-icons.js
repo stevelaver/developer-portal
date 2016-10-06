@@ -3,6 +3,7 @@ var async = require('async');
 var aws = require('aws-sdk');
 var db = require('lib/db');
 var identity = require('lib/identity');
+var log = require('lib/log');
 var moment = require('moment');
 var vandium = require('vandium');
 require('dotenv').config({silent: true});
@@ -19,6 +20,7 @@ module.exports.links = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('appsIcons', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,

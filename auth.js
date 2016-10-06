@@ -2,6 +2,7 @@
 var async = require('async');
 var aws = require('aws-sdk');
 var identity = require('lib/identity');
+var log = require('lib/log');
 var moment = require('moment');
 var mysql = require('mysql');
 var vandium = require('vandium');
@@ -21,6 +22,7 @@ module.exports.confirm = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('authConfirm', event);
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   async.waterfall([
     function (callbackLocal) {
@@ -78,6 +80,7 @@ module.exports.confirmResend = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('authConfirmResend', event);
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.adminInitiateAuth({
     AuthFlow: 'ADMIN_NO_SRP_AUTH',
@@ -119,6 +122,7 @@ module.exports.forgot = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('authForgot', event);
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.forgotPassword({
     ClientId: process.env.COGNITO_CLIENT_ID,
@@ -149,6 +153,7 @@ module.exports.forgotConfirm = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('authForgotConfirm', event);
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.confirmForgotPassword({
     ClientId: process.env.COGNITO_CLIENT_ID,
@@ -175,6 +180,7 @@ module.exports.login = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('authLogin', event);
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.adminInitiateAuth({
     AuthFlow: 'ADMIN_NO_SRP_AUTH',
@@ -210,6 +216,7 @@ module.exports.profile = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('authProfile', event);
   identity.getUser(process.env.REGION, event.headers.Authorization, callback);
 });
 
@@ -233,6 +240,7 @@ module.exports.profileChange = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('authProfileChange', event);
   var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.changePassword({
     PreviousPassword: event.body.oldPassword,
@@ -263,6 +271,7 @@ module.exports.signup = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('authSignup', event);
   var db = mysql.createConnection({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,

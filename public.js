@@ -1,6 +1,7 @@
 'use strict';
 var async = require('async');
-var db = require('./lib/db');
+//var db = require('./lib/db');
+var log = require('lib/log');
 var vandium = require('vandium');
 require('dotenv').config();
 
@@ -26,6 +27,7 @@ module.exports.detail = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('publicDetail', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,
@@ -63,6 +65,7 @@ module.exports.list = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('publicList', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,
@@ -103,6 +106,7 @@ module.exports.versions = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('publicVersions', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,
@@ -140,6 +144,7 @@ module.exports.vendorsList = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('publicVendorsList', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,
@@ -166,6 +171,7 @@ module.exports.vendorDetail = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('publicVendorDetail', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,

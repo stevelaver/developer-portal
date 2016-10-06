@@ -2,6 +2,7 @@
 var async = require('async');
 var db = require('lib/db');
 var identity = require('lib/identity');
+var log = require('lib/log');
 var vandium = require('vandium');
 require('dotenv').config({silent: true});
 
@@ -18,6 +19,7 @@ module.exports.handler = vandium.createInstance({
     }
   }
 }).handler(function(event, context, callback) {
+  log.start('appsList', event);
   db.connect({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,
