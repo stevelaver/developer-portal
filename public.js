@@ -1,6 +1,6 @@
 'use strict';
 var async = require('async');
-//var db = require('./lib/db');
+var db = require('./lib/db');
 var log = require('lib/log');
 var vandium = require('vandium');
 require('dotenv').config();
