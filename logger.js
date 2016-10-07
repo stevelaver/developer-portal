@@ -19,8 +19,8 @@ exports.handler = function (event, context, callback) {
     log.add(papertrail, {
       host: process.env.LOG_HOST,
       port: process.env.LOG_PORT,
-      hostname: context.functionName,
-      program: context.functionVersion,
+      hostname: 'developer-portal',
+      program: process.env.SERVICE_NAME,
       flushOnClose: true,
       includeMetaInMessage: false,
       handleExceptions: true,
