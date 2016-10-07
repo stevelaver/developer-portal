@@ -1,11 +1,11 @@
 'use strict';
-var async = require('async');
-var aws = require('aws-sdk');
-var db = require('lib/db');
-var identity = require('lib/identity');
-var log = require('lib/log');
-var moment = require('moment');
-var vandium = require('vandium');
+const async = require('async');
+const aws = require('aws-sdk');
+const db = require('lib/db');
+const identity = require('lib/identity');
+const log = require('lib/log');
+const moment = require('moment');
+const vandium = require('vandium');
 require('dotenv').config({silent: true});
 
 module.exports.links = vandium.createInstance({
@@ -38,9 +38,9 @@ module.exports.links = vandium.createInstance({
       });
     },
     function(callbackLocal) {
-      var s3 = new aws.S3();
-      var validity = 3600;
-      var expires = moment().add(validity, 's').utc().format();
+      const s3 = new aws.S3();
+      const validity = 3600;
+      const expires = moment().add(validity, 's').utc().format();
       async.parallel({
         32: function (callbackLocal2) {
           s3.getSignedUrl(
@@ -94,10 +94,10 @@ module.exports.upload = vandium.createInstance().handler(function(event, context
     return callback();
   }
 
-  var bucket = event.Records[0].s3.bucket.name;
-  var key = event.Records[0].s3.object.key;
-  var appId = key.split('/').shift();
-  var size = key.split('/')[1];
+  const bucket = event.Records[0].s3.bucket.name;
+  const key = event.Records[0].s3.object.key;
+  const appId = key.split('/').shift();
+  const size = key.split('/')[1];
 
   db.connect({
     host: process.env.RDS_HOST,
@@ -106,7 +106,7 @@ module.exports.upload = vandium.createInstance().handler(function(event, context
     database: process.env.RDS_DATABASE,
     ssl: process.env.RDS_SSL
   });
-  var s3 = new aws.S3();
+  const s3 = new aws.S3();
   async.waterfall([
     function(callbackLocal) {
       db.addAppIcon(appId, size, function(err, version) {

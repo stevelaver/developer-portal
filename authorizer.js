@@ -1,12 +1,12 @@
 'use strict';
-var jwt = require('jsonwebtoken');
-var request = require('request'); 
-var jwkToPem = require('jwk-to-pem');
+const jwt = require('jsonwebtoken');
+const request = require('request');
+const jwkToPem = require('jwk-to-pem');
 require('dotenv').config({silent: true});
 
-var userPoolId = process.env.COGNITO_POOL_ID;
-var region = process.env.REGION;
-var iss = 'https://cognito-idp.' + region + '.amazonaws.com/' + userPoolId;
+const userPoolId = process.env.COGNITO_POOL_ID;
+const region = process.env.REGION;
+const iss = 'https://cognito-idp.' + region + '.amazonaws.com/' + userPoolId;
 var pems;
 
 module.exports.authorizer = function(event, context, callback) {
@@ -19,14 +19,14 @@ module.exports.authorizer = function(event, context, callback) {
      }, function (error, response, body) {
       if (!error && response.statusCode === 200) {
         pems = {};
-        var keys = body['keys'];
+        const keys = body['keys'];
         for(var i = 0; i < keys.length; i++) {
           //Convert each key to PEM
-          var key_id = keys[i].kid;
-          var modulus = keys[i].n;
-          var exponent = keys[i].e;
-          var key_type = keys[i].kty;
-          var jwk = { kty: key_type, n: modulus, e: exponent};
+          const key_id = keys[i].kid;
+          const modulus = keys[i].n;
+          const exponent = keys[i].e;
+          const key_type = keys[i].kty;
+          const jwk = { kty: key_type, n: modulus, e: exponent};
           pems[key_id] = jwkToPem(jwk);
         }
         //Now continue with validating the token
@@ -43,10 +43,10 @@ module.exports.authorizer = function(event, context, callback) {
 };
 
 function ValidateToken(pems, event, callback) {
-  var token = event.authorizationToken;
+  const token = event.authorizationToken;
 
   //Fail if the token is not jwt
-  var decodedJwt = jwt.decode(token, {complete: true});
+  const decodedJwt = jwt.decode(token, {complete: true});
   if (!decodedJwt) {
     return callback(Error("Unauthorized"));
   }
@@ -62,8 +62,8 @@ function ValidateToken(pems, event, callback) {
   }
 
   //Get the kid from the token and retrieve corresponding PEM
-  var kid = decodedJwt.header.kid;
-  var pem = pems[kid];
+  const kid = decodedJwt.header.kid;
+  const pem = pems[kid];
   if (!pem) {
     //Invalid access token
     return callback(Error("Unauthorized"));
@@ -78,23 +78,23 @@ function ValidateToken(pems, event, callback) {
       //Valid token. Generate the API Gateway policy for the user
       //Always generate the policy on value of 'sub' claim and not for 'username' because username is reassignable
       //sub is UUID for a user which is never reassigned to another user.
-      var principalId = payload.sub;
+      const principalId = payload.sub;
 
       //Get AWS AccountId and API Options
       var apiOptions = {};
-      var tmp = event.methodArn.split(':');
-      var apiGatewayArnTmp = tmp[5].split('/');
-      var awsAccountId = tmp[4];
+      const tmp = event.methodArn.split(':');
+      const apiGatewayArnTmp = tmp[5].split('/');
+      const awsAccountId = tmp[4];
       apiOptions.region = tmp[3];
       apiOptions.restApiId = apiGatewayArnTmp[0];
       apiOptions.stage = apiGatewayArnTmp[1];
-      var method = apiGatewayArnTmp[2];
+      const method = apiGatewayArnTmp[2];
       var resource = '/'; // root resource
       if (apiGatewayArnTmp[3]) {
         resource += apiGatewayArnTmp[3];
       }
       //For more information on specifics of generating policy, refer to blueprint for API Gateway's Custom authorizer in Lambda console
-      var policy = new AuthPolicy(principalId, awsAccountId, apiOptions);
+      const policy = new AuthPolicy(principalId, awsAccountId, apiOptions);
       policy.allowAllMethods();
       return callback(null, policy.build());
     }
@@ -215,7 +215,7 @@ AuthPolicy.prototype = (function() {
    * @param {Object} conditions The conditions object in the format specified by the AWS docs.
    * @return {void}
    */
-  var addMethod = function(effect, verb, resource, conditions) {
+  const addMethod = function(effect, verb, resource, conditions) {
     if (verb != "*" && !AuthPolicy.HttpVerb.hasOwnProperty(verb)) {
       throw new Error("[400] Invalid HTTP verb " + verb + ". Allowed verbs in AuthPolicy.HttpVerb");
     }
@@ -228,7 +228,7 @@ AuthPolicy.prototype = (function() {
     if (resource.substring(0, 1) == "/") {
         cleanedResource = resource.substring(1, resource.length);
     }
-    var resourceArn = "arn:aws:execute-api:" +
+    const resourceArn = "arn:aws:execute-api:" +
       this.region + ":" +
       this.awsAccountId + ":" +
       this.restApiId + "/" +
@@ -258,7 +258,7 @@ AuthPolicy.prototype = (function() {
    * @return {Object} An empty statement object with the Action, Effect, and Resource
    *          properties prepopulated.
    */
-  var getEmptyStatement = function(effect) {
+  const getEmptyStatement = function(effect) {
     effect = effect.substring(0, 1).toUpperCase() + effect.substring(1, effect.length).toLowerCase();
     var statement = {};
     statement.Action = "execute-api:Invoke";
@@ -278,14 +278,14 @@ AuthPolicy.prototype = (function() {
    *        and the conditions for the policy
    * @return {Array} an array of formatted statements for the policy.
    */
-  var getStatementsForEffect = function(effect, methods) {
+  const getStatementsForEffect = function(effect, methods) {
     var statements = [];
 
     if (methods.length > 0) {
       var statement = getEmptyStatement(effect);
 
       for (var i = 0; i < methods.length; i++) {
-        var curMethod = methods[i];
+        const curMethod = methods[i];
         if (curMethod.conditions === null || curMethod.conditions.length === 0) {
           statement.Resource.push(curMethod.resourceArn);
         } else {

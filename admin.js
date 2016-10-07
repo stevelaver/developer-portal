@@ -1,11 +1,11 @@
 'use strict';
-var _ = require('lodash');
-var async = require('async');
-var aws = require('aws-sdk');
-var db = require('lib/db');
-var identity = require('lib/identity');
-var log = require('lib/log');
-var vandium = require('vandium');
+const _ = require('lodash');
+const async = require('async');
+const aws = require('aws-sdk');
+const db = require('lib/db');
+const identity = require('lib/identity');
+const log = require('lib/log');
+const vandium = require('vandium');
 require('dotenv').config();
 
 
@@ -55,7 +55,7 @@ module.exports.appApprove = vandium.createInstance({
       });
     },
     function(app, vendor, cb) {
-      var ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
+      const ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
       ses.sendEmail({
         Source: process.env.SES_EMAIL,
         Destination: { ToAddresses: [vendor.email] },
@@ -135,7 +135,7 @@ module.exports.userAdmin = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('adminUserAdmin', event);
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   async.waterfall([
     function (cb) {
       identity.getAdmin(process.env.REGION, event.headers.Authorization, cb);
@@ -149,7 +149,7 @@ module.exports.userAdmin = vandium.createInstance({
           return cb(err);
         }
 
-        var isAdmin = _.get(_.find(data.UserAttributes, function(o) { return o.Name == 'custom:isAdmin'; }), 'Value', null);
+        const isAdmin = _.get(_.find(data.UserAttributes, function(o) { return o.Name == 'custom:isAdmin'; }), 'Value', null);
         if (isAdmin) {
           return cb(Error('[404] Already is admin'));
         }
@@ -191,7 +191,7 @@ module.exports.userEnable = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('adminUserEnable', event);
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   async.waterfall([
     function (cb) {
       identity.getAdmin(process.env.REGION, event.headers.Authorization, cb);
@@ -221,8 +221,8 @@ module.exports.userEnable = vandium.createInstance({
       });
     },
     function(user, cb) {
-      var vendor = _.get(_.find(user.UserAttributes, function(o) { return o.Name == 'profile'; }), 'Value', null);
-      var ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
+      const vendor = _.get(_.find(user.UserAttributes, function(o) { return o.Name == 'profile'; }), 'Value', null);
+      const ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
       ses.sendEmail({
         Source: process.env.SES_EMAIL,
         Destination: { ToAddresses: [event.path.email] },
@@ -277,7 +277,7 @@ module.exports.users = vandium.createInstance({
       filter = 'cognito:user_status = "Confirmed"';
       break;
   }
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   async.waterfall([
     function (cb) {
       identity.getAdmin(process.env.REGION, event.headers.Authorization, cb);

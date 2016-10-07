@@ -1,11 +1,11 @@
 'use strict';
-var async = require('async');
-var aws = require('aws-sdk');
-var identity = require('lib/identity');
-var log = require('lib/log');
-var moment = require('moment');
-var mysql = require('mysql');
-var vandium = require('vandium');
+const async = require('async');
+const aws = require('aws-sdk');
+const identity = require('lib/identity');
+const log = require('lib/log');
+const moment = require('moment');
+const mysql = require('mysql');
+const vandium = require('vandium');
 require('dotenv').config({silent: true});
 
 /**
@@ -23,7 +23,7 @@ module.exports.confirm = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('authConfirm', event);
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   async.waterfall([
     function (callbackLocal) {
       provider.confirmSignUp({
@@ -45,7 +45,7 @@ module.exports.confirm = vandium.createInstance({
   ], function (err) {
     if (err) return callback(err);
 
-    var ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
+    const ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
     ses.sendEmail({
       Source: process.env.SES_EMAIL,
       Destination: { ToAddresses: [process.env.SES_EMAIL] },
@@ -81,7 +81,7 @@ module.exports.confirmResend = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('authConfirmResend', event);
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.adminInitiateAuth({
     AuthFlow: 'ADMIN_NO_SRP_AUTH',
     ClientId: process.env.COGNITO_CLIENT_ID,
@@ -123,7 +123,7 @@ module.exports.forgot = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('authForgot', event);
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.forgotPassword({
     ClientId: process.env.COGNITO_CLIENT_ID,
     Username: event.path.email
@@ -154,7 +154,7 @@ module.exports.forgotConfirm = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('authForgotConfirm', event);
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.confirmForgotPassword({
     ClientId: process.env.COGNITO_CLIENT_ID,
     ConfirmationCode: event.body.code,
@@ -181,7 +181,7 @@ module.exports.login = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('authLogin', event);
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.adminInitiateAuth({
     AuthFlow: 'ADMIN_NO_SRP_AUTH',
     ClientId: process.env.COGNITO_CLIENT_ID,
@@ -241,7 +241,7 @@ module.exports.profileChange = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('authProfileChange', event);
-  var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
   provider.changePassword({
     PreviousPassword: event.body.oldPassword,
     ProposedPassword: event.body.newPassword,
@@ -272,7 +272,7 @@ module.exports.signup = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('authSignup', event);
-  var db = mysql.createConnection({
+  const db = mysql.createConnection({
     host: process.env.RDS_HOST,
     user: process.env.RDS_USER,
     password: process.env.RDS_PASSWORD,
@@ -293,7 +293,7 @@ module.exports.signup = vandium.createInstance({
       });
     },
     function(callbackLocal) {
-      var provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+      const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
       provider.signUp({
         ClientId: process.env.COGNITO_CLIENT_ID,
         Username: event.body.email,

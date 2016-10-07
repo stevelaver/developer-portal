@@ -1,11 +1,11 @@
 'use strict';
-var async = require('async');
-var db = require('./lib/db');
-var log = require('lib/log');
-var vandium = require('vandium');
+const async = require('async');
+const db = require('./lib/db');
+const log = require('lib/log');
+const vandium = require('vandium');
 require('dotenv').config();
 
-var addIcons = function(app) {
+const addIcons = function(app) {
   app.icon = {
     32: app.icon32 ? process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32 : null,
     64: app.icon64 ? process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64 : null

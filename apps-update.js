@@ -1,9 +1,9 @@
 'use strict';
-var async = require('async');
-var db = require('lib/db');
-var identity = require('lib/identity');
-var log = require('lib/log');
-var vandium = require('vandium');
+const async = require('async');
+const db = require('lib/db');
+const identity = require('lib/identity');
+const log = require('lib/log');
+const vandium = require('vandium');
 require('dotenv').config({silent: true});
 
 module.exports.handler = vandium.createInstance({

@@ -1,14 +1,14 @@
 'use script';
 require('dotenv').config({path: '.env-test', silent: true});
-var _ = require('lodash');
-var async = require('async');
-var aws = require('aws-sdk');
-var db = require('../lib/db');
-var fs = require('fs');
-var mysql = require('mysql');
-var request = require('request');
+const _ = require('lodash');
+const async = require('async');
+const aws = require('aws-sdk');
+const db = require('../lib/db');
+const fs = require('fs');
+const mysql = require('mysql');
+const request = require('request');
 
-var rds = mysql.createConnection({
+const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST,
   user: process.env.FUNC_RDS_USER,
   password: process.env.FUNC_RDS_PASSWORD,
@@ -17,9 +17,9 @@ var rds = mysql.createConnection({
   multipleStatements: true
 });
 
-var args = process.argv.slice(2);
+const args = process.argv.slice(2);
 
-var downloadIcon = function(uri, id, size, callback) {
+const downloadIcon = function(uri, id, size, callback) {
   if (!fs.existsSync('icons/'+id)) {
     fs.mkdirSync('icons/'+id);
   }
@@ -36,7 +36,7 @@ var downloadIcon = function(uri, id, size, callback) {
     });
 };
 
-var downloadIcons = function() {
+const downloadIcons = function() {
   fs.readFile(args[0], 'utf8', (err, data) => {
     if (err) throw err;
     data = JSON.parse(data);
@@ -62,7 +62,7 @@ var downloadIcons = function() {
 var flags = [];
 var types = [];
 
-var getData = function(callbackMain) {
+const getData = function(callbackMain) {
   fs.readFile(args[0], 'utf8', (err, data) => {
     var result = [];
     if (err) throw err;
@@ -160,7 +160,7 @@ var getData = function(callbackMain) {
       }
 
       flags = _.union(flags, app.flags);
-      var resApp = {
+      result.push({
         id: app.id,
         vendor: app.vendor,
         isApproved: 1,
@@ -198,8 +198,7 @@ var getData = function(callbackMain) {
         icon32: app.ico32 ? app.id + '/32/1.png' : null,
         icon64: app.ico64 ? app.id + '/64/1.png' : null,
         legacyUri: (app.uri != 'https://syrup.keboola.com/docker/' + app.id) ? app.uri : null
-      };
-      result.push(resApp);
+      });
       callback();
     }, function(err) {
       callbackMain(err, result);
@@ -207,24 +206,24 @@ var getData = function(callbackMain) {
   });
 };
 
-var saveData = function(data, callbackMain) {
+const saveData = function(data, callbackMain) {
   async.parallel([
     function(cb) {
-      rds.query('SET FOREIGN_KEY_CHECKS = 0;TRUNCATE TABLE appVersions;TRUNCATE TABLE apps;', function(err, res) {
+      rds.query('SET FOREIGN_KEY_CHECKS = 0;TRUNCATE TABLE appVersions;TRUNCATE TABLE apps;', function(err) {
         cb(err);
       });
     },
     function(cb) {
       async.each(data, function(resApp, callback) {
-        var dbApp = db.formatAppInput(resApp);
-        rds.query('INSERT IGNORE INTO apps SET ?', dbApp, function(err, res) {
+        const dbApp = db.formatAppInput(resApp);
+        rds.query('INSERT IGNORE INTO apps SET ?', dbApp, function(err) {
           if (err) {
             console.log(resApp);
             throw(err);
           }
           delete dbApp.vendor;
           delete dbApp.isApproved;
-          rds.query('INSERT IGNORE INTO appVersions SET ?', dbApp, function(err, res) {
+          rds.query('INSERT IGNORE INTO appVersions SET ?', dbApp, function(err) {
             if (err) {
               console.log(resApp);
               throw(err);

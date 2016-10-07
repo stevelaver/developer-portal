@@ -1,10 +1,10 @@
 'use strict';
-var async = require('async');
-var aws = require('aws-sdk');
-var db = require('lib/db');
-var identity = require('lib/identity');
-var log = require('lib/log');
-var vandium = require('vandium');
+const async = require('async');
+const aws = require('aws-sdk');
+const db = require('lib/db');
+const identity = require('lib/identity');
+const log = require('lib/log');
+const vandium = require('vandium');
 require('dotenv').config({silent: true});
 
 /**
@@ -87,7 +87,7 @@ module.exports.handler = vandium.createInstance({
       return callback(err);
     }
 
-    var ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
+    const ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
     ses.sendEmail({
       Source: process.env.SES_EMAIL,
       Destination: { ToAddresses: [process.env.SES_EMAIL] },
