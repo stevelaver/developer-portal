@@ -1,22 +1,22 @@
-var _ = require('lodash');
-var zlib = require('zlib');
-var winston = require('winston');
-var papertrailTransport = require('winston-papertrail').Papertrail;
-require('dotenv').config({silent: true});
+const _ = require('lodash');
+const papertrail = require('winston-papertrail').Papertrail;
+const winston = require('winston');
+const zlib = require('zlib');
+require('dotenv').config({ silent: true });
 
 exports.handler = function (event, context, callback) {
-  var payload = new Buffer(event.awslogs.data, 'base64');
+  const payload = new Buffer(event.awslogs.data, 'base64');
 
   zlib.gunzip(payload, function (err, result) {
+    const log = new (winston.Logger)({
+      transports: [],
+    });
+
     if (err) {
       return callback(err);
     }
 
-    var log = new (winston.Logger)({
-      transports: []
-    });
-
-    log.add(papertrailTransport, {
+    log.add(papertrail, {
       host: process.env.LOG_HOST,
       port: process.env.LOG_PORT,
       hostname: context.functionName,
@@ -29,16 +29,16 @@ exports.handler = function (event, context, callback) {
         if (_.startsWith(message, 'REPORT ')) {
           data.report = {};
           _.each(_.split(message.substr(7), "\t"), function(val) {
-            var res = _.split(val, ': ');
+            const res = _.split(val, ': ');
             data.report[res[0]] = res[1];
           });
           message = 'END';
           data.request = data.report.RequestId;
           delete data.report.RequestId;
         } else {
-          var consoleLog = /(.*)\t(.*)\t(.*)/g.exec(message);
+          const consoleLog = /(.*)\t(.*)\t(.*)/g.exec(message);
           if (consoleLog) {
-            var logData = JSON.parse(consoleLog[3]);
+            const logData = JSON.parse(consoleLog[3]);
             if (_.has(logData, 'message')) {
               data = logData;
             } else {
@@ -58,7 +58,7 @@ exports.handler = function (event, context, callback) {
       }
     });
 
-    var data = JSON.parse(result.toString('utf8'));
+    const data = JSON.parse(result.toString('utf8'));
 
     data.logEvents.forEach(function(line) {
       if (!_.startsWith(line.message, 'END RequestId') && !_.startsWith(line.message, 'START RequestId')) {

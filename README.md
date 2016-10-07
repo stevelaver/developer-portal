@@ -70,5 +70,9 @@ Application based on Serverless framework utilizing AWS Lamda, API Gateway and C
         RDS_SSL: Amazon RDS
         S3_BUCKET_ICONS: 
         ICONS_PUBLIC_FOLDER: 
+        LOG_HOST: logs.papertrailapp.com
+        LOG_PORT: 
 
 12. Deploy all resources using command `sls deploy`
+
+13. Run `node scripts/setup-log-subscriber.js <logger-function-arn>` to setup logging
