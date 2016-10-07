@@ -31,6 +31,9 @@ module.exports.confirm = vandium.createInstance({
         ConfirmationCode: event.path.code,
         Username: event.path.email
       }, function(err) {
+        if (err.code == 'ExpiredCodeException' || err.code == 'CodeMismatchException') {
+          err.message = '[404] Invalid verification code provided.';
+        }
         return callbackLocal(err);
       });
     },
@@ -161,6 +164,9 @@ module.exports.forgotConfirm = vandium.createInstance({
     Password: event.body.password,
     Username: event.path.email
   }, function(err) {
+    if (err.code == 'ExpiredCodeException' || err.code == 'CodeMismatchException') {
+      err.message = '[404] Invalid verification code provided.';
+    }
     return callback(err);
   });
 });
