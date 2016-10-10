@@ -547,6 +547,8 @@ Takes settings from chosen version and creates new version with it.
 
 ### List published apps [GET /apps?offset=0&limit=100]
 
+Shows all apps having flags `isApproved` and `isVisible` set to `true`.
+
 + Parameters
     + offset (optional) - pagination offset
         + Default: 0
@@ -573,6 +575,9 @@ Takes settings from chosen version and creates new version with it.
             ]
 
 ### Get app detail [GET /apps/{appId}]
+
+Shows the app if it's flags `isApproved` is set to `true`. I.e. also shows detail
+for unlisted app (having `isVisible` set to `false`).
 
 + Response 200 (application/json)
 
