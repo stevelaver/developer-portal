@@ -66,6 +66,8 @@ functions:
           cors: true
           method: post
           path: "admin/apps/{id}/approve"
+          default:
+            statusCode: 204
   adminApps:
     handler: admin.apps
     events:
@@ -93,6 +95,8 @@ functions:
           cors: true
           method: post
           path: "admin/users/{email}/admin"
+          default:
+            statusCode: 204
   adminUserEnable:
     handler: admin.userEnable
     events:
@@ -102,6 +106,8 @@ functions:
           cors: true
           method: post
           path: "admin/users/{email}/enable"
+          default:
+            statusCode: 204
   appsApprove:
     handler: apps-approve.handler
     events:
@@ -111,6 +117,8 @@ functions:
           cors: true
           method: post
           path: "vendor/apps/{appId}/approve"
+          default:
+            statusCode: 202
   appsCreate:
     handler: apps-create.handler
     events:
@@ -120,6 +128,8 @@ functions:
           cors: true
           method: post
           path: vendor/apps
+          default:
+            statusCode: 201
   appsDetail:
     handler: apps-detail.handler
     events:
@@ -170,6 +180,8 @@ functions:
           cors: true
           method: patch
           path: vendor/apps/{appId}
+          default:
+            statusCode: 204
   appsVersionsList:
     handler: apps-versions.list
     events:
@@ -188,6 +200,8 @@ functions:
           cors: true
           method: post
           path: "vendor/apps/{appId}/versions/{version}/rollback"
+          default:
+            statusCode: 204
 
   authEmailTrigger:
     handler: auth.emailTrigger
@@ -199,6 +213,8 @@ functions:
           cors: true
           method: post
           path: "auth/confirm/{email}/{code}"
+          default:
+            statusCode: 204
       -
         http:
           cors: true
@@ -220,6 +236,8 @@ functions:
           cors: true
           method: post
           path: "auth/forgot/{email}"
+          default:
+            statusCode: 204
   authForgotConfirm:
     handler: auth.forgotConfirm
     events:
@@ -228,6 +246,8 @@ functions:
           cors: true
           method: post
           path: "auth/forgot/{email}/confirm"
+          default:
+            statusCode: 204
   authLogin:
     handler: auth.login
     events:
@@ -254,6 +274,8 @@ functions:
           cors: true
           method: put
           path: auth/profile
+          default:
+            statusCode: 204
   authSignup:
     handler: auth.signup
     events:
