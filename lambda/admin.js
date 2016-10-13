@@ -1,9 +1,6 @@
 'use strict';
 
-if (!global._babelPolyfill) {
-  require('babel-polyfill');
-}
-
+require('babel-polyfill');
 const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
@@ -36,6 +33,7 @@ module.exports.appApprove = vandium.createInstance({
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
     ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
   });
   async.waterfall([
     function (cb) {
@@ -108,7 +106,8 @@ module.exports.apps = vandium.createInstance({
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL
+    ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
   });
   async.waterfall([
     function (cb) {

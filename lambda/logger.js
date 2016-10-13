@@ -1,9 +1,6 @@
 'use strict';
 
-if (!global._babelPolyfill) {
-  require('babel-polyfill');
-}
-
+require('babel-polyfill');
 const _ = require('lodash');
 const env = require('../env.yml');
 const papertrail = require('winston-papertrail').Papertrail;

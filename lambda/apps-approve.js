@@ -1,9 +1,6 @@
 'use strict';
 
-if (!global._babelPolyfill) {
-  require('babel-polyfill');
-}
-
+require('babel-polyfill');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
@@ -33,6 +30,7 @@ module.exports.handler = vandium.createInstance({
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
     ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
   });
   async.waterfall([
     function (callbackLocal) {

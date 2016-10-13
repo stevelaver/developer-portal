@@ -1,9 +1,6 @@
 'use strict';
 
-if (!global._babelPolyfill) {
-  require('babel-polyfill');
-}
-
+require('babel-polyfill');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
@@ -38,7 +35,8 @@ module.exports.detail = vandium.createInstance({
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL
+    ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
   });
   async.waterfall([
     function (callbackLocal) {
@@ -76,7 +74,8 @@ module.exports.list = vandium.createInstance({
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL
+    ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
   });
   async.waterfall([
     function (callbackLocal) {
@@ -117,7 +116,8 @@ module.exports.versions = vandium.createInstance({
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL
+    ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
   });
   async.waterfall([
     function(callbackLocal) {
@@ -155,7 +155,8 @@ module.exports.vendorsList = vandium.createInstance({
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL
+    ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
   });
   db.listVendors(event.query.offset, event.query.limit, function(err, result) {
     db.end();
@@ -182,7 +183,8 @@ module.exports.vendorDetail = vandium.createInstance({
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL
+    ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
   });
   db.getVendor(event.path.vendor, function(err, result) {
     db.end();

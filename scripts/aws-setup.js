@@ -164,6 +164,7 @@ setup.deleteCognitoPool = function (region, id, cb) {
     }
 
     process.stdout.write(`Cognito Pool removed: ${id} `);
+    cb();
   });
 };
 
@@ -174,5 +175,6 @@ setup.deleteRds = function (region, id, cb) {
     }
 
     process.stdout.write(`Rds removed: ${id} `);
+    cb();
   });
 };
