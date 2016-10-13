@@ -282,7 +282,7 @@ module.exports.users = vandium.createInstance({
       filter = 'cognito:user_status = "Confirmed"';
       break;
   }
-  const provider = new aws.CognitoIdentityServiceProvider({region: env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
   async.waterfall([
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
@@ -290,7 +290,7 @@ module.exports.users = vandium.createInstance({
     function (user, cb) {
       provider.listUsers({
         UserPoolId: env.COGNITO_POOL_ID,
-        Filter: filter
+        Filter: filter,
       }, cb);
     },
     function(data, cb) {

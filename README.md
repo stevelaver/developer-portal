@@ -9,70 +9,23 @@ Application based on Serverless framework utilizing AWS Lamda, API Gateway and C
 
 ### Installation
 
-1. Install Serverless 1.0 rc: `npm install -g serverless@1.0.0-rc.1`
-2. Checkout git repository: `git clone git@github.com:keboola/developer-portal.git`
-3. Cd into directory: `cd developer-portal`
-4. Install npm dependencies: `npm install` and dev dependencies `npm install --only=dev`
-5. Install AWS CLI (e.g. `pip install awscli` on Mac)
-6. Setup sender of emails, verify the address and save it to `env.yml`:
- 
-        aws ses verify-email-identity \
-            -- email-address <value>
- 
-7. Create Cognito User Pool and save it's id and arn to `env.yml`: 
+1. Install Serverless 1.0: `npm install -g serverless`
+2. Install AWS CLI (e.g. `pip install awscli` on Mac)
+3. Checkout git repository: `git clone git@github.com:keboola/developer-portal.git`
+4. Cd into directory: `cd developer-portal`
+5. Install npm dependencies: `npm install` and dev dependencies `npm install --only=dev`
+6. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= make`
+  - `SERVICE_NAME` - Name of the Serverless service. Will be used as prefix for created AWS services, should be only alphanumeric with optional dashes
+  - `REGION` - AWS region where the services should be created
+  - `RDS_PASSWORD` - Desired password for created database
+  - `RDS_INSTANCE_CLASS` - Desired instance class of created RDS, see http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
+  - `SES_EMAIL_FROM` - Email address used as sender for emails
+  - `STAGE` - Stage of the service (`dev`, `test`, `prod`)
+  - `LOG_HOST` - Papertrail endpoint hostname
+  - `LOG_PORT` - Papertrail endpoint port
+  - The script will put created identifiers to file `env.yml`
+7. Confirm email sender, AWS should send you confirmation request
 
-        aws cognito-idp create-user-pool \
-            --pool-name <value> \
-            --policies PasswordPolicy={MinimumLength=8,RequireUppercase=true,RequireLowercase=true,RequireNumbers=true,RequireSymbols=false} \
-            --email-configuration <SES verified email ARN>
-        
-8. Add attribute to Cognito User Pool:
+### Cleanup
 
-         aws cognito-idp add-custom-attributes \
-            --user-pool-id <value> \
-            --custom-attributes Name=isAdmin,AttributeDataType=integer,DeveloperOnlyAttribute=false,Mutable=true,Required=false,NumberAttributeConstraints={MinValue=0,MaxValue=1}
-        
-9. Create Cognito User Pool Client and save it's id to `env.yml`:
-
-        aws cognito-idp create-user-pool-client \
-            --user-pool-id <value> \
-            --client-name <value> \
-            --no-generate-secret \
-            --read-attributes "custom:isAdmin" \
-            --write-attributes "profile" \
-            --explicit-auth-flows ADMIN_NO_SRP_AUTH
-
-10. Create Myql 5.7 RDS and save credentials to `env.yml`, e.g.:
-
-        aws rds create-db-instance \
-            --allocated-storage 1 \
-            --db-name <value> \
-            --db-instance-dientifier <value> \
-            --db-instance-class <value> \
-            --engine mysql \
-            --engine-version 5.7 \
-            --master-username <value> \
-            --master-user-password <value> \
-            --publicly-accessible true
-        
-11. Create `env.yml` file with following configuration:
-
-        SERVICE_NAME: dev-portal
-        REGION: us-east-1
-        COGNITO_CLIENT_ID: 
-        COGNITO_POOL_ID: 
-        COGNITO_POOL_ARN: 
-        SES_EMAIL_FROM: 
-        RDS_HOST: 
-        RDS_USER: 
-        RDS_PASSWORD: 
-        RDS_DATABASE: 
-        RDS_SSL: Amazon RDS
-        S3_BUCKET_ICONS: 
-        ICONS_PUBLIC_FOLDER: 
-        LOG_HOST: logs.papertrailapp.com
-        LOG_PORT: 
-
-12. Deploy all resources using command `sls deploy`
-
-13. Run `node scripts/setup-log-subscriber.js <logger-function-arn>` to setup logging
+1. Run `make remove` to remove all resources from AWS

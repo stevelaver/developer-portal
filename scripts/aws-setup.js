@@ -16,7 +16,7 @@ setup.saveAccountId = function (cb) {
     }
     accountId = _.trim(out);
     console.info(`Account id saved: ${accountId}`);
-    return cb();
+    return cb(null, accountId);
   });
 };
 
@@ -30,9 +30,10 @@ setup.registerEmail = function (region, email, cb) {
   });
 };
 
-setup.createCognitoPool = function (region, name, emailArn, cb) {
+setup.createCognitoPool = function (region, name, email, cb) {
   async.waterfall([
     (cb2) => {
+      const emailArn = `arn:aws:ses:${region}:${accountId}:identity/${email}`;
       exec(`aws cognito-idp create-user-pool --region ${region} --pool-name ${name} \
         --policies '{"PasswordPolicy":{"MinimumLength":8,"RequireUppercase":true,"RequireLowercase":true,"RequireNumbers":true,"RequireSymbols":false}}' \
         --email-configuration SourceArn=${emailArn} --auto-verified-attributes email`, (err, out) => {
@@ -57,18 +58,20 @@ setup.createCognitoPool = function (region, name, emailArn, cb) {
     (poolId, cb2) => {
       exec(`aws cognito-idp create-user-pool-client --region ${region} --user-pool-id ${poolId} --client-name ${name} \
         --no-generate-secret --read-attributes "custom:isAdmin" --write-attributes "profile" \
-        --explicit-auth-flows ADMIN_NO_SRP_AUTH`, (err) => {
+        --explicit-auth-flows ADMIN_NO_SRP_AUTH`, (err, out) => {
         if (err) {
           cb2(`Cognito Create Pool error: ${err}`);
         }
+        const clientId = JSON.parse(out).UserPoolClient.ClientId;
         console.info('Cognito User Pool Client created');
-        cb2();
+        cb2(null, { poolId, clientId });
       });
     },
   ], cb);
 };
 
-setup.updateCognitoPool = function (region, poolId, messageHandlerArn, cb) {
+setup.updateCognitoPool = function (region, poolId, name, stage, cb) {
+  const messageHandlerArn = `arn:aws:lambda:${region}:${accountId}:function:${name}-${stage}-authEmailTrigger`;
   exec(`aws cognito-idp update-user-pool --region ${region} --user-pool-id ${poolId} \
         --lambda-config '{"CustomMessage": "${messageHandlerArn}"}'`, (err) => {
     if (err) {
@@ -151,5 +154,25 @@ setup.subscribeLogs = function (region, service, stage, cb) {
     } else {
       cb2();
     }
-  }, cb) ;
+  }, cb);
+};
+
+setup.deleteCognitoPool = function (region, id, cb) {
+  exec(`aws cognito-idp delete-user-pool --region ${region} --user-pool-id ${id}`, (err) => {
+    if (err) {
+      cb(`Remove Cognito pool error: ${err}`);
+    }
+
+    process.stdout.write(`Cognito Pool removed: ${id} `);
+  });
+};
+
+setup.deleteRds = function (region, id, cb) {
+  exec(`aws rds delete-db-instance --region ${region} --db-instance-identifier ${id}`, (err) => {
+    if (err) {
+      cb(`Remove rds error: ${err}`);
+    }
+
+    process.stdout.write(`Rds removed: ${id} `);
+  });
 };
