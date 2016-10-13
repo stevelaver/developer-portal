@@ -1,14 +1,19 @@
 'use strict';
+
+if (!global._babelPolyfill) {
+  require('babel-polyfill');
+}
+
 const async = require('async');
-const db = require('./lib/db');
-const log = require('lib/log');
+const db = require('../lib/db');
+const env = require('../env.yml');
+const log = require('../lib/log');
 const vandium = require('vandium');
-require('dotenv').config();
 
 const addIcons = function(app) {
   app.icon = {
-    32: app.icon32 ? process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon32 : null,
-    64: app.icon64 ? process.env.ICONS_PUBLIC_FOLDER + '/' + app.icon64 : null
+    32: app.icon32 ? env.ICONS_PUBLIC_FOLDER + '/' + app.icon32 : null,
+    64: app.icon64 ? env.ICONS_PUBLIC_FOLDER + '/' + app.icon64 : null
   };
   delete app.icon32;
   delete app.icon64;
@@ -29,11 +34,11 @@ module.exports.detail = vandium.createInstance({
 }).handler(function(event, context, callback) {
   log.start('publicDetail', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   async.waterfall([
     function (callbackLocal) {
@@ -67,11 +72,11 @@ module.exports.list = vandium.createInstance({
 }).handler(function(event, context, callback) {
   log.start('publicList', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   async.waterfall([
     function (callbackLocal) {
@@ -108,11 +113,11 @@ module.exports.versions = vandium.createInstance({
 }).handler(function(event, context, callback) {
   log.start('publicVersions', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   async.waterfall([
     function(callbackLocal) {
@@ -146,11 +151,11 @@ module.exports.vendorsList = vandium.createInstance({
 }).handler(function(event, context, callback) {
   log.start('publicVendorsList', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   db.listVendors(event.query.offset, event.query.limit, function(err, result) {
     db.end();
@@ -173,11 +178,11 @@ module.exports.vendorDetail = vandium.createInstance({
 }).handler(function(event, context, callback) {
   log.start('publicVendorDetail', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   db.getVendor(event.path.vendor, function(err, result) {
     db.end();

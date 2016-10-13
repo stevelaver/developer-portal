@@ -62,7 +62,7 @@ Application based on Serverless framework utilizing AWS Lamda, API Gateway and C
         COGNITO_CLIENT_ID: 
         COGNITO_POOL_ID: 
         COGNITO_POOL_ARN: 
-        SES_EMAIL: 
+        SES_EMAIL_FROM: 
         RDS_HOST: 
         RDS_USER: 
         RDS_PASSWORD: 

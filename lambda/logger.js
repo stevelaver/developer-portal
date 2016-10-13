@@ -1,8 +1,14 @@
+'use strict';
+
+if (!global._babelPolyfill) {
+  require('babel-polyfill');
+}
+
 const _ = require('lodash');
+const env = require('../env.yml');
 const papertrail = require('winston-papertrail').Papertrail;
 const winston = require('winston');
 const zlib = require('zlib');
-require('dotenv').config({ silent: true });
 
 exports.handler = function (event, context, callback) {
   const payload = new Buffer(event.awslogs.data, 'base64');
@@ -17,10 +23,10 @@ exports.handler = function (event, context, callback) {
     }
 
     log.add(papertrail, {
-      host: process.env.LOG_HOST,
-      port: process.env.LOG_PORT,
+      host: env.LOG_HOST,
+      port: env.LOG_PORT,
       hostname: 'developer-portal',
-      program: process.env.SERVICE_NAME,
+      program: env.SERVICE_NAME,
       flushOnClose: true,
       includeMetaInMessage: false,
       handleExceptions: true,

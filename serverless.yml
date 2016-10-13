@@ -1,6 +1,7 @@
 ---
 custom:
   writeEnvVars: ${file(./env.yml)}
+  webpackIncludeModules: true
 
 service: "${file(./env.yml):SERVICE_NAME}"
 
@@ -8,6 +9,7 @@ plugins:
    - serverless-plugin-write-env-vars
    - serverless-offline
    - serverless-run-function-plugin
+   - serverless-webpack
 
 package:
   exclude:
@@ -330,20 +332,3 @@ functions:
           cors: true
           method: get
           path: "vendors/{vendor}"
-
-#resources:
-#  Resources:
-#    IconsBucket:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: "${file(./env.yml):S3_BUCKET_ICONS}
-#    Database:
-#      Type: AWS::RDS::DBInstance
-#      Properties:
-#        AllocatedStorage: 1
-#        DBInstanceClass: db.t2.micro
-#        Engine: MySQL
-#        EngineVersion: 5.7
-#        DBName:
-#        MasterUsername: "${file(./env.yml):RDS_USER}
-#        MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}

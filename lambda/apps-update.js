@@ -1,10 +1,15 @@
 'use strict';
+
+if (!global._babelPolyfill) {
+  require('babel-polyfill');
+}
+
 const async = require('async');
-const db = require('lib/db');
-const identity = require('lib/identity');
-const log = require('lib/log');
+const db = require('../lib/db');
+const env = require('../env.yml');
+const identity = require('../lib/identity');
+const log = require('../lib/log');
 const vandium = require('vandium');
-require('dotenv').config({silent: true});
 
 module.exports.handler = vandium.createInstance({
   validation: {
@@ -63,15 +68,15 @@ module.exports.handler = vandium.createInstance({
 }).handler(function(event, context, callback) {
   log.start('appsUpdate', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   async.waterfall([
     function (callbackLocal) {
-      identity.getUser(process.env.REGION, event.headers.Authorization, callbackLocal);
+      identity.getUser(env.REGION, event.headers.Authorization, callbackLocal);
     },
     function (user, callbackLocal) {
       db.checkAppAccess(event.path.appId, user.vendor, function(err) {

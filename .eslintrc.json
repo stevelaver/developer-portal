@@ -3,6 +3,7 @@
   "plugins": [],
   "rules": {
     "func-names": 0,
+    "no-console": 0,
 
     // doesn't work in node v4 :(
     "strict": 0,

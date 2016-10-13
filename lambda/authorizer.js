@@ -1,11 +1,12 @@
 'use strict';
+
+const env = require('../env.yml');
 const jwt = require('jsonwebtoken');
 const request = require('request');
 const jwkToPem = require('jwk-to-pem');
-require('dotenv').config({silent: true});
 
-const userPoolId = process.env.COGNITO_POOL_ID;
-const region = process.env.REGION;
+const userPoolId = env.COGNITO_POOL_ID;
+const region = env.REGION;
 const iss = 'https://cognito-idp.' + region + '.amazonaws.com/' + userPoolId;
 var pems;
 

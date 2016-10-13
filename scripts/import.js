@@ -1,8 +1,8 @@
 'use script';
+
 require('dotenv').config({path: '.env-test', silent: true});
 const _ = require('lodash');
 const async = require('async');
-const aws = require('aws-sdk');
 const db = require('../lib/db');
 const fs = require('fs');
 const mysql = require('mysql');
@@ -14,43 +14,39 @@ const rds = mysql.createConnection({
   password: process.env.FUNC_RDS_PASSWORD,
   database: process.env.FUNC_RDS_DATABASE,
   ssl: process.env.RDS_SSL ? 'Amazon RDS' : false,
-  multipleStatements: true
+  multipleStatements: true,
 });
 
 const args = process.argv.slice(2);
 
 const downloadIcon = function(uri, id, size, callback) {
-  if (!fs.existsSync('icons/'+id)) {
-    fs.mkdirSync('icons/'+id);
+  if (!fs.existsSync(`icons/${id}`)) {
+    fs.mkdirSync(`icons/${id}`);
   }
-  if (!fs.existsSync('icons/'+id+'/'+size)) {
-    fs.mkdirSync('icons/'+id+'/'+size);
+  if (!fs.existsSync(`icons/${id}/${size}`)) {
+    fs.mkdirSync(`icons/${id}/${size}`);
   }
-  request({uri: uri})
-    .pipe(fs.createWriteStream('icons/'+id+'/'+size+'/1.png'))
-    .on('close', function() {
-      callback();
-    })
-    .on('error', function(err) {
-      console.log(err);
-    });
+  request({ uri: uri })
+    .pipe(fs.createWriteStream(`icons/${id}/${size}/1.png`))
+    .on('close', () => callback())
+    .on('error', err => console.log(err));
 };
 
 const downloadIcons = function() {
   fs.readFile(args[0], 'utf8', (err, data) => {
     if (err) throw err;
     data = JSON.parse(data);
-    data.apis.forEach(function(app) {
+    data.apis.forEach((app) => {
       if (app.ico32) {
-        downloadIcon(app.ico32, app.id, 32, function() {
-          
+        downloadIcon(app.ico32, app.id, 32, () => {
+          //
         });
       } else {
         console.log(app.id, '32px Icon Missing');
       }
       if (app.ico64) {
-        downloadIcon(app.ico64, app.id, 64, function() {
-          
+        downloadIcon(app.ico64, app.id, 64, () => {
+          //
         });
       } else {
         console.log(app.id, '64px Icon Missing');
@@ -59,15 +55,15 @@ const downloadIcons = function() {
   });
 };
 
-var flags = [];
-var types = [];
+let flags = [];
+const types = [];
 
-const getData = function(callbackMain) {
+const getData = function (callbackMain) {
   fs.readFile(args[0], 'utf8', (err, data) => {
-    var result = [];
+    const result = [];
     if (err) throw err;
     data = JSON.parse(data);
-    async.each(data.apis, function(app, callback) {
+    async.each(data.apis, (app, callback) => {
       if (_.has(app, 'data.vendor.contact')) {
         if (_.startsWith(app.data.vendor.contact[0], 'Blue Sky')) {
           app.vendor = 'blueskydigital';
@@ -145,13 +141,13 @@ const getData = function(callbackMain) {
       }
 
       app.repoOptions = null;
-      if (app.repoType=='builder') {
+      if (app.repoType === 'builder') {
         app.repoOptions = _.get(app, 'data.definition.build_options');
       }
       if (_.has(app, 'data.definition.repository.username') && _.has(app, 'data.definition.repository.#password')) {
         app.repoOptions = {
           username: app.data.definition.repository.username,
-          '#password': app.data.definition.repository['#password']
+          '#password': app.data.definition.repository['#password'],
         };
       }
 
@@ -173,7 +169,7 @@ const getData = function(callbackMain) {
           type: app.repoType,
           uri: _.get(app, 'data.definition.uri', null),
           tag: _.get(app, 'data.definition.tag', null),
-          options: app.repoOptions
+          options: app.repoOptions,
         },
         shortDescription: app.description,
         longDescription: app.longDescription,
@@ -197,50 +193,44 @@ const getData = function(callbackMain) {
         loggerConfiguration: _.has(app, 'data.logging.gelf_server_type') ? {transport: app.data.logging.gelf_server_type} : {},
         icon32: app.ico32 ? app.id + '/32/1.png' : null,
         icon64: app.ico64 ? app.id + '/64/1.png' : null,
-        legacyUri: (app.uri != 'https://syrup.keboola.com/docker/' + app.id) ? app.uri : null
+        legacyUri: (app.uri !== `https://syrup.keboola.com/docker/${app.id}`) ? app.uri : null,
       });
       callback();
-    }, function(err) {
-      callbackMain(err, result);
-    });
+    }, err2 => callbackMain(err2, result));
   });
 };
 
 const saveData = function(data, callbackMain) {
   async.parallel([
-    function(cb) {
-      rds.query('SET FOREIGN_KEY_CHECKS = 0;TRUNCATE TABLE appVersions;TRUNCATE TABLE apps;', function(err) {
-        cb(err);
-      });
+    function (cb) {
+      rds.query('SET FOREIGN_KEY_CHECKS = 0;TRUNCATE TABLE appVersions;TRUNCATE TABLE apps;', err => cb(err));
     },
     function(cb) {
-      async.each(data, function(resApp, callback) {
+      async.each(data, (resApp, callback) => {
         const dbApp = db.formatAppInput(resApp);
-        rds.query('INSERT IGNORE INTO apps SET ?', dbApp, function(err) {
+        rds.query('INSERT IGNORE INTO apps SET ?', dbApp, (err) => {
           if (err) {
             console.log(resApp);
-            throw(err);
+            throw err;
           }
           delete dbApp.vendor;
           delete dbApp.isApproved;
-          rds.query('INSERT IGNORE INTO appVersions SET ?', dbApp, function(err) {
-            if (err) {
+          rds.query('INSERT IGNORE INTO appVersions SET ?', dbApp, (err2) => {
+            if (err2) {
               console.log(resApp);
-              throw(err);
+              throw err2;
             }
             callback();
           });
         });
       }, cb);
-    }
+    },
   ], callbackMain);
 };
 
-getData(function(err, res) {
+getData((err, res) => {
   if (err) {
     throw err;
   }
-  saveData(res, function() {
-    process.exit();
-  });
+  saveData(res, () => process.exit());
 });

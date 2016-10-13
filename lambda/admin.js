@@ -1,12 +1,17 @@
 'use strict';
+
+if (!global._babelPolyfill) {
+  require('babel-polyfill');
+}
+
 const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
-const db = require('lib/db');
-const identity = require('lib/identity');
-const log = require('lib/log');
+const db = require('../lib/db');
+const env = require('../env.yml');
+const identity = require('../lib/identity');
+const log = require('../lib/log');
 const vandium = require('vandium');
-require('dotenv').config();
 
 
 /**
@@ -16,25 +21,25 @@ module.exports.appApprove = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required')),
       }),
       path: vandium.types.object().keys({
-        id: vandium.types.string().required()
-      })
-    }
-  }
+        id: vandium.types.string().required(),
+      }),
+    },
+  },
 }).handler(function(event, context, callback) {
   log.start('adminAppApprove', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL,
   });
   async.waterfall([
     function (cb) {
-      identity.getAdmin(process.env.REGION, event.headers.Authorization, cb);
+      identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
     function(user, cb) {
       db.getApp(event.path.id, null, function(err, data) {
@@ -55,9 +60,9 @@ module.exports.appApprove = vandium.createInstance({
       });
     },
     function(app, vendor, cb) {
-      const ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
+      const ses = new aws.SES({apiVersion: '2010-12-01', region: env.REGION});
       ses.sendEmail({
-        Source: process.env.SES_EMAIL,
+        Source: env.SES_EMAIL_FROM,
         Destination: { ToAddresses: [vendor.email] },
         Message: {
           Subject: {
@@ -99,15 +104,15 @@ module.exports.apps = vandium.createInstance({
 }).handler(function(event, context, callback) {
   log.start('adminApps', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   async.waterfall([
     function (cb) {
-      identity.getAdmin(process.env.REGION, event.headers.Authorization, cb);
+      identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
     function (user, cb) {
       db.listApps(event.query.filter, event.query.offset, event.query.limit, function(err, result) {
@@ -135,14 +140,14 @@ module.exports.userAdmin = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('adminUserAdmin', event);
-  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: env.REGION});
   async.waterfall([
     function (cb) {
-      identity.getAdmin(process.env.REGION, event.headers.Authorization, cb);
+      identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
     function(user, cb) {
       provider.adminGetUser({
-        UserPoolId: process.env.COGNITO_POOL_ID,
+        UserPoolId: env.COGNITO_POOL_ID,
         Username: event.path.email
       }, function(err, data) {
         if (err) {
@@ -159,7 +164,7 @@ module.exports.userAdmin = vandium.createInstance({
     },
     function(user, cb) {
       provider.adminUpdateUserAttributes({
-        UserPoolId: process.env.COGNITO_POOL_ID,
+        UserPoolId: env.COGNITO_POOL_ID,
         Username: event.path.email,
         UserAttributes: [
           {
@@ -191,14 +196,14 @@ module.exports.userEnable = vandium.createInstance({
   }
 }).handler(function(event, context, callback) {
   log.start('adminUserEnable', event);
-  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: env.REGION});
   async.waterfall([
     function (cb) {
-      identity.getAdmin(process.env.REGION, event.headers.Authorization, cb);
+      identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
     function(user, cb) {
       provider.adminGetUser({
-        UserPoolId: process.env.COGNITO_POOL_ID,
+        UserPoolId: env.COGNITO_POOL_ID,
         Username: event.path.email
       }, function(err, data) {
         if (err) {
@@ -214,7 +219,7 @@ module.exports.userEnable = vandium.createInstance({
     },
     function(user, cb) {
       provider.adminEnableUser({
-        UserPoolId: process.env.COGNITO_POOL_ID,
+        UserPoolId: env.COGNITO_POOL_ID,
         Username: event.path.email
       }, function(err) {
         return err ? cb(err) : cb(null, user);
@@ -222,9 +227,9 @@ module.exports.userEnable = vandium.createInstance({
     },
     function(user, cb) {
       const vendor = _.get(_.find(user.UserAttributes, function(o) { return o.Name == 'profile'; }), 'Value', null);
-      const ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
+      const ses = new aws.SES({apiVersion: '2010-12-01', region: env.REGION});
       ses.sendEmail({
-        Source: process.env.SES_EMAIL,
+        Source: env.SES_EMAIL_FROM,
         Destination: { ToAddresses: [event.path.email] },
         Message: {
           Subject: {
@@ -277,14 +282,14 @@ module.exports.users = vandium.createInstance({
       filter = 'cognito:user_status = "Confirmed"';
       break;
   }
-  const provider = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+  const provider = new aws.CognitoIdentityServiceProvider({region: env.REGION});
   async.waterfall([
     function (cb) {
-      identity.getAdmin(process.env.REGION, event.headers.Authorization, cb);
+      identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
     function (user, cb) {
       provider.listUsers({
-        UserPoolId: process.env.COGNITO_POOL_ID,
+        UserPoolId: env.COGNITO_POOL_ID,
         Filter: filter
       }, cb);
     },

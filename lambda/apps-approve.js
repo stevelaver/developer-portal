@@ -1,11 +1,15 @@
 'use strict';
+
+if (!global._babelPolyfill) {
+  require('babel-polyfill');
+}
+
 const async = require('async');
-const aws = require('aws-sdk');
-const db = require('lib/db');
-const identity = require('lib/identity');
-const log = require('lib/log');
+const db = require('../lib/db');
+const env = require('../env.yml');
+const identity = require('../lib/identity');
+const log = require('../lib/log');
 const vandium = require('vandium');
-require('dotenv').config({silent: true});
 
 /**
  * Approve
@@ -14,33 +18,31 @@ module.exports.handler = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required')),
       }),
       path: vandium.types.object().keys({
-        appId: vandium.types.string().required().error(Error('[422] Parameter appId is required'))
-      })
-    }
-  }
-}).handler(function(event, context, callback) {
+        appId: vandium.types.string().required().error(Error('[422] Parameter appId is required')),
+      }),
+    },
+  },
+}).handler((event, context, callback) => {
   log.start('appsApprove', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL,
   });
   async.waterfall([
     function (callbackLocal) {
-      identity.getUser(process.env.REGION, event.headers.Authorization, callbackLocal);
+      identity.getUser(env.REGION, event.headers.Authorization, callbackLocal);
     },
     function (user, callbackLocal) {
-      db.checkAppAccess(event.path.appId, user.vendor, function(err) {
-        return callbackLocal(err);
-      });
+      db.checkAppAccess(event.path.appId, user.vendor, err => callbackLocal(err));
     },
-    function(callbackLocal) {
-      db.getApp(event.path.appId, null, function(err, data) {
+    function (callbackLocal) {
+      db.getApp(event.path.appId, null, (err, data) => {
         if (err) {
           return callbackLocal(err);
         }
@@ -51,7 +53,7 @@ module.exports.handler = vandium.createInstance({
         return callbackLocal(err, data);
       });
     },
-    function(app, callbackLocal) {
+    function (app, callbackLocal) {
       if (!app.repository.type) {
         return callbackLocal(Error('[400] App property repository.type cannot be empty'));
       }
@@ -79,31 +81,10 @@ module.exports.handler = vandium.createInstance({
       if (!app.icon64) {
         return callbackLocal(Error('[400] App icon of size 64px is missing, upload it first.'));
       }
-      return callbackLocal(null, app);
-    }
-  ], function(err, app) {
-    if (err) {
-      db.end();
-      return callback(err);
-    }
-
-    const ses = new aws.SES({apiVersion: '2010-12-01', region: process.env.REGION});
-    ses.sendEmail({
-      Source: process.env.SES_EMAIL,
-      Destination: { ToAddresses: [process.env.SES_EMAIL] },
-      Message: {
-        Subject: {
-          Data: '[dev-portal] Request for approval of app ' + app.id
-        },
-        Body: {
-          Text: {
-            Data: JSON.stringify(app, null, 4)
-          }
-        }
-      }
-    }, function(errLocal) {
-      db.end();
-      return callback(errLocal);
-    });
+      return callbackLocal();
+    },
+  ], (err) => {
+    db.end();
+    return callback(err);
   });
 });

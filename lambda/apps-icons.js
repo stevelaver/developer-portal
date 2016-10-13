@@ -1,12 +1,17 @@
 'use strict';
+
+if (!global._babelPolyfill) {
+  require('babel-polyfill');
+}
+
 const async = require('async');
 const aws = require('aws-sdk');
-const db = require('lib/db');
-const identity = require('lib/identity');
-const log = require('lib/log');
+const db = require('../lib/db');
+const env = require('../env.yml');
+const identity = require('../lib/identity');
+const log = require('../lib/log');
 const moment = require('moment');
 const vandium = require('vandium');
-require('dotenv').config({silent: true});
 
 module.exports.links = vandium.createInstance({
   validation: {
@@ -22,15 +27,15 @@ module.exports.links = vandium.createInstance({
 }).handler(function(event, context, callback) {
   log.start('appsIcons', event);
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   async.waterfall([
     function (callbackLocal) {
-      identity.getUser(process.env.REGION, event.headers.Authorization, callbackLocal);
+      identity.getUser(env.REGION, event.headers.Authorization, callbackLocal);
     },
     function (user, callbackLocal) {
       db.checkAppAccess(event.path.appId, user.vendor, function(err) {
@@ -46,7 +51,7 @@ module.exports.links = vandium.createInstance({
           s3.getSignedUrl(
             'putObject',
             {
-              Bucket: process.env.S3_BUCKET_ICONS,
+              Bucket: env.S3_BUCKET_ICONS,
               Key: event.path.appId + '/32/latest.png',
               Expires: validity,
               ContentType: 'image/png',
@@ -59,7 +64,7 @@ module.exports.links = vandium.createInstance({
           s3.getSignedUrl(
             'putObject',
             {
-              Bucket: process.env.S3_BUCKET_ICONS,
+              Bucket: env.S3_BUCKET_ICONS,
               Key: event.path.appId + '/64/latest.png',
               Expires: validity,
               ContentType: 'image/png',
@@ -100,11 +105,11 @@ module.exports.upload = vandium.createInstance().handler(function(event, context
   const size = key.split('/')[1];
 
   db.connect({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL
   });
   const s3 = new aws.S3();
   async.waterfall([
