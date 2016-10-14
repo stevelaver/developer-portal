@@ -12,7 +12,7 @@ async.waterfall([
   (cb) => {
     awsSetup.saveAccountId(cb);
   },
-  (cb) => {
+  (accountId, cb) => {
     awsSetup.updateCognitoPool(
       env.REGION,
       env.COGNITO_POOL_ID,
