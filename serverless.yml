@@ -93,13 +93,16 @@ provider:
     Outputs:
       RdsUri:
         Description: "RDS Endpoint"
-        Value: "Fn::GetAtt": ["Rds", "Endpoint.Address"]
+        Value:
+          "Fn::GetAtt": ["Rds", "Endpoint.Address"]
       RdsPort:
         Description: "RDS Port"
-        Value: "Fn::GetAtt": ["Rds", "Endpoint.Port"]
+        Value:
+          "Fn::GetAtt": ["Rds", "Endpoint.Port"]
       CloudFrontUri:
         Description: "CloudFront Uri"
-        Value: "Fn::GetAtt": ["CloudFront", "Distribution.DomainName"]
+        Value:
+          "Fn::GetAtt": ["CloudFront", "Distribution.DomainName"]
 
 functions:
   authorizer:

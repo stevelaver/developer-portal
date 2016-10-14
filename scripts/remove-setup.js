@@ -4,7 +4,7 @@ const async = require('async');
 const awsSetup = require('./aws-setup');
 const yaml = require('yamljs');
 
-const env = yaml.load('../env.yml');
+const env = yaml.load(`${__dirname}/../env.yml`);
 
 async.waterfall([
   (cb) => {
