@@ -145,9 +145,8 @@ setup.getCloudFormationOutput = function (region, name, stage, cb) {
       if (_.includes(['RdsUri', 'RdsPort', 'CloudFrontUri'], item.OutputKey)) {
         result[item.OutputKey] = item.OutputValue;
       }
-    }, () => {
-      console.info('- CloudFormation stack described');
-      cb(null, result);
     });
+    console.info('- CloudFormation stack described');
+    cb(null, result);
   });
 };

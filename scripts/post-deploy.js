@@ -38,6 +38,11 @@ async.waterfall([
     );
   },
   (data, cb) => {
+    const res = data;
+    res.RDS_HOST = data.RdsUri;
+    res.RDS_PORT = data.RdsPort;
+    res.CLOUDFRONT_URI = data.CloudFrontUri;
+    res.API_ENDPOINT = data.ServiceEndpoint;
     fs.writeFile(
       `${__dirname}/../env.yml`,
       yaml.stringify(_.assign(env, data)),
