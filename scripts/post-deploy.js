@@ -1,5 +1,6 @@
-'use script';
+'use strict';
 
+const _ = require('lodash');
 const async = require('async');
 const awsSetup = require('./aws-setup');
 const fs = require('fs');
@@ -29,22 +30,19 @@ async.waterfall([
     );
   },
   (cb) => {
-    awsSetup.registerCloudFront(
+    awsSetup.getCloudFormationOutput(
       env.REGION,
       env.SERVICE_NAME,
-      env.S3_BUCKET,
-      (err, res) => {
-        if (err) {
-          cb(err);
-        }
-        env.CLOUDFRONT_ID = res.id;
-        env.CLOUDFRONT_URI = res.uri;
-        cb();
-      }
+      env.STAGE,
+      cb
     );
   },
-  (cb) => {
-    fs.writeFile(`${__dirname}/../env.yml`, yaml.stringify(env), err => cb(err));
+  (data, cb) => {
+    fs.writeFile(
+      `${__dirname}/../env.yml`,
+      yaml.stringify(_.assign(env, data)),
+      err => cb(err)
+    );
   },
 ], (err) => {
   if (err) {

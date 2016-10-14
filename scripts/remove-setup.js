@@ -1,4 +1,4 @@
-'use script';
+'use strict';
 
 const async = require('async');
 const awsSetup = require('./aws-setup');
@@ -10,31 +10,10 @@ async.waterfall([
   (cb) => {
     awsSetup.saveAccountId(cb);
   },
-  (cb) => {
+  (accountId, cb) => {
     awsSetup.deleteCognitoPool(
       env.REGION,
       env.COGNITO_POOL_ID,
-      cb
-    );
-  },
-  (cb) => {
-    awsSetup.deleteRds(
-      env.REGION,
-      env.RDS_DATABASE,
-      cb
-    );
-  },
-  (cb) => {
-    awsSetup.deleteCloudFront(
-      env.REGION,
-      env.CLOUDFRONT_ID,
-      cb
-    );
-  },
-  (cb) => {
-    awsSetup.deleteS3Bucket(
-      env.REGION,
-      env.S3_BUCKET,
       cb
     );
   },

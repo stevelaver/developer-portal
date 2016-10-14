@@ -1,4 +1,4 @@
-'use script';
+'use strict';
 
 require('dotenv').config({path: '.env-test', silent: true});
 const _ = require('lodash');

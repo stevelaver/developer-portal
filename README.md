@@ -10,9 +10,9 @@ Application based on Serverless framework utilizing AWS Lamda, API Gateway and C
 ### Installation
 
 The installation process creates S3 bucket, Cognito User Pool, RDS instance,
-Lambda functions and API Gateway. All resources are prefixed with `SERVICE_NAME`
-variable. Please ensure that the prefix is unique, if resources with same
-identifiers already exist, the installation will fail.
+Cloudfront distribution, Lambda functions and API Gateway. All resources are
+prefixed with `SERVICE_NAME` variable. Please ensure that the prefix is unique,
+if resources with same identifiers already exist, the installation will fail.
 
 1. Install Serverless 1.0: `npm install -g serverless`
 2. Install AWS CLI (e.g. `pip install awscli` on Mac)

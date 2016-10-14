@@ -1,8 +1,7 @@
-'use script';
+'use strict';
 
 const _ = require('lodash');
 const async = require('async');
-const aws = require('aws-sdk');
 const exec = require('child_process').exec;
 const yaml = require('yamljs');
 
@@ -16,7 +15,7 @@ setup.saveAccountId = function (cb) {
       return cb(`AWS get identity error: ${err}`);
     }
     accountId = _.trim(out);
-    console.info(`Account id saved: ${accountId}`);
+    console.info(`- Account id saved: ${accountId}`);
     return cb(null, accountId);
   });
 };
@@ -26,7 +25,7 @@ setup.registerEmail = function (region, email, cb) {
     if (err) {
       return cb(`SES registration error: ${err}`);
     }
-    console.info(`Email registered in SES: ${email}`);
+    console.info(`- Email registered in SES: ${email}`);
     return cb();
   });
 };
@@ -42,7 +41,7 @@ setup.createCognitoPool = function (region, name, email, cb) {
           cb2(`Cognito Create Pool error: ${err}`);
         }
         const poolId = JSON.parse(out).UserPool.Id;
-        console.info(`Cognito User Pool created: ${poolId}`);
+        console.info(`- Cognito User Pool created: ${poolId}`);
         cb2(null, poolId);
       });
     },
@@ -52,7 +51,7 @@ setup.createCognitoPool = function (region, name, email, cb) {
         if (err) {
           cb2(`Cognito Create Pool error: ${err}`);
         }
-        console.info('Attributes to Cognito User Pool added');
+        console.info('- Attributes to Cognito User Pool added');
         cb2(null, poolId);
       });
     },
@@ -64,7 +63,7 @@ setup.createCognitoPool = function (region, name, email, cb) {
           cb2(`Cognito Create Pool error: ${err}`);
         }
         const clientId = JSON.parse(out).UserPoolClient.ClientId;
-        console.info('Cognito User Pool Client created');
+        console.info('- Cognito User Pool Client created');
         cb2(null, { poolId, clientId });
       });
     },
@@ -78,52 +77,8 @@ setup.updateCognitoPool = function (region, poolId, name, stage, cb) {
     if (err) {
       cb(`Cognito Update Pool error: ${err}`);
     }
-    console.info(`Cognito User Pool updated: ${poolId}`);
+    console.info(`- Cognito User Pool updated: ${poolId}`);
     cb();
-  });
-};
-
-setup.createRds = function (region, name, password, instanceClass, cb) {
-  exec(`aws rds create-db-instance --region ${region} --allocated-storage 5 --db-name ${name} \
-        --db-instance-identifier ${name} --db-instance-class ${instanceClass} --engine mysql \
-        --engine-version 5.7 --master-username ${name} --master-user-password ${password} \
-        --publicly-accessible`, (err) => {
-    if (err) {
-      cb(`Create rds error: ${err}`);
-    }
-
-    process.stdout.write(`Creating RDS: ${name} `);
-    let endpoint = null;
-    let retry = 0;
-    async.whilst(() => !endpoint && retry < 60, (cb2) => {
-      retry += 1;
-      setTimeout(() => {
-        exec(`aws rds describe-db-instances --region ${region} --db-instance-identifier ${name}`, (err2, out) => {
-          if (err2) {
-            cb2(`Describing RDS error: ${err2}`);
-          }
-          process.stdout.write('.');
-          const data2 = JSON.parse(out);
-          if (_.has(data2, 'DBInstances')) {
-            if (data2.DBInstances.length === 1) {
-              if (_.has(data2.DBInstances[0], 'Endpoint')) {
-                endpoint = data2.DBInstances[0].Endpoint;
-              }
-            }
-          }
-          cb2();
-        });
-      }, 5000);
-    }, (err2) => {
-      if (err2) {
-        cb(err2);
-      }
-      if (!endpoint) {
-        cb(Error(`Waiting for creation of rds ${name} timed-out.`));
-      }
-      console.info(`RDS created: ${endpoint.Address}:${endpoint.Port}`);
-      cb(null, endpoint);
-    });
   });
 };
 
@@ -155,7 +110,13 @@ setup.subscribeLogs = function (region, service, stage, cb) {
     } else {
       cb2();
     }
-  }, cb);
+  }, (err) => {
+    if (err) {
+      cb(err);
+    }
+    console.info('- Logs subscribed');
+    cb();
+  });
 };
 
 setup.deleteCognitoPool = function (region, id, cb) {
@@ -164,92 +125,29 @@ setup.deleteCognitoPool = function (region, id, cb) {
       cb(`Remove Cognito pool error: ${err}`);
     }
 
-    process.stdout.write(`Cognito Pool ${id} removed`);
+    console.info(`- Cognito Pool ${id} removed`);
     cb();
   });
 };
 
-setup.deleteRds = function (region, id, cb) {
-  exec(`aws rds delete-db-instance --region ${region} --db-instance-identifier ${id}`, (err) => {
+setup.getCloudFormationOutput = function (region, name, stage, cb) {
+  exec(`aws cloudformation describe-stacks --region ${region} --stack-name ${name}-${stage}`, (err, res) => {
     if (err) {
-      cb(`Remove rds error: ${err}`);
+      cb(`Describe CloudFormation stack error: ${err}`);
     }
 
-    process.stdout.write(`Rds ${id} removed`);
-    cb();
-  });
-};
-
-setup.deleteS3Bucket = function (region, bucket, cb) {
-  exec(`aws s3 rm --region ${region} --recursive s3://${bucket}`, (err) => {
-    if (err) {
-      cb(`Remove s3 bucket error: ${err}`);
+    if (!_.has(res, 'Stacks') || res.Stacks.length < 1) {
+      cb(Error(`Describe CloudFormation stack error: ${JSON.stringify(res)}`));
     }
 
-    process.stdout.write(`S3 bucket ${bucket} removed`);
-    cb();
-  });
-};
-
-setup.registerCloudFront = function (region, name, bucket, cb) {
-  const cloudfront = new aws.CloudFront();
-  cloudfront.createDistribution({
-    DistributionConfig: {
-      CallerReference: name,
-      Origins: {
-        Items: [
-          {
-            S3OriginConfig: { OriginAccessIdentity: '' },
-            Id: `S3-${bucket}`,
-            DomainName: `${bucket}.s3.amazonaws.com`,
-          },
-        ],
-        Quantity: 1,
-      },
-      Enabled: true,
-      DefaultCacheBehavior: {
-        TargetOriginId: `S3-${bucket}`,
-        TrustedSigners: {
-          Enabled: false,
-          Quantity: 0,
-        },
-        ViewerProtocolPolicy: 'https-only',
-        ForwardedValues: {
-          Cookies: { Forward: 'none' },
-          QueryString: false,
-          MinTTL: 0,
-          MaxTTL: 31536000,
-          DefaultTTL: 86400,
-          AllowedMethods: {
-            Items: ['HEAD', 'GET'],
-            CachedMethods: {
-              Items: ['HEAD', 'GET'],
-              Quantity: 2,
-            },
-            Quantity: 2,
-          },
-          Compress: true,
-        },
-      },
-    },
-  }, (err, res) => {
-    if (err) {
-      cb(`Register Cloudfront error: ${err}`);
-    }
-
-    process.stdout.write(`Cloudfront registered: ${res.Distribution.DomainName}`);
-    cb(null, { id: res.Distribution.Id, uri: res.Distribution.DomainName });
-  });
-};
-
-setup.deleteCloudFront = function (region, id, cb) {
-  const cloudfront = new aws.CloudFront();
-  cloudfront.deleteDistribution({ Id: id }, (err) => {
-    if (err) {
-      cb(`Register Cloudfront error: ${err}`);
-    }
-
-    process.stdout.write(`Cloudfront deleted: ${id}`);
-    cb();
+    const result = {};
+    _.each(res.Stacks[0].Outputs, (item) => {
+      if (_.includes(['RdsUri', 'RdsPort', 'CloudFrontUri'], item.OutputKey)) {
+        result[item.OutputKey] = item.OutputValue;
+      }
+    }, () => {
+      console.info('- CloudFormation stack described');
+      cb(null, result);
+    });
   });
 };
