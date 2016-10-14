@@ -24,6 +24,20 @@ async.waterfall([
       cb
     );
   },
+  (cb) => {
+    awsSetup.deleteCloudFront(
+      env.REGION,
+      env.CLOUDFRONT_ID,
+      cb
+    );
+  },
+  (cb) => {
+    awsSetup.deleteS3Bucket(
+      env.REGION,
+      env.S3_BUCKET,
+      cb
+    );
+  },
 ], (err) => {
   if (err) {
     console.error(err);

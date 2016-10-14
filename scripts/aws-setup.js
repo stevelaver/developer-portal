@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const async = require('async');
+const aws = require('aws-sdk');
 const exec = require('child_process').exec;
 const yaml = require('yamljs');
 
@@ -163,7 +164,7 @@ setup.deleteCognitoPool = function (region, id, cb) {
       cb(`Remove Cognito pool error: ${err}`);
     }
 
-    process.stdout.write(`Cognito Pool removed: ${id} `);
+    process.stdout.write(`Cognito Pool ${id} removed`);
     cb();
   });
 };
@@ -174,7 +175,81 @@ setup.deleteRds = function (region, id, cb) {
       cb(`Remove rds error: ${err}`);
     }
 
-    process.stdout.write(`Rds removed: ${id} `);
+    process.stdout.write(`Rds ${id} removed`);
+    cb();
+  });
+};
+
+setup.deleteS3Bucket = function (region, bucket, cb) {
+  exec(`aws s3 rm --region ${region} --recursive s3://${bucket}`, (err) => {
+    if (err) {
+      cb(`Remove s3 bucket error: ${err}`);
+    }
+
+    process.stdout.write(`S3 bucket ${bucket} removed`);
+    cb();
+  });
+};
+
+setup.registerCloudFront = function (region, name, bucket, cb) {
+  const cloudfront = new aws.CloudFront();
+  cloudfront.createDistribution({
+    DistributionConfig: {
+      CallerReference: name,
+      Origins: {
+        Items: [
+          {
+            S3OriginConfig: { OriginAccessIdentity: '' },
+            Id: `S3-${bucket}`,
+            DomainName: `${bucket}.s3.amazonaws.com`,
+          },
+        ],
+        Quantity: 1,
+      },
+      Enabled: true,
+      DefaultCacheBehavior: {
+        TargetOriginId: `S3-${bucket}`,
+        TrustedSigners: {
+          Enabled: false,
+          Quantity: 0,
+        },
+        ViewerProtocolPolicy: 'https-only',
+        ForwardedValues: {
+          Cookies: { Forward: 'none' },
+          QueryString: false,
+          MinTTL: 0,
+          MaxTTL: 31536000,
+          DefaultTTL: 86400,
+          AllowedMethods: {
+            Items: ['HEAD', 'GET'],
+            CachedMethods: {
+              Items: ['HEAD', 'GET'],
+              Quantity: 2,
+            },
+            Quantity: 2,
+          },
+          Compress: true,
+        },
+      },
+    },
+  }, (err, res) => {
+    if (err) {
+      cb(`Register Cloudfront error: ${err}`);
+    }
+
+    process.stdout.write(`Cloudfront registered: ${res.Distribution.DomainName}`);
+    cb(null, { id: res.Distribution.Id, uri: res.Distribution.DomainName });
+  });
+};
+
+setup.deleteCloudFront = function (region, id, cb) {
+  const cloudfront = new aws.CloudFront();
+  cloudfront.deleteDistribution({ Id: id }, (err) => {
+    if (err) {
+      cb(`Register Cloudfront error: ${err}`);
+    }
+
+    process.stdout.write(`Cloudfront deleted: ${id}`);
     cb();
   });
 };

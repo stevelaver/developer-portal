@@ -49,7 +49,7 @@ module.exports.confirm = vandium.createInstance({
     if (err) return callback(err);
 
     // @TODO SNS message User ${event.path.email} requests approval
-    callback();
+    return callback();
   });
 });
 
@@ -271,7 +271,7 @@ module.exports.signup = vandium.createInstance({
         if (err) return callbackLocal(err);
 
         if (result.length === 0) {
-          return callbackLocal(Error(`[400] Vendor ${id} does not exist`));
+          return callbackLocal(Error(`[400] Vendor ${event.body.vendor} does not exist`));
         }
 
         return callbackLocal();
@@ -305,7 +305,7 @@ module.exports.signup = vandium.createInstance({
   });
 });
 
-module.exports.emailTrigger = function(event, context, callback) {
+module.exports.emailTrigger = function (event, context, callback) {
   switch (event.triggerSource) {
     case 'CustomMessage_SignUp':
       event.response.emailSubject = 'Welcome to Keboola Developer Portal';

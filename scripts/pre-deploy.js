@@ -11,6 +11,7 @@ const env = {
   STAGE: process.env.STAGE,
   SES_EMAIL_FROM: process.env.SES_EMAIL_FROM,
   RDS_PASSWORD: process.env.RDS_PASSWORD,
+  S3_BUCKET: `${process.env.SERVICE_NAME}-icons`,
 };
 
 async.waterfall([
@@ -61,7 +62,7 @@ async.waterfall([
     );
   },
   (cb) => {
-    fs.writeFile('../env.yml', yaml.stringify(env), err => cb(err));
+    fs.writeFile(`${__dirname}/../env.yml`, yaml.stringify(env), err => cb(err));
   },
 ], (err) => {
   if (err) {

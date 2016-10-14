@@ -32,7 +32,7 @@ provider:
         - "s3:*"
       Effect: Allow
       Resource:
-        - "arn:aws:s3:::${file(./env.yml):S3_BUCKET_ICONS}/*"
+        - "arn:aws:s3:::${file(./env.yml):S3_BUCKET}/*"
     -
       Action:
         - "ses:SendEmail"
@@ -161,7 +161,7 @@ functions:
     events:
       -
         s3:
-          bucket: "${file(./env.yml):S3_BUCKET_ICONS}"
+          bucket: "${file(./env.yml):S3_BUCKET}"
           event: "s3:ObjectCreated:Put"
           suffix: .png
   appsList:

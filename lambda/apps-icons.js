@@ -1,6 +1,7 @@
 'use strict';
 
 require('babel-polyfill');
+const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
 const db = require('../lib/db');
@@ -14,14 +15,15 @@ module.exports.links = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required()
+          .error(Error('[422] Authorization header is required')),
       }),
       path: vandium.types.object().keys({
-        appId: vandium.types.string().required()
-      })
-    }
-  }
-}).handler(function(event, context, callback) {
+        appId: vandium.types.string().required(),
+      }),
+    },
+  },
+}).handler((event, context, callback) => {
   log.start('appsIcons', event);
   db.connect({
     host: env.RDS_HOST,
@@ -32,65 +34,67 @@ module.exports.links = vandium.createInstance({
     port: env.RDS_PORT,
   });
   async.waterfall([
-    function (callbackLocal) {
-      identity.getUser(env.REGION, event.headers.Authorization, callbackLocal);
+    function (cb) {
+      identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
-    function (user, callbackLocal) {
-      db.checkAppAccess(event.path.appId, user.vendor, function(err) {
-        return callbackLocal(err);
-      });
+    function (user, cb) {
+      db.checkAppAccess(event.path.appId, user.vendor, err => cb(err));
     },
-    function(callbackLocal) {
+    function (cb) {
       const s3 = new aws.S3();
       const validity = 3600;
       const expires = moment().add(validity, 's').utc().format();
       async.parallel({
-        32: function (callbackLocal2) {
+        32: (callbackLocal2) => {
           s3.getSignedUrl(
             'putObject',
             {
-              Bucket: env.S3_BUCKET_ICONS,
-              Key: event.path.appId + '/32/latest.png',
+              Bucket: env.S3_BUCKET,
+              Key: `${event.path.appId}/32/latest.png`,
               Expires: validity,
               ContentType: 'image/png',
-              ACL: 'public-read'
+              ACL: 'public-read',
             },
             callbackLocal2
           );
         },
-        64: function (callbackLocal2) {
+        64: (callbackLocal2) => {
           s3.getSignedUrl(
             'putObject',
             {
-              Bucket: env.S3_BUCKET_ICONS,
-              Key: event.path.appId + '/64/latest.png',
+              Bucket: env.S3_BUCKET,
+              Key: `${event.path.appId}/64/latest.png`,
               Expires: validity,
               ContentType: 'image/png',
-              ACL: 'public-read'
+              ACL: 'public-read',
             },
             callbackLocal2
           );
-        }
-      }, function(err, data) {
+        },
+      }, (err, data) => {
+        const res = data;
         if (err) {
-          return callbackLocal(err);
+          return cb(err);
         }
-        data.expires = expires;
-        return callbackLocal(null, data);
+        res.expires = expires;
+        return cb(null, res);
       });
-    }
-  ], function(err, result) {
+    },
+  ], (err, result) => {
     db.end();
     return callback(err, result);
   });
 });
 
 
-module.exports.upload = vandium.createInstance().handler(function(event, context, callback) {
-  if (!event.hasOwnProperty('Records') || !event.Records.length || !event.Records[0].hasOwnProperty('s3')  ||
-    !event.Records[0].s3.hasOwnProperty('bucket') || !event.Records[0].s3.hasOwnProperty('object') ||
-    !event.Records[0].s3.bucket.hasOwnProperty('name') || !event.Records[0].s3.object.hasOwnProperty('key')) {
-    throw Error('Event is missing. See: ' + JSON.stringify(event));
+module.exports.upload = vandium.createInstance()
+.handler((event, context, callback) => {
+  if (!_.has(event, 'Records') || !event.Records.length ||
+    !_.has(event.Records[0], 's3') || !_.has(event.Records[0].s3, 'bucket') ||
+    !_.has(event.Records[0].s3, 'object') ||
+    !_.has(event.Records[0].s3.bucket, 'name') ||
+    !_.has(event.Records[0].s3.object, 'key')) {
+    throw Error(`Event is missing. See: ${JSON.stringify(event)}`);
   }
 
   if (event.Records[0].eventName !== 'ObjectCreated:Put') {
@@ -112,25 +116,23 @@ module.exports.upload = vandium.createInstance().handler(function(event, context
   });
   const s3 = new aws.S3();
   async.waterfall([
-    function(callbackLocal) {
-      db.addAppIcon(appId, size, function(err, version) {
-        return callbackLocal(null, version);
-      });
+    function (cb) {
+      db.addAppIcon(appId, size, (err, version) => cb(null, version));
     },
-    function(version, callbackLocal) {
+    function (version, cb) {
       s3.copyObject(
         {
-          CopySource: bucket + '/' + key,
+          CopySource: `${bucket}/${key}`,
           Bucket: bucket,
-          Key: appId + '/' + size + '/' + version + '.png',
-          ACL: 'public-read'
+          Key: `${appId}/${size}/${version}.png`,
+          ACL: 'public-read',
         },
-        function(err) {
-          callbackLocal(err);
+        (err) => {
+          cb(err);
         }
       );
-    }
-  ], function(err, result) {
+    },
+  ], (err, result) => {
     db.end();
     return callback(err, result);
   });
