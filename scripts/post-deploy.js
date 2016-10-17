@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('lodash');
 const async = require('async');
 const awsSetup = require('./aws-setup');
 const fs = require('fs');
@@ -21,14 +20,14 @@ async.waterfall([
       cb
     );
   },
-  (cb) => {
+  /*(cb) => {
     awsSetup.subscribeLogs(
       env.REGION,
       env.SERVICE_NAME,
       env.STAGE,
       cb
     );
-  },
+  },*/
   (cb) => {
     awsSetup.getCloudFormationOutput(
       env.REGION,
@@ -38,14 +37,13 @@ async.waterfall([
     );
   },
   (data, cb) => {
-    const res = data;
-    res.RDS_HOST = data.RdsUri;
-    res.RDS_PORT = data.RdsPort;
-    res.CLOUDFRONT_URI = data.CloudFrontUri;
-    res.API_ENDPOINT = data.ServiceEndpoint;
+    env.RDS_HOST = data.RdsUri;
+    env.RDS_PORT = data.RdsPort;
+    env.CLOUDFRONT_URI = data.CloudFrontUri;
+    env.API_ENDPOINT = data.ServiceEndpoint;
     fs.writeFile(
       `${__dirname}/../env.yml`,
-      yaml.stringify(_.assign(env, data)),
+      yaml.stringify(env),
       err => cb(err)
     );
   },

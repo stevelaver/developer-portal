@@ -91,17 +91,17 @@ setup.subscribeLogs = function (region, service, stage, cb) {
         --statement-id ${service}-${stage}-${item} --action lambda:InvokeFunction \
         --principal logs.${region}.amazonaws.com`, (err) => {
             if (err) {
-              cb3(`Add function ${item} permission error: ${err}`);
+              console.warn(`Add function ${item} permission error: ${err}`);
             }
             cb3();
           });
         },
         (cb3) => {
-          exec(`aws logs put-subscription-filter --region ${region} --filter-pattern  \
+          exec(`aws logs put-subscription-filter --region ${region} --filter-pattern '' \
           --filter-name LambdaToPapertrail-${service}-${stage} --log-group-name /aws/lambda/${service}-${stage}-${item} \
           --destination-arn arn:aws:lambda:${region}:${accountId}:function:${service}-${stage}-logger`, (err) => {
             if (err) {
-              cb3(`Add function ${item} permission error: ${err}`);
+              console.warn(`Add function ${item} permission error: ${err}`);
             }
             cb3();
           });
@@ -131,10 +131,11 @@ setup.deleteCognitoPool = function (region, id, cb) {
 };
 
 setup.getCloudFormationOutput = function (region, name, stage, cb) {
-  exec(`aws cloudformation describe-stacks --region ${region} --stack-name ${name}-${stage}`, (err, res) => {
+  exec(`aws cloudformation describe-stacks --region ${region} --stack-name ${name}-${stage}`, (err, out) => {
     if (err) {
       cb(`Describe CloudFormation stack error: ${err}`);
     }
+    const res = JSON.parse(out);
 
     if (!_.has(res, 'Stacks') || res.Stacks.length < 1) {
       cb(Error(`Describe CloudFormation stack error: ${JSON.stringify(res)}`));
@@ -142,7 +143,7 @@ setup.getCloudFormationOutput = function (region, name, stage, cb) {
 
     const result = {};
     _.each(res.Stacks[0].Outputs, (item) => {
-      if (_.includes(['RdsUri', 'RdsPort', 'CloudFrontUri'], item.OutputKey)) {
+      if (_.includes(['RdsUri', 'RdsPort', 'CloudFrontUri', 'ServiceEndpoint'], item.OutputKey)) {
         result[item.OutputKey] = item.OutputValue;
       }
     });

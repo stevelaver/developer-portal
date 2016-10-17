@@ -54,55 +54,6 @@ provider:
       Effect: Allow
       Resource:
         - "*"
-  resources:
-    Resources:
-      Rds:
-        Type: AWS::RDS::DBInstance
-        Properties:
-          AllocatedStorage: "5"
-          DbName: "${file(./env.yml):RDS_DATABASE}"
-          DbInstanceIdentifier: "${file(./env.yml):SERVICE_NAME}-rds"
-          DbInstanceClass: "${file(./env.yml):RDS_INSTANCE_CLASS}"
-          Engine: "mysql"
-          EngineVersion: "5.7"
-          MasterUsername: "${file(./env.yml):RDS_USER}"
-          MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}"
-      CloudFront:
-        Type: AWS::CloudFront::Distribution
-        Properties:
-          DistributionConfig:
-            Origins:
-              -
-                DomainName: ${file(./env.yml):S3_BUCKET}.s3.amazonaws.com
-                Id: "S3-${file(./env.yml):S3_BUCKET}"
-                S3OriginConfig:
-                  OriginAccessIdentity:
-            Enabled: 'true'
-            DefaultCacheBehavior:
-              AllowedMethods:
-                - GET
-                - HEAD
-              TargetOriginId: "S3-${file(./env.yml):S3_BUCKET}"
-              ForwardedValues:
-                QueryString: 'false'
-                Cookies:
-                  Forward: none
-              ViewerProtocolPolicy: https-only
-            ViewerCertificate:
-              CloudFrontDefaultCertificate: 'true'
-    Outputs:
-      RdsUri:
-        Description: "RDS Endpoint"
-        Value:
-          "Fn::GetAtt": ["Rds", "Endpoint.Address"]
-      RdsPort:
-        Description: "RDS Port"
-        Value:
-          "Fn::GetAtt": ["Rds", "Endpoint.Port"]
-      CloudFrontUri:
-        Description: "CloudFront Uri"
-        Value:
-          "Fn::GetAtt": ["CloudFront", "Distribution.DomainName"]
 
 functions:
   authorizer:
@@ -383,3 +334,54 @@ functions:
           cors: true
           method: get
           path: "vendors/{vendor}"
+
+resources:
+  Resources:
+    Rds:
+      Type: AWS::RDS::DBInstance
+      Properties:
+        AllocatedStorage: "5"
+        DBName: "${file(./env.yml):RDS_DATABASE}"
+        DBInstanceIdentifier: "${file(./env.yml):SERVICE_NAME}-rds"
+        DBInstanceClass: "${file(./env.yml):RDS_INSTANCE_CLASS}"
+        Engine: "mysql"
+        EngineVersion: "5.7"
+        MasterUsername: "${file(./env.yml):RDS_USER}"
+        MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}"
+        PubliclyAccessible: "true"
+    CloudFront:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Origins:
+            -
+              DomainName: ${file(./env.yml):S3_BUCKET}.s3.amazonaws.com
+              Id: "S3-${file(./env.yml):S3_BUCKET}"
+              S3OriginConfig:
+                OriginAccessIdentity: ""
+          Enabled: 'true'
+          DefaultCacheBehavior:
+            AllowedMethods:
+              - GET
+              - HEAD
+            TargetOriginId: "S3-${file(./env.yml):S3_BUCKET}"
+            ForwardedValues:
+              QueryString: 'false'
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: https-only
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: 'true'
+  Outputs:
+    RdsUri:
+      Description: "RDS Endpoint"
+      Value:
+        "Fn::GetAtt": ["Rds", "Endpoint.Address"]
+    RdsPort:
+      Description: "RDS Port"
+      Value:
+        "Fn::GetAtt": ["Rds", "Endpoint.Port"]
+    CloudFrontUri:
+      Description: "CloudFront Uri"
+      Value:
+        "Fn::GetAtt": ["CloudFront", "DomainName"]
