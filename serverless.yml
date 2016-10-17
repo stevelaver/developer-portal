@@ -297,11 +297,13 @@ functions:
           cors: true
           method: get
           path: "apps/{appId}"
+          integration: lambda-proxy
       -
         http:
           cors: true
           method: get
           path: "apps/{appId}/versions/{version}"
+          integration: lambda-proxy
   publicList:
     handler: public.list
     events:

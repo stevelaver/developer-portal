@@ -1,42 +1,46 @@
 'use strict';
 
-require('dotenv').config({path: '.env-test', silent: true});
 const _ = require('lodash');
 const async = require('async');
 const db = require('../lib/db');
+const env = require('../lib/env').load();
 const fs = require('fs');
 const mysql = require('mysql');
 const request = require('request');
+const awsSetup = require('./aws-setup');
 
 const rds = mysql.createConnection({
-  host: process.env.FUNC_RDS_HOST,
-  user: process.env.FUNC_RDS_USER,
-  password: process.env.FUNC_RDS_PASSWORD,
-  database: process.env.FUNC_RDS_DATABASE,
-  ssl: process.env.RDS_SSL ? 'Amazon RDS' : false,
+  host: env.RDS_HOST,
+  port: env.RDS_PORT,
+  user: env.RDS_USER,
+  password: env.RDS_PASSWORD,
+  database: env.RDS_DATABASE,
+  ssl: env.RDS_SSL,
   multipleStatements: true,
 });
 
 const args = process.argv.slice(2);
 
-const downloadIcon = function(uri, id, size, callback) {
+const downloadIcon = function (uri, id, size, callback) {
   if (!fs.existsSync(`icons/${id}`)) {
     fs.mkdirSync(`icons/${id}`);
   }
   if (!fs.existsSync(`icons/${id}/${size}`)) {
     fs.mkdirSync(`icons/${id}/${size}`);
   }
-  request({ uri: uri })
+  request({ uri })
     .pipe(fs.createWriteStream(`icons/${id}/${size}/1.png`))
     .on('close', () => callback())
     .on('error', err => console.log(err));
 };
 
-const downloadIcons = function() {
-  fs.readFile(args[0], 'utf8', (err, data) => {
+const getIcons = function (cb) {
+  if (!fs.existsSync('icons')) {
+    fs.mkdirSync('icons');
+  }
+  fs.readFile(args[1], 'utf8', (err, data) => {
     if (err) throw err;
-    data = JSON.parse(data);
-    data.apis.forEach((app) => {
+    JSON.parse(data).apis.forEach((app) => {
       if (app.ico32) {
         downloadIcon(app.ico32, app.id, 32, () => {
           //
@@ -52,6 +56,7 @@ const downloadIcons = function() {
         console.log(app.id, '64px Icon Missing');
       }
     });
+    cb();
   });
 };
 
@@ -59,11 +64,14 @@ let flags = [];
 const types = [];
 
 const getData = function (callbackMain) {
-  fs.readFile(args[0], 'utf8', (err, data) => {
+  fs.readFile(args[1], 'utf8', (err, data) => {
+    if (err) {
+      throw err;
+    }
+
     const result = [];
-    if (err) throw err;
-    data = JSON.parse(data);
-    async.each(data.apis, (app, callback) => {
+    async.each(JSON.parse(data).apis, (appIn, callback) => {
+      const app = appIn;
       if (_.has(app, 'data.vendor.contact')) {
         if (_.startsWith(app.data.vendor.contact[0], 'Blue Sky')) {
           app.vendor = 'blueskydigital';
@@ -190,9 +198,9 @@ const getData = function (callbackMain) {
         fees: _.includes(app.flags, 'appInfo.fee'),
         limits: null,
         logger: _.get(app, 'data.logging.type', 'standard'),
-        loggerConfiguration: _.has(app, 'data.logging.gelf_server_type') ? {transport: app.data.logging.gelf_server_type} : {},
-        icon32: app.ico32 ? app.id + '/32/1.png' : null,
-        icon64: app.ico64 ? app.id + '/64/1.png' : null,
+        loggerConfiguration: _.has(app, 'data.logging.gelf_server_type') ? { transport: app.data.logging.gelf_server_type } : {},
+        icon32: app.ico32 ? `${app.id}/32/1.png` : null,
+        icon64: app.ico64 ? `${app.id}/64/1.png` : null,
         legacyUri: (app.uri !== `https://syrup.keboola.com/docker/${app.id}`) ? app.uri : null,
       });
       callback();
@@ -200,12 +208,12 @@ const getData = function (callbackMain) {
   });
 };
 
-const saveData = function(data, callbackMain) {
+const saveData = function (data, callbackMain) {
   async.parallel([
     function (cb) {
       rds.query('SET FOREIGN_KEY_CHECKS = 0;TRUNCATE TABLE appVersions;TRUNCATE TABLE apps;', err => cb(err));
     },
-    function(cb) {
+    function (cb) {
       async.each(data, (resApp, callback) => {
         const dbApp = db.formatAppInput(resApp);
         rds.query('INSERT IGNORE INTO apps SET ?', dbApp, (err) => {
@@ -228,9 +236,27 @@ const saveData = function(data, callbackMain) {
   ], callbackMain);
 };
 
-getData((err, res) => {
-  if (err) {
-    throw err;
-  }
-  saveData(res, () => process.exit());
-});
+if (args[0] === 'data') {
+  getData((err, res) => {
+    if (err) {
+      throw err;
+    }
+    saveData(res, () => process.exit());
+  });
+} else if (args[0] === 'icons') {
+  getIcons((err) => {
+    console.log('ERR', err);
+    if (err) {
+      throw err;
+    }
+    awsSetup.s3Upload('icons', env.S3_BUCKET, (err2) => {
+      if (err2) {
+        throw err2;
+      }
+      process.exit();
+    });
+  });
+} else {
+  console.warn('No valid arguments, run with "data" or "icons" argument');
+  process.exit();
+}

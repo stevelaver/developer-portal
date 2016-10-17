@@ -1,6 +1,7 @@
 'use strict';
 
 require('babel-polyfill');
+const _ = require('lodash');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
@@ -41,6 +42,7 @@ module.exports.detail = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => {
+  log.init(env.LOG_HOST, env.LOG_PORT, env.SERVICE_NAME);
   log.start('publicDetail', event);
   dbConnect();
   async.waterfall([
@@ -66,7 +68,7 @@ module.exports.detail = vandium.createInstance({
 module.exports.list = vandium.createInstance({
   validation: {
     schema: {
-      query: vandium.types.object().keys({
+      queryStringParameters: vandium.types.object().allow(null).keys({
         offset: vandium.types.number().integer().default(0).allow(''),
         limit: vandium.types.number().integer().default(100).allow(''),
       }),
@@ -77,17 +79,24 @@ module.exports.list = vandium.createInstance({
   dbConnect();
   async.waterfall([
     function (callbackLocal) {
-      db.listAllPublishedApps(event.query.offset, event.query.limit, (err, res) => {
-        if (err) {
-          return callbackLocal(err);
+      db.listAllPublishedApps(
+        _.get(event, 'queryStringParameters.offset', null),
+        _.get(event, 'queryStringParameters.limit', null),
+        (err, res) => {
+          if (err) {
+            return callbackLocal(err);
+          }
+          res.map(addIcons);
+          return callbackLocal(null, res);
         }
-        res.map(addIcons);
-        return callbackLocal(null, res);
-      });
+      );
     },
   ], (err, result) => {
     db.end();
-    return callback(err, result);
+    return callback(err, {
+      statusCode: 200,
+      body: JSON.stringify(result),
+    });
   });
 });
 

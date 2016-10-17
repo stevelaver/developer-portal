@@ -151,3 +151,12 @@ setup.getCloudFormationOutput = function (region, name, stage, cb) {
     cb(null, result);
   });
 };
+
+setup.s3Upload = function (folder, bucket, cb) {
+  exec(`aws s3 sync ${folder} s3://${bucket} --acl public-read`, (err) => {
+    if (err) {
+      return cb(`S3 upload error: ${err}`);
+    }
+    return cb();
+  });
+};

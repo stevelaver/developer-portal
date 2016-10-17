@@ -15,7 +15,7 @@ const env = {
   RDS_DATABASE: dbName,
   RDS_USER: dbName,
   RDS_PASSWORD: process.env.RDS_PASSWORD,
-  RDS_SSL: 'Amazon SSL',
+  RDS_SSL: 'Amazon RDS',
   S3_BUCKET: `${process.env.SERVICE_NAME}-icons`,
   LOG_HOST: process.env.LOG_HOST,
   LOG_PORT: process.env.LOG_PORT,

@@ -32,6 +32,11 @@ if resources with same identifiers already exist, the installation will fail.
     - `LOG_PORT` - Papertrail endpoint port
 7. Confirm email sender, AWS should send you confirmation request
 
+Optionally you can import data from KBC:
+1. download `https://connection.keboola.com/admin/manage-apps/apis-list` to a file
+2. run `node scripts/import.js data <path-to-the-file.json>` to load data to db
+3. run `node scripts/import.js icons <path-to-the-file.json>` to get app icons and upload to s3
+
 ### Cleanup
 
 1. Run `make remove` to remove all resources from AWS
