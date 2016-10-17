@@ -17,6 +17,8 @@ const env = {
   RDS_PASSWORD: process.env.RDS_PASSWORD,
   RDS_SSL: 'Amazon SSL',
   S3_BUCKET: `${process.env.SERVICE_NAME}-icons`,
+  LOG_HOST: process.env.LOG_HOST,
+  LOG_PORT: process.env.LOG_PORT,
 };
 
 async.waterfall([
