@@ -11,6 +11,34 @@ const request = require('../lib/request');
 const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
+const authError = function (err) {
+  if (!err) {
+    return null;
+  }
+  let newErr = new UserError(err.message);
+  newErr.type = err.code;
+  switch (err.code) {
+    case 'UserNotFoundException':
+      newErr.message = 'User not found.';
+      newErr.code = 404;
+      break;
+    case 'ExpiredCodeException':
+    case 'CodeMismatchException':
+      newErr.code = 404;
+      break;
+    case 'LimitExceededException':
+      newErr.code = 400;
+      break;
+    case 'NotAuthorizedException':
+    case 'UserNotConfirmedException':
+      newErr.code = 401;
+      break;
+    default:
+      newErr = err;
+  }
+  return newErr;
+};
+
 /**
  * Confirm
  */
@@ -36,16 +64,7 @@ module.exports.confirm = vandium.createInstance({
         ClientId: env.COGNITO_CLIENT_ID,
         ConfirmationCode: event.pathParameters.code,
         Username: event.pathParameters.email,
-      }, (err) => {
-        let newErr = err;
-        if (err.code === 'ExpiredCodeException' ||
-          err.code === 'CodeMismatchException') {
-          newErr = new UserError('Invalid verification code provided.');
-          newErr.code = 404;
-          newErr.type = err.code;
-        }
-        return cb(newErr);
-      });
+      }, err => cb(authError(err)));
     },
     function (cb) {
       provider.adminDisableUser({
@@ -92,7 +111,12 @@ module.exports.confirmResend = vandium.createInstance({
       PASSWORD: event.body.password,
     },
   }, (err) => {
-    if (err && err.code === 'NotAuthorizedException') {
+    if (err && err.code === 'UserNotConfirmedException') {
+      provider.resendConfirmationCode({
+        ClientId: env.COGNITO_CLIENT_ID,
+        Username: event.body.email,
+      }, err2 => request.response(err2, null, event, context, callback, 204));
+    } else if (err && err.code === 'NotAuthorizedException') {
       return request.response(
         new UserError('Already confirmed'),
         null,
@@ -100,13 +124,9 @@ module.exports.confirmResend = vandium.createInstance({
         context,
         callback
       );
-    } else if (err && err.code === 'UserNotConfirmedException') {
-      provider.resendConfirmationCode({
-        ClientId: env.COGNITO_CLIENT_ID,
-        Username: event.body.email,
-      }, err2 => request.response(err2, null, event, context, callback, 204));
+    } else {
+      return request.response(authError(err), null, event, context, callback);
     }
-    return request.response(err, null, event, context, callback, 204);
   });
 }, context, callback));
 
@@ -131,7 +151,14 @@ module.exports.forgot = vandium.createInstance({
   provider.forgotPassword({
     ClientId: env.COGNITO_CLIENT_ID,
     Username: event.pathParameters.email,
-  }, err => request.response(err, null, event, context, callback, 204));
+  }, err => request.response(
+    authError(err),
+    null,
+    event,
+    context,
+    callback,
+    204
+  ));
 }, context, callback));
 
 
@@ -166,15 +193,14 @@ module.exports.forgotConfirm = vandium.createInstance({
     ConfirmationCode: event.body.code,
     Password: event.body.password,
     Username: event.pathParameters.email,
-  }, (err) => {
-    let newErr = err;
-    if (err.code === 'ExpiredCodeException' ||
-      err.code === 'CodeMismatchException') {
-      newErr = new UserError('Invalid verification code provided.');
-      newErr.code = 404;
-    }
-    return request.response(newErr, null, event, context, callback, 204);
-  });
+  }, err => request.response(
+    authError(err),
+    null,
+    event,
+    context,
+    callback,
+    204
+  ));
 }, context, callback));
 
 
@@ -207,15 +233,10 @@ module.exports.login = vandium.createInstance({
     },
   }, (err, data) => {
     if (err) {
-      let newErr = err;
-
-      // TODO Handle wrong credentials with UserError
-      if (err.code === 'UserNotConfirmedException') {
-        newErr = new UserError(err.message);
-      } else {
-        console.error(JSON.stringify(err));
+      const newErr = authError(err);
+      if (newErr.type === 'NotAuthorizedException') {
+        newErr.message = 'User is not approved yet.';
       }
-      newErr.code = 401;
       return request.response(newErr, null, event, context, callback);
     }
 
@@ -278,7 +299,7 @@ module.exports.profileChange = vandium.createInstance({
     PreviousPassword: event.body.oldPassword,
     ProposedPassword: event.body.newPassword,
     AccessToken: event.headers.Authorization,
-  }, err => request.response(err, null, event, context, callback, 204));
+  }, err => request.response(authError(err), null, event, context, callback, 204));
 }, context, callback));
 
 
@@ -353,7 +374,7 @@ module.exports.signup = vandium.createInstance({
             Value: event.body.vendor,
           },
         ],
-      }, err => cb(err));
+      }, err => cb(authError(err)));
     },
   ], (err) => {
     db.destroy();

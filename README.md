@@ -37,7 +37,7 @@ Optionally you can import data from KBC:
 2. run `node scripts/import.js data <path-to-the-file.json>` to load data to db
 3. run `node scripts/import.js icons <path-to-the-file.json>` to get app icons and upload to s3
 
-And you can setup created user as admin using command: `node scripts/setup-admin.js <email> enable`
+You can set created user as admin using command: `node scripts/setup-admin.js <email> enable`
 
 ### Cleanup
 

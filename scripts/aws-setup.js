@@ -57,7 +57,7 @@ setup.createCognitoPool = function (region, name, email, cb) {
     },
     (poolId, cb2) => {
       exec(`aws cognito-idp create-user-pool-client --region ${region} --user-pool-id ${poolId} --client-name ${name} \
-        --no-generate-secret --read-attributes "custom:isAdmin" --write-attributes profile email name "custom:isAdmin" \
+        --no-generate-secret --read-attributes profile email name "custom:isAdmin" --write-attributes profile email name "custom:isAdmin" \
         --explicit-auth-flows ADMIN_NO_SRP_AUTH`, (err, out) => {
         if (err) {
           cb2(`Cognito Create Pool error: ${err}`);

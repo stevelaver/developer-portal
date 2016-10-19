@@ -79,7 +79,7 @@ describe('auth', () => {
           },
         }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.null;
+          expect(body, JSON.stringify(body)).to.be.empty;
           cb();
         });
       },
@@ -148,7 +148,7 @@ describe('auth', () => {
           },
         }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.null;
+          expect(body, JSON.stringify(body)).to.be.empty;
           cb();
         });
       },
@@ -177,7 +177,7 @@ describe('auth', () => {
           url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
         }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.equal('null'); // be.null;
+          expect(body, JSON.stringify(body)).to.be.empty;
           cb();
         });
       },
