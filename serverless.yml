@@ -204,8 +204,7 @@ functions:
           cors: true
           method: post
           path: "vendor/apps/{appId}/versions/{version}/rollback"
-          default:
-            statusCode: 204
+          
 
   authEmailTrigger:
     handler: auth.emailTrigger
@@ -217,13 +216,13 @@ functions:
           cors: true
           method: post
           path: "auth/confirm/{email}/{code}"
-          default:
-            statusCode: 204
+          integration: lambda-proxy
       -
         http:
           cors: true
           method: get
           path: "auth/confirm/{email}/{code}"
+          integration: lambda-proxy
   authConfirmResend:
     handler: auth.confirmResend
     events:
@@ -232,6 +231,7 @@ functions:
           cors: true
           method: post
           path: auth/confirm
+          integration: lambda-proxy
   authForgot:
     handler: auth.forgot
     events:
@@ -240,8 +240,7 @@ functions:
           cors: true
           method: post
           path: "auth/forgot/{email}"
-          default:
-            statusCode: 204
+          integration: lambda-proxy
   authForgotConfirm:
     handler: auth.forgotConfirm
     events:
@@ -250,8 +249,7 @@ functions:
           cors: true
           method: post
           path: "auth/forgot/{email}/confirm"
-          default:
-            statusCode: 204
+          integration: lambda-proxy
   authLogin:
     handler: auth.login
     events:
@@ -260,6 +258,7 @@ functions:
           cors: true
           method: post
           path: auth/login
+          integration: lambda-proxy
   authProfile:
     handler: auth.profile
     events:
@@ -269,6 +268,7 @@ functions:
           cors: true
           method: get
           path: auth/profile
+          integration: lambda-proxy
   authProfileChange:
     handler: auth.profileChange
     events:
@@ -278,8 +278,7 @@ functions:
           cors: true
           method: put
           path: auth/profile
-          default:
-            statusCode: 204
+          integration: lambda-proxy
   authSignup:
     handler: auth.signup
     events:
@@ -288,6 +287,7 @@ functions:
           cors: true
           method: post
           path: auth/signup
+          integration: lambda-proxy
 
   publicDetail:
     handler: public.detail
@@ -312,6 +312,7 @@ functions:
           cors: true
           method: get
           path: apps
+          integration: lambda-proxy
   publicVersions:
     handler: public.versions
     events:
@@ -320,6 +321,7 @@ functions:
           cors: true
           method: get
           path: "apps/{appId}/versions"
+          integration: lambda-proxy
   publicVendors:
     handler: public.vendorsList
     events:
@@ -328,6 +330,7 @@ functions:
           cors: true
           method: get
           path: "vendors"
+          integration: lambda-proxy
   publicVendor:
     handler: public.vendorDetail
     events:
@@ -336,6 +339,7 @@ functions:
           cors: true
           method: get
           path: "vendors/{vendor}"
+          integration: lambda-proxy
 
 resources:
   Resources:

@@ -1,211 +1,218 @@
 'use strict';
-require('dotenv').config({path: '.env-test', silent: true});
 
-var async = require('async');
-var aws = require('aws-sdk');
-var expect = require('chai').expect;
-var mysql = require('mysql');
-var request = require('request');
+const async = require('async');
+const aws = require('aws-sdk');
+const env = require('../../lib/env').load();
+const expect = require('chai').expect;
+const mysql = require('mysql');
+const request = require('request');
 
-var rds = mysql.createConnection({
-  host: process.env.FUNC_RDS_HOST,
-  user: process.env.FUNC_RDS_USER,
-  password: process.env.FUNC_RDS_PASSWORD,
-  database: process.env.FUNC_RDS_DATABASE,
-  ssl: process.env.RDS_SSL ? 'Amazon RDS' : false,
-  multipleStatements: true
+const rds = mysql.createConnection({
+  host: env.RDS_HOST,
+  port: env.RDS_PORT,
+  user: env.RDS_USER,
+  password: env.RDS_PASSWORD,
+  database: env.RDS_DATABASE,
+  ssl: env.RDS_SSL,
+  multipleStatements: true,
 });
 
-const vendor = 'v' + Date.now();
-const userEmail = 'u' + Date.now() + '@test.com';
+const vendor = `v${Date.now()}`;
+const userEmail = `u${Date.now()}@test.com`;
 const userPassword1 = 'uiOU.-jfdksfj88';
 const userPassword2 = 'uiOU.-jfdksfj89';
 
-var cognito = new aws.CognitoIdentityServiceProvider({region: process.env.REGION});
+const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
 
-describe('auth', function() {
-  before(function(done) {
-    rds.query('INSERT INTO vendors SET ?', {id: vendor, name: 'test', address: 'test', email: 'test'}, function(err) {
-      done(err);
-    });
+describe('auth', () => {
+  before((done) => {
+    rds.query(
+      'INSERT INTO vendors SET ?',
+      { id: vendor, name: 'test', address: 'test', email: 'test' },
+      err => done(err)
+    );
   });
 
-  it('create user flow', function(done) {
+  it('create user flow', (done) => {
     async.waterfall([
-      function(callback) {
+      (cb) => {
         // 1) Signup
         request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/signup',
+          url: `${env.API_ENDPOINT}/auth/signup`,
           json: true,
           body: {
             email: userEmail,
             password: userPassword1,
             name: 'Test',
-            vendor: vendor
-          }
-        }, function(err, res, body) {
-          expect(err).to.be.null;
-          expect(body).to.be.null;
-          callback();
-        });
-      },
-      function(callback) {
-        // 2) Login without confirmation
-        request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/login',
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1
-          }
-        }, function(err, res, body) {
-          expect(err).to.be.null;
-          expect(body).to.have.property('errorType');
-          expect(body.errorType).to.equal('UserNotConfirmedException');
-          callback();
-        });
-      },
-      function(callback) {
-        // 3) Resend confirmation
-        request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/confirm',
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1
-          }
-        }, function(err, res, body) {
+            vendor,
+          },
+        }, (err, res, body) => {
           expect(err).to.be.null;
           expect(body, JSON.stringify(body)).to.be.null;
-          callback();
+          cb();
         });
       },
-      function(callback) {
-        // 4) Confirm
-        // We can't get valid code so we try with some invalid to check that function works and confirm user manually
+      (cb) => {
+        // 2) Login without confirmation
         request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/confirm/'+process.env.FUNC_USER_EMAIL+'/000000'
-        }, function(err, res, body) {
-          expect(err).to.be.null;
-          body = JSON.parse(body);
-          expect(body).to.have.property('errorType');
-          expect(body.errorType).to.be.oneOf(['CodeMismatchException', 'ExpiredCodeException']);
-          callback();
-        });
-      },function(callback) {
-        cognito.adminConfirmSignUp({UserPoolId: process.env.COGNITO_POOL_ID, Username: userEmail}, function(err) {
-          callback(err);
-        });
-      },
-      function(callback) {
-        // 5) Login
-        request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/login',
+          url: `${env.API_ENDPOINT}/auth/login`,
           json: true,
           body: {
             email: userEmail,
-            password: userPassword1
-          }
-        }, function(err, res, body) {
+            password: userPassword1,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null;
+          expect(body, JSON.stringify(body)).to.have.property('errorType');
+          expect(body.errorType).to.equal('UserNotConfirmedException');
+          cb();
+        });
+      },
+      (cb) => {
+        // 3) Resend confirmation
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/confirm`,
+          json: true,
+          body: {
+            email: userEmail,
+            password: userPassword1,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null;
+          expect(body, JSON.stringify(body)).to.be.null;
+          cb();
+        });
+      },
+      (cb) => {
+        // 4) Confirm
+        // We can't get valid code so we try with some invalid to check that
+        // function works and confirm user manually
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/confirm/${process.env.FUNC_USER_EMAIL}/000`,
+        }, (err, res, bodyIn) => {
+          expect(err).to.be.null;
+          const body = JSON.parse(bodyIn);
+          expect(body, JSON.stringify(body)).to.have.property('errorType');
+          expect(body.errorType).to.be
+            .oneOf(['CodeMismatchException', 'ExpiredCodeException']);
+          cb();
+        });
+      },
+      (cb) => {
+        cognito.adminConfirmSignUp(
+          { UserPoolId: env.COGNITO_POOL_ID, Username: userEmail },
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        // 5) Login
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/login`,
+          json: true,
+          body: {
+            email: userEmail,
+            password: userPassword1,
+          },
+        }, (err, res, body) => {
           expect(err).to.be.null;
           expect(body, JSON.stringify(body)).to.have.property('token');
-          callback(null, body.token);
+          cb(null, body.token);
         });
       },
-      function(token, callback) {
+      (token, cb) => {
         // 6) Get Profile
         request.get({
-          url: process.env.FUNC_API_BASE_URI + '/auth/profile',
+          url: `${env.API_ENDPOINT}/auth/profile`,
           headers: {
-            Authorization: token
-          }
-        }, function(err, res, body) {
+            Authorization: token,
+          },
+        }, (err, res, bodyIn) => {
           expect(err).to.be.null;
-          body = JSON.parse(body);
+          const body = JSON.parse(bodyIn);
           expect(body, JSON.stringify(body)).to.have.property('vendor');
           expect(body.vendor).to.equal(vendor);
-          callback(null, token);
+          cb(null, token);
         });
       },
-      function(token, callback) {
+      (token, cb) => {
         // 7) Change password
         request.put({
-          url: process.env.FUNC_API_BASE_URI + '/auth/profile',
+          url: `${env.API_ENDPOINT}/auth/profile`,
           headers: {
-            Authorization: token
+            Authorization: token,
           },
           json: true,
           body: {
             oldPassword: userPassword1,
-            newPassword: userPassword2
-          }
-        }, function(err, res, body) {
+            newPassword: userPassword2,
+          },
+        }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body).to.be.null;
-          callback();
+          expect(body, JSON.stringify(body)).to.be.null;
+          cb();
         });
       },
-      function(callback) {
+      (cb) => {
         // 8) Login with new password
         request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/login',
+          url: `${env.API_ENDPOINT}/auth/login`,
           json: true,
           body: {
             email: userEmail,
-            password: userPassword2
-          }
-        }, function(err, res, body) {
+            password: userPassword2,
+          },
+        }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body).to.have.property('token');
-          callback();
+          expect(body, JSON.stringify(body)).to.have.property('token');
+          cb();
         });
-      }
+      },
     ], done);
   });
 
-  it('forgot password flow', function(done) {
+  it('forgot password flow', (done) => {
     async.waterfall([
-      function (callback) {
+      (cb) => {
         request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/forgot/' + process.env.FUNC_USER_EMAIL
-        }, function (err, res, body) {
+          url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
+        }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body).to.equal('null'); //be.null;
-          callback();
+          expect(body, JSON.stringify(body)).to.equal('null'); // be.null;
+          cb();
         });
       },
-      function (callback) {
-        // Check with fake code - as we can't get real one from email so we just test if lambda function works
+      (cb) => {
+        // Check with fake code - as we can't get real one from email
+        // so we just test if lambda function works
         request.post({
-          url: process.env.FUNC_API_BASE_URI + '/auth/forgot/' + process.env.FUNC_USER_EMAIL + '/confirm',
+          url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}/confirm`,
           json: true,
           body: {
             password: userPassword1,
-            code: '000000'
-          }
-        }, function (err, res, body) {
+            code: '000000',
+          },
+        }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body).to.have.property('errorType');
-          expect(body.errorType).to.be.oneOf(['CodeMismatchException', 'ExpiredCodeException']);
-          callback();
+          expect(body, JSON.stringify(body)).to.have.property('errorType');
+          expect(body.errorType).to.be
+            .oneOf(['CodeMismatchException', 'ExpiredCodeException']);
+          cb();
         });
-      }
+      },
     ], done);
   });
 
-  after(function(done) {
+  after((done) => {
     async.waterfall([
-      function(callback) {
-        rds.query('DELETE FROM vendors WHERE id=?', vendor, function() {
-          callback();
-        });
+      (cb) => {
+        rds.query('DELETE FROM vendors WHERE id=?', vendor, () => cb());
       },
-      function(callback) {
-        cognito.adminDeleteUser({UserPoolId: process.env.COGNITO_POOL_ID, Username: userEmail}, function() {
-          // Ignore if does not exist
-          callback();
-        });
-      }
+      (cb) => {
+        cognito.adminDeleteUser(
+          { UserPoolId: env.COGNITO_POOL_ID, Username: userEmail },
+          () => cb()
+        );
+      },
     ], done);
   });
 });

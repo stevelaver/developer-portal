@@ -1,15 +1,13 @@
 'use strict';
-require('dotenv').config({path: '.env-test', silent: true});
 
-var async = require('async');
-var expect = require('chai').expect;
-var request = require('request');
+const async = require('async');
+const env = require('../../lib/env').load();
+const expect = require('chai').expect;
+const request = require('request');
 
-const vendor = process.env.FUNC_VENDOR;
-
-var checkAuth = function(err, res, body, callback) {
+const checkAuth = function (err, res, bodyIn, callback) {
   expect(err, JSON.stringify(err)).to.be.null;
-  body = JSON.parse(body);
+  const body = JSON.parse(bodyIn);
   expect(body).to.have.property('message');
   expect(body.message).to.equal('Unauthorized');
   expect(res).to.have.property('statusCode');
@@ -17,110 +15,126 @@ var checkAuth = function(err, res, body, callback) {
   callback();
 };
 
-describe('check if all endpoints have auth required', function() {
-  it('check apps', function(done) {
+describe('check if all endpoints have auth required', () => {
+  it('check apps', (done) => {
     async.parallel([
-      function(callback) {
+      (cb) => {
         // Get profile
-        request.get({url: process.env.FUNC_API_BASE_URI + '/auth/profile'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.get(
+          { url: `${env.API_ENDPOINT}/auth/profile` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Change password
-        request.put({url: process.env.FUNC_API_BASE_URI + '/auth/profile'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.put(
+          { url: `${env.API_ENDPOINT}/auth/profile` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Create app
-        request.post({url: process.env.FUNC_API_BASE_URI + '/vendor/apps'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.post(
+          { url: `${env.API_ENDPOINT}/vendor/apps` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Get app detail
-        request.get({url: process.env.FUNC_API_BASE_URI + '/vendor/apps/app'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.get(
+          { url: `${env.API_ENDPOINT}/vendor/apps/app` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // List apps
-        request.get({url: process.env.FUNC_API_BASE_URI + '/vendor/apps'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.get(
+          { url: `${env.API_ENDPOINT}/vendor/apps` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Approve
-        request.post({url: process.env.FUNC_API_BASE_URI + '/vendor/apps/app/approve'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.post(
+          { url: `${env.API_ENDPOINT}/vendor/apps/app/approve` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Update app
-        request.patch({url: process.env.FUNC_API_BASE_URI + '/vendor/apps/app'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.patch(
+          { url: `${env.API_ENDPOINT}/vendor/apps/app` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Request url to upload icons
-        request.post({url: process.env.FUNC_API_BASE_URI + '/vendor/apps/app/icons'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.post(
+          { url: `${env.API_ENDPOINT}/vendor/apps/app/icons` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Rollback version
-        request.post({url: process.env.FUNC_API_BASE_URI + '/vendor/apps/app/versions/1/rollback'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.post(
+          { url: `${env.API_ENDPOINT}/vendor/apps/app/versions/1/rollback` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // List versions
-        request.get({url: process.env.FUNC_API_BASE_URI + '/vendor/apps/app/versions'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.get(
+          { url: `${env.API_ENDPOINT}/vendor/apps/app/versions` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Get version
-        request.get({url: process.env.FUNC_API_BASE_URI + '/vendor/apps/app/versions/1'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
-      }
+        request.get(
+          { url: `${env.API_ENDPOINT}/vendor/apps/app/versions/1` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
+      },
     ], done);
   });
 
-  it('check admin', function(done) {
+  it('check admin', (done) => {
     async.parallel([
-      function(callback) {
+      (cb) => {
         // List users
-        request.get({url: process.env.FUNC_API_BASE_URI + '/admin/users'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.get(
+          { url: `${env.API_ENDPOINT}/admin/users` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Enable user
-        request.post({url: process.env.FUNC_API_BASE_URI + '/admin/users/test@test.com/enable'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.post(
+          { url: `${env.API_ENDPOINT}/admin/users/test@test.com/enable` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Make user admin
-        request.post({url: process.env.FUNC_API_BASE_URI + '/admin/users/test@test.com/admin'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.post(
+          { url: `${env.API_ENDPOINT}/admin/users/test@test.com/admin` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // List apps
-        request.get({url: process.env.FUNC_API_BASE_URI + '/admin/apps'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
+        request.get(
+          { url: `${env.API_ENDPOINT}/admin/apps` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
       },
-      function(callback) {
+      (cb) => {
         // Approve app
-        request.post({url: process.env.FUNC_API_BASE_URI + '/admin/apps/appId/approve'}, function(err, res, body) {
-          checkAuth(err, res, body, callback);
-        });
-      }
+        request.post(
+          { url: `${env.API_ENDPOINT}/admin/apps/appId/approve` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
+      },
     ], done);
   });
 });

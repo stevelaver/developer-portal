@@ -5,9 +5,10 @@ const async = require('async');
 const aws = require('aws-sdk');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
-const log = require('../lib/log');
 const moment = require('moment');
 const mysql = require('mysql');
+const request = require('../lib/request');
+const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 /**
@@ -16,42 +17,51 @@ const vandium = require('vandium');
 module.exports.confirm = vandium.createInstance({
   validation: {
     schema: {
-      path: vandium.types.object().keys({
-        email: vandium.types.string().required().error(Error('[422] Parameter email is required ' +
-          'and should have format of email address')),
-        code: vandium.types.string().required().error(Error('[422] Parameter code is required')),
+      pathParameters: vandium.types.object().keys({
+        email: vandium.types.string().required()
+          .error(new UserError('Parameter email is required and should have ' +
+          'format of email address')),
+        code: vandium.types.string().required()
+          .error(new UserError('Parameter code is required')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('authConfirm', event);
-  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+}).handler((event, context, callback) => request.errorHandler(() => {
+  const provider = new aws.CognitoIdentityServiceProvider({
+    region: env.REGION,
+  });
   async.waterfall([
-    function (callbackLocal) {
+    function (cb) {
       provider.confirmSignUp({
         ClientId: env.COGNITO_CLIENT_ID,
-        ConfirmationCode: event.path.code,
-        Username: event.path.email,
+        ConfirmationCode: event.pathParameters.code,
+        Username: event.pathParameters.email,
       }, (err) => {
-        if (err.code === 'ExpiredCodeException' || err.code === 'CodeMismatchException') {
-          err.message = '[404] Invalid verification code provided.';
+        let newErr = err;
+        if (err.code === 'ExpiredCodeException' ||
+          err.code === 'CodeMismatchException') {
+          newErr = new UserError('Invalid verification code provided.');
+          newErr.code = 404;
+          newErr.type = err.code;
         }
-        return callbackLocal(err);
+        return cb(newErr);
       });
     },
-    function(callbackLocal) {
+    function (cb) {
       provider.adminDisableUser({
         UserPoolId: env.COGNITO_POOL_ID,
-        Username: event.path.email,
-      }, err => callbackLocal(err));
+        Username: event.pathParameters.email,
+      }, err => cb(err));
     },
   ], (err) => {
-    if (err) return callback(err);
+    if (err) {
+      return request.response(err, null, event, context, callback);
+    }
 
-    // @TODO SNS message User ${event.path.email} requests approval
-    return callback();
+    // @TODO SNS message User ${event.pathParameters.email} requests approval
+    return request.response(null, null, event, context, callback, 204);
   });
-});
+}, context, callback));
 
 
 /**
@@ -61,15 +71,18 @@ module.exports.confirmResend = vandium.createInstance({
   validation: {
     schema: {
       body: vandium.types.object().keys({
-        email: vandium.types.string().required().error(Error('[422] Parameter email is required ' +
-          'and should have format of email address')),
-        password: vandium.types.string().required().error(Error('[422] Parameter password is required')),
+        email: vandium.types.string().required()
+          .error(new UserError('Parameter email is required and should have ' +
+          'format of email address')),
+        password: vandium.types.string().required()
+          .error(new UserError('Parameter password is required')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('authConfirmResend', event);
-  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+}).handler((event, context, callback) => request.errorHandler(() => {
+  const provider = new aws.CognitoIdentityServiceProvider({
+    region: env.REGION,
+  });
   provider.adminInitiateAuth({
     AuthFlow: 'ADMIN_NO_SRP_AUTH',
     ClientId: env.COGNITO_CLIENT_ID,
@@ -79,19 +92,23 @@ module.exports.confirmResend = vandium.createInstance({
       PASSWORD: event.body.password,
     },
   }, (err) => {
-    if (!err || err.code === 'NotAuthorizedException') {
-      return callback(Error('[400] Already confirmed'));
-    }
-    if (err.code === 'UserNotConfirmedException') {
+    if (err && err.code === 'NotAuthorizedException') {
+      return request.response(
+        new UserError('Already confirmed'),
+        null,
+        event,
+        context,
+        callback
+      );
+    } else if (err && err.code === 'UserNotConfirmedException') {
       provider.resendConfirmationCode({
         ClientId: env.COGNITO_CLIENT_ID,
         Username: event.body.email,
-      }, err2 => callback(err2));
-    } else {
-      return callback(err);
+      }, err2 => request.response(err2, null, event, context, callback, 204));
     }
+    return request.response(err, null, event, context, callback, 204);
   });
-});
+}, context, callback));
 
 
 /**
@@ -100,20 +117,22 @@ module.exports.confirmResend = vandium.createInstance({
 module.exports.forgot = vandium.createInstance({
   validation: {
     schema: {
-      path: vandium.types.object().keys({
-        email: vandium.types.string().required().error(Error('[422] Parameter email is required and ' +
-          'should have format of email address')),
+      pathParameters: vandium.types.object().allow(null).keys({
+        email: vandium.types.string().required()
+          .error(new UserError('Parameter email is required and should have ' +
+          'format of email address')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('authForgot', event);
-  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+}).handler((event, context, callback) => request.errorHandler(() => {
+  const provider = new aws.CognitoIdentityServiceProvider({
+    region: env.REGION,
+  });
   provider.forgotPassword({
     ClientId: env.COGNITO_CLIENT_ID,
-    Username: event.path.email,
-  }, err => callback(err));
-});
+    Username: event.pathParameters.email,
+  }, err => request.response(err, null, event, context, callback, 204));
+}, context, callback));
 
 
 /**
@@ -122,34 +141,41 @@ module.exports.forgot = vandium.createInstance({
 module.exports.forgotConfirm = vandium.createInstance({
   validation: {
     schema: {
-      path: vandium.types.object().keys({
-        email: vandium.types.string().required().error(Error('[422] Parameter email is required and ' +
-          'should have format of email address')),
+      pathParameters: vandium.types.object().allow(null).keys({
+        email: vandium.types.string().required()
+          .error(new UserError('Parameter email is required and should have ' +
+          'format of email address')),
       }),
       body: vandium.types.object().keys({
         password: vandium.types.string().required().min(8)
           .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-          .error(Error('[422] Parameter newPassword is required, must have at least 8 characters '
-            + 'and contain at least one lowercase letter, one uppercase letter and one number')),
-        code: vandium.types.string().required().error(Error('[422] Parameter code is required')),
+          .error(new UserError('Parameter newPassword is required, must have ' +
+          'at least 8 characters and contain at least one lowercase letter, ' +
+          'one uppercase letter and one number')),
+        code: vandium.types.string().required()
+          .error(new UserError('Parameter code is required')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('authForgotConfirm', event);
-  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+}).handler((event, context, callback) => request.errorHandler(() => {
+  const provider = new aws.CognitoIdentityServiceProvider({
+    region: env.REGION,
+  });
   provider.confirmForgotPassword({
     ClientId: env.COGNITO_CLIENT_ID,
     ConfirmationCode: event.body.code,
     Password: event.body.password,
-    Username: event.path.email,
+    Username: event.pathParameters.email,
   }, (err) => {
-    if (err.code === 'ExpiredCodeException' || err.code === 'CodeMismatchException') {
-      err.message = '[404] Invalid verification code provided.';
+    let newErr = err;
+    if (err.code === 'ExpiredCodeException' ||
+      err.code === 'CodeMismatchException') {
+      newErr = new UserError('Invalid verification code provided.');
+      newErr.code = 404;
     }
-    return callback(err);
+    return request.response(newErr, null, event, context, callback, 204);
   });
-});
+}, context, callback));
 
 
 /**
@@ -159,15 +185,18 @@ module.exports.login = vandium.createInstance({
   validation: {
     schema: {
       body: vandium.types.object().keys({
-        email: vandium.types.email().required().error(Error('[422] Parameter email is required ' +
-          'and should have format of email address')),
-        password: vandium.types.string().required().error(Error('[422] Parameter password is required')),
+        email: vandium.types.email().required()
+          .error(new UserError('Parameter email is required and should have ' +
+          'format of email address')),
+        password: vandium.types.string().required()
+          .error(new UserError('Parameter password is required')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('authLogin', event);
-  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+}).handler((event, context, callback) => request.errorHandler(() => {
+  const provider = new aws.CognitoIdentityServiceProvider({
+    region: env.REGION,
+  });
   provider.adminInitiateAuth({
     AuthFlow: 'ADMIN_NO_SRP_AUTH',
     ClientId: env.COGNITO_CLIENT_ID,
@@ -178,16 +207,25 @@ module.exports.login = vandium.createInstance({
     },
   }, (err, data) => {
     if (err) {
-      err.message = `[401] ${err.message}`;
-      return callback(err);
+      let newErr = err;
+
+      // TODO Handle wrong credentials with UserError
+      if (err.code === 'UserNotConfirmedException') {
+        newErr = new UserError(err.message);
+      } else {
+        console.error(JSON.stringify(err));
+      }
+      newErr.code = 401;
+      return request.response(newErr, null, event, context, callback);
     }
 
-    return callback(null, {
-      token: data.AuthenticationResult.AccessToken, //data.AuthenticationResult.IdToken,
-      expires: moment().add(data.AuthenticationResult.ExpiresIn, 's').utc().format(),
-    });
+    return request.response(null, {
+      token: data.AuthenticationResult.AccessToken, // data.AuthenticationResult.IdToken,
+      expires: moment().add(data.AuthenticationResult.ExpiresIn, 's').utc()
+        .format(),
+    }, event, context, callback);
   });
-});
+}, context, callback));
 
 
 /**
@@ -197,14 +235,18 @@ module.exports.profile = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required')),
+        Authorization: vandium.types.string().required()
+          .error(new UserError('Authorization header is required')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('authProfile', event);
-  identity.getUser(env.REGION, event.headers.Authorization, callback);
-});
+}).handler((event, context, callback) => request.errorHandler(() => {
+  identity.getUser(
+    env.REGION,
+    event.headers.Authorization,
+    (err, res) => request.response(err, res, event, context, callback)
+  );
+}, context, callback));
 
 
 /**
@@ -214,49 +256,57 @@ module.exports.profileChange = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required')),
+        Authorization: vandium.types.string().required()
+          .error(new UserError('Authorization header is required')),
       }),
       body: vandium.types.object().keys({
-        oldPassword: vandium.types.string().required().error(Error('[422] Parameter oldPassword is required')),
+        oldPassword: vandium.types.string().required()
+          .error(new UserError('Parameter oldPassword is required')),
         newPassword: vandium.types.string().required().min(8)
           .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-          .error(Error('[422] Parameter newPassword is required, must have at least 8 characters '
-            + 'and contain at least one lowercase letter, one uppercase letter and one number')),
+          .error(new UserError('Parameter newPassword is required, must have ' +
+            'at least 8 characters and contain at least one lowercase ' +
+            'letter, one uppercase letter and one number')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('authProfileChange', event);
-  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+}).handler((event, context, callback) => request.errorHandler(() => {
+  const provider = new aws.CognitoIdentityServiceProvider({
+    region: env.REGION,
+  });
   provider.changePassword({
     PreviousPassword: event.body.oldPassword,
     ProposedPassword: event.body.newPassword,
     AccessToken: event.headers.Authorization,
-  }, err => callback(err));
-});
+  }, err => request.response(err, null, event, context, callback, 204));
+}, context, callback));
 
 
 /**
  * Signup
  */
+let db;
 module.exports.signup = vandium.createInstance({
   validation: {
     schema: {
       body: vandium.types.object().keys({
-        name: vandium.types.string().required().error(Error('[422] Parameter name is required')),
-        email: vandium.types.email().required().error(Error('[422] Parameter email is required ' +
-          'and should have format of email address')),
+        name: vandium.types.string().required()
+          .error(new UserError('Parameter name is required')),
+        email: vandium.types.email().required()
+          .error(new UserError('Parameter email is required and should have ' +
+          'format of email address')),
         password: vandium.types.string().required().min(8)
           .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-          .error(Error('[422] Parameter password is required, must have at least 8 characters '
-            + 'and contain at least one lowercase letter, one uppercase letter and one number')),
-        vendor: vandium.types.string().required().error(Error('[422] Parameter vendor is required')),
+          .error(new UserError('Parameter password is required, must have ' +
+          'at least 8 characters and contain at least one lowercase letter, ' +
+          'one uppercase letter and one number')),
+        vendor: vandium.types.string().required()
+          .error(new UserError('Parameter vendor is required')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('authSignup', event);
-  const db = mysql.createConnection({
+}).handler((event, context, callback) => request.errorHandler(() => {
+  db = mysql.createConnection({
     host: env.RDS_HOST,
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
@@ -266,19 +316,25 @@ module.exports.signup = vandium.createInstance({
   });
 
   async.waterfall([
-    function(callbackLocal) {
-      db.query('SELECT * FROM `vendors` WHERE `id` = ?', [event.body.vendor], (err, result) => {
-        if (err) return callbackLocal(err);
+    function (cb) {
+      db.query(
+        'SELECT * FROM `vendors` WHERE `id` = ?',
+        [event.body.vendor],
+        (err, result) => {
+          if (err) return cb(err);
 
-        if (result.length === 0) {
-          return callbackLocal(Error(`[400] Vendor ${event.body.vendor} does not exist`));
+          if (result.length === 0) {
+            return cb(new UserError(`Vendor ${event.body.vendor} does not exist`));
+          }
+
+          return cb();
         }
-
-        return callbackLocal();
-      });
+      );
     },
-    (callbackLocal) => {
-      const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+    (cb) => {
+      const provider = new aws.CognitoIdentityServiceProvider({
+        region: env.REGION,
+      });
       provider.signUp({
         ClientId: env.COGNITO_CLIENT_ID,
         Username: event.body.email,
@@ -297,28 +353,33 @@ module.exports.signup = vandium.createInstance({
             Value: event.body.vendor,
           },
         ],
-      }, err => callbackLocal(err));
+      }, err => cb(err));
     },
   ], (err) => {
     db.destroy();
-    return callback(err);
+    return request.response(err, null, event, context, callback, 201);
   });
-});
+}, context, (err, res) => {
+  db.destroy();
+  callback(err, res);
+}));
 
 module.exports.emailTrigger = function (event, context, callback) {
+  const newEvent = event;
   switch (event.triggerSource) {
     case 'CustomMessage_SignUp':
-      event.response.emailSubject = 'Welcome to Keboola Developer Portal';
-      event.response.emailMessage = `Thank you for signing up. Confirm your email using this link: https://m8pbt5jpi8.execute-api.us-east-1.amazonaws.com/dev/auth/confirm/${event.userName}/${event.request.codeParameter}`;
+      newEvent.response.emailSubject = 'Welcome to Keboola Developer Portal';
+      newEvent.response.emailMessage = `Thank you for signing up. Confirm your email using this link: ${env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
       break;
     case 'CustomMessage_ForgotPassword':
-      event.response.emailSubject = 'Forgot Password to Keboola Developer Portal';
-      event.response.emailMessage = `Your confirmation code is ${event.request.codeParameter}`;
+      newEvent.response.emailSubject = 'Forgot Password to Keboola Developer Portal';
+      newEvent.response.emailMessage = `Your confirmation code is ${event.request.codeParameter}`;
       break;
     case 'CustomMessage_ResendCode':
-      event.response.emailSubject = 'Confirmation code for Keboola Developer Portal';
-      event.response.emailMessage = `Confirm your email using this link: https://m8pbt5jpi8.execute-api.us-east-1.amazonaws.com/dev/auth/confirm/${event.userName}/${event.request.codeParameter}`;
+      newEvent.response.emailSubject = 'Confirmation code for Keboola Developer Portal';
+      newEvent.response.emailMessage = `Confirm your email using this link: ${env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
       break;
+    default:
   }
-  callback(null, event);
+  callback(null, newEvent);
 };
