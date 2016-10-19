@@ -1,30 +1,32 @@
 'use strict';
 
 require('babel-polyfill');
+const _ = require('lodash');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
-const log = require('../lib/log');
+const request = require('../lib/request');
+const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 module.exports.list = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required()
+          .error(new UserError('Authorization header is required')),
       }),
-      path: vandium.types.object().keys({
-        appId: vandium.types.string().required()
+      pathParameters: vandium.types.object().keys({
+        appId: vandium.types.string().required(),
       }),
-      query: vandium.types.object().keys({
+      queryStringParameters: vandium.types.object().allow(null).keys({
         offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow('')
-      })
-    }
-  }
-}).handler(function(event, context, callback) {
-  log.start('appsVersions', event);
+        limit: vandium.types.number().integer().default(100).allow(''),
+      }),
+    },
+  },
+}).handler((event, context, callback) => request.errorHandler(() => {
   db.connect({
     host: env.RDS_HOST,
     user: env.RDS_USER,
@@ -34,35 +36,43 @@ module.exports.list = vandium.createInstance({
     port: env.RDS_PORT,
   });
   async.waterfall([
-    function (callbackLocal) {
-      identity.getUser(env.REGION, event.headers.Authorization, callbackLocal);
+    function (cb) {
+      identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
-    function (user, callbackLocal) {
-      db.checkAppAccess(event.path.appId, user.vendor, function(err) {
-        return callbackLocal(err);
-      });
+    function (user, cb) {
+      db.checkAppAccess(
+        event.pathParameters.appId,
+        user.vendor,
+        err => cb(err)
+      );
     },
-    function(callbackLocal) {
-      db.listVersions(event.path.appId, event.query.offset, event.query.limit, callbackLocal);
-    }
-  ], function(err, result) {
+    function (cb) {
+      db.listVersions(
+        event.pathParameters.appId,
+        _.get(event, 'queryStringParameters.offset', null),
+        _.get(event, 'queryStringParameters.limit', null),
+        cb
+      );
+    },
+  ], (err, res) => {
     db.end();
-    return callback(err, result);
+    return request.response(err, res, event, context, callback);
   });
-});
+}, context, callback));
 
 
 module.exports.rollback = vandium.createInstance({
   validation: {
     headers: vandium.types.object().keys({
-      authorizationToken: vandium.types.string().required()
+      Authorization: vandium.types.string().required()
+        .error(new UserError('Authorization header is required')),
     }),
-    path: {
+    pathParameters: {
       appId: vandium.types.string().required(),
-      version: vandium.types.number()
-    }
-  }
-}).handler(function(event, context, callback) {
+      version: vandium.types.number(),
+    },
+  },
+}).handler((event, context, callback) => request.errorHandler(() => {
   db.connect({
     host: env.RDS_HOST,
     user: env.RDS_USER,
@@ -72,25 +82,30 @@ module.exports.rollback = vandium.createInstance({
     port: env.RDS_PORT,
   });
   async.waterfall([
-    function (callbackLocal) {
-      identity.getUser(env.REGION, event.headers.Authorization, callbackLocal);
+    function (cb) {
+      identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
-    function (user, callbackLocal) {
-      db.checkAppAccess(event.path.appId, user.vendor, function(err) {
-        return callbackLocal(err, user.email);
-      });
+    function (user, cb) {
+      db.checkAppAccess(
+        event.pathParameters.appId,
+        user.vendor,
+        err => cb(err, user.email)
+      );
     },
-    function (user, callbackLocal) {
-      db.getApp(event.path.appId, event.path.version, function(err, res) {
-        callbackLocal(err, res, user);
-      });
+    function (user, cb) {
+      db.getApp(
+        event.pathParameters.appId,
+        event.pathParameters.version,
+        (err, res) => cb(err, res, user)
+      );
     },
-    function(app, user, callbackLocal) {
+    function (appIn, user, cb) {
+      const app = appIn;
       delete app.version;
-      db.updateApp(app, event.path.appId, user.email, callbackLocal);
-    }
-  ], function(err, result) {
+      db.updateApp(app, event.pathParameters.appId, user.email, cb);
+    },
+  ], (err, res) => {
     db.end();
-    return callback(err, result);
+    return request.response(err, res, event, context, callback);
   });
-});
+}, context, callback));

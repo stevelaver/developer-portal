@@ -8,6 +8,8 @@ const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
 const log = require('../lib/log');
+const request = require('../lib/request');
+const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 
@@ -18,7 +20,7 @@ module.exports.appApprove = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required')),
+        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required')),
       }),
       path: vandium.types.object().keys({
         id: vandium.types.string().required(),
@@ -90,7 +92,7 @@ module.exports.apps = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required'))
       }),
       query: vandium.types.object().keys({
         offset: vandium.types.number().integer().default(0).allow(''),
@@ -130,7 +132,7 @@ module.exports.userAdmin = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required'))
       }),
       path: vandium.types.object().keys({
         email: vandium.types.email().error(Error('Parameter email must have format of email address'))
@@ -186,7 +188,7 @@ module.exports.userEnable = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required'))
       }),
       path: vandium.types.object().keys({
         email: vandium.types.email().error(Error('Parameter email must have format of email address'))
@@ -255,7 +257,7 @@ module.exports.users = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required'))
       }),
       query: vandium.types.object().keys({
         offset: vandium.types.number().integer().default(0).allow(''),

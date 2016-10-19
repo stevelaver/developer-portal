@@ -1,12 +1,10 @@
-var nodeExternals = require('webpack-node-externals');
-var path = require('path');
+const nodeExternals = require('webpack-node-externals');
+const path = require('path');
 
 module.exports = {
   entry: {
     admin: ['babel-polyfill', './lambda/admin.js'],
     'apps-approve': ['babel-polyfill', './lambda/apps-approve.js'],
-    'apps-create': ['babel-polyfill', './lambda/apps-create.js'],
-    'apps-detail': ['babel-polyfill', './lambda/apps-detail.js'],
     'apps-icons': ['babel-polyfill', './lambda/apps-icons.js'],
     'apps-list': ['babel-polyfill', './lambda/apps-list.js'],
     'apps-update': ['babel-polyfill', './lambda/apps-update.js'],
@@ -33,8 +31,8 @@ module.exports = {
       },
       {
         test: /env\.yml$/,
-        loader: 'yml'
-      }
+        loader: 'yml',
+      },
     ],
   },
 };

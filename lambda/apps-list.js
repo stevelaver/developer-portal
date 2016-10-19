@@ -1,27 +1,29 @@
 'use strict';
 
 require('babel-polyfill');
+const _ = require('lodash');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
-const log = require('../lib/log');
+const request = require('../lib/request');
+const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
-module.exports.handler = vandium.createInstance({
+module.exports.appsList = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required'))
+        Authorization: vandium.types.string().required()
+          .error(new UserError('Authorization header is required')),
       }),
-      query: vandium.types.object().keys({
+      queryStringParameters: vandium.types.object().allow(null).keys({
         offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow('')
-      })
-    }
-  }
-}).handler(function(event, context, callback) {
-  log.start('appsList', event);
+        limit: vandium.types.number().integer().default(100).allow(''),
+      }),
+    },
+  },
+}).handler((event, context, callback) => request.errorHandler(() => {
   db.connect({
     host: env.RDS_HOST,
     user: env.RDS_USER,
@@ -31,14 +33,71 @@ module.exports.handler = vandium.createInstance({
     port: env.RDS_PORT,
   });
   async.waterfall([
-    function (callbackLocal) {
-      identity.getUser(env.REGION, event.headers.Authorization, callbackLocal);
+    function (cb) {
+      identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
-    function(user, callbackLocal) {
-      db.listAppsForVendor(user.vendor, event.query.offset, event.query.limit, callbackLocal);
-    }
-  ], function(err, result) {
+    function (user, cb) {
+      db.listAppsForVendor(
+        user.vendor,
+        _.get(event, 'queryStringParameters.offset', null),
+        _.get(event, 'queryStringParameters.limit', null),
+        cb
+      );
+    },
+  ], (err, res) => {
     db.end();
-    return callback(err, result);
+    return request.response(err, res, event, context, callback);
   });
-});
+}, context, callback));
+
+module.exports.appsDetail = vandium.createInstance({
+  validation: {
+    schema: {
+      headers: vandium.types.object().keys({
+        Authorization: vandium.types.string().required()
+          .error(new UserError('Authorization header is required')),
+      }),
+      pathParameters: vandium.types.object().keys({
+        appId: vandium.types.string().required(),
+        version: vandium.types.number().integer(),
+      }),
+    },
+  },
+}).handler((event, context, callback) => request.errorHandler(() => {
+  db.connect({
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
+  });
+  async.waterfall([
+    function (cb) {
+      identity.getUser(env.REGION, event.headers.Authorization, cb);
+    },
+    function (user, cb) {
+      db.checkAppAccess(
+        event.pathParameters.appId,
+        user.vendor,
+        err => cb(err)
+      );
+    },
+    function (cb) {
+      db.getApp(event.pathParameters.appId, event.pathParameters.version, cb);
+    },
+    function (appIn, cb) {
+      const app = appIn;
+      app.icon = {
+        32: `https://${env.CLOUDFRONT_URI}/${app.icon32}`,
+        64: `https://${env.CLOUDFRONT_URI}/${app.icon64}`,
+      };
+      delete app.icon32;
+      delete app.icon64;
+      cb(null, app);
+    },
+  ], (err, res) => {
+    db.end();
+    return request.response(err, res, event, context, callback);
+  });
+}, context, callback));

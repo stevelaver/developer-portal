@@ -9,6 +9,8 @@ const env = require('../env.yml');
 const identity = require('../lib/identity');
 const log = require('../lib/log');
 const moment = require('moment');
+const request = require('../lib/request');
+const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 module.exports.links = vandium.createInstance({
@@ -16,14 +18,14 @@ module.exports.links = vandium.createInstance({
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(Error('[422] Authorization header is required')),
+          .error(new UserError('Authorization header is required')),
       }),
-      path: vandium.types.object().keys({
+      pathParameters: vandium.types.object().keys({
         appId: vandium.types.string().required(),
       }),
     },
   },
-}).handler((event, context, callback) => {
+}).handler((event, context, callback) => request.errorHandler(() => {
   log.start('appsIcons', event);
   db.connect({
     host: env.RDS_HOST,
@@ -38,37 +40,37 @@ module.exports.links = vandium.createInstance({
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
     function (user, cb) {
-      db.checkAppAccess(event.path.appId, user.vendor, err => cb(err));
+      db.checkAppAccess(event.pathParameters.appId, user.vendor, err => cb(err));
     },
     function (cb) {
       const s3 = new aws.S3();
       const validity = 3600;
       const expires = moment().add(validity, 's').utc().format();
       async.parallel({
-        32: (callbackLocal2) => {
+        32: (cb2) => {
           s3.getSignedUrl(
             'putObject',
             {
               Bucket: env.S3_BUCKET,
-              Key: `${event.path.appId}/32/latest.png`,
+              Key: `${event.pathParameters.appId}/32/latest.png`,
               Expires: validity,
               ContentType: 'image/png',
               ACL: 'public-read',
             },
-            callbackLocal2
+            cb2
           );
         },
-        64: (callbackLocal2) => {
+        64: (cb2) => {
           s3.getSignedUrl(
             'putObject',
             {
               Bucket: env.S3_BUCKET,
-              Key: `${event.path.appId}/64/latest.png`,
+              Key: `${event.pathParameters.appId}/64/latest.png`,
               Expires: validity,
               ContentType: 'image/png',
               ACL: 'public-read',
             },
-            callbackLocal2
+            cb2
           );
         },
       }, (err, data) => {
@@ -80,15 +82,15 @@ module.exports.links = vandium.createInstance({
         return cb(null, res);
       });
     },
-  ], (err, result) => {
+  ], (err, res) => {
     db.end();
-    return callback(err, result);
+    return request.response(err, res, event, context, callback);
   });
-});
+}, context, callback));
 
 
 module.exports.upload = vandium.createInstance()
-.handler((event, context, callback) => {
+.handler((event, context, callback) => request.errorHandler(() => {
   if (!_.has(event, 'Records') || !event.Records.length ||
     !_.has(event.Records[0], 's3') || !_.has(event.Records[0].s3, 'bucket') ||
     !_.has(event.Records[0].s3, 'object') ||
@@ -136,4 +138,4 @@ module.exports.upload = vandium.createInstance()
     db.end();
     return callback(err, result);
   });
-});
+}, context, callback));

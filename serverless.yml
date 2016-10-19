@@ -121,10 +121,9 @@ functions:
           cors: true
           method: post
           path: "vendor/apps/{appId}/approve"
-          default:
-            statusCode: 202
+          integration: lambda-proxy
   appsCreate:
-    handler: apps-create.handler
+    handler: apps-update.appsCreate
     events:
       -
         http:
@@ -132,10 +131,9 @@ functions:
           cors: true
           method: post
           path: vendor/apps
-          default:
-            statusCode: 201
+          integration: lambda-proxy
   appsDetail:
-    handler: apps-detail.handler
+    handler: apps-list.appsDetail
     events:
       -
         http:
@@ -143,12 +141,14 @@ functions:
           cors: true
           method: get
           path: "vendor/apps/{appId}"
+          integration: lambda-proxy
       -
         http:
           authorizer: authorizer
           cors: true
           method: get
           path: "vendor/apps/{appId}/versions/{version}"
+          integration: lambda-proxy
   appsIconsLinks:
     handler: apps-icons.links
     events:
@@ -158,6 +158,7 @@ functions:
           cors: true
           method: post
           path: "vendor/apps/{appId}/icons"
+          integration: lambda-proxy
   appsIconsUpload:
     handler: apps-icons.upload
     events:
@@ -167,7 +168,7 @@ functions:
           event: "s3:ObjectCreated:Put"
           suffix: .png
   appsList:
-    handler: apps-list.handler
+    handler: apps-list.appsList
     events:
       -
         http:
@@ -175,8 +176,9 @@ functions:
           cors: true
           method: get
           path: vendor/apps
+          integration: lambda-proxy
   appsUpdate:
-    handler: apps-update.handler
+    handler: apps-update.appsUpdate
     events:
       -
         http:
@@ -184,8 +186,7 @@ functions:
           cors: true
           method: patch
           path: vendor/apps/{appId}
-          default:
-            statusCode: 204
+          integration: lambda-proxy
   appsVersionsList:
     handler: apps-versions.list
     events:
@@ -195,6 +196,7 @@ functions:
           cors: true
           method: get
           path: "vendor/apps/{appId}/versions"
+          integration: lambda-proxy
   appsVersionsRollback:
     handler: apps-versions.rollback
     events:
@@ -204,7 +206,8 @@ functions:
           cors: true
           method: post
           path: "vendor/apps/{appId}/versions/{version}/rollback"
-          
+          integration: lambda-proxy
+
 
   authEmailTrigger:
     handler: auth.emailTrigger

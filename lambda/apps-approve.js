@@ -5,7 +5,8 @@ const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
-const log = require('../lib/log');
+const request = require('../lib/request');
+const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 /**
@@ -15,15 +16,16 @@ module.exports.handler = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(Error('[422] Authorization header is required')),
+        Authorization: vandium.types.string().required()
+          .error(new UserError('Authorization header is required')),
       }),
-      path: vandium.types.object().keys({
-        appId: vandium.types.string().required().error(Error('[422] Parameter appId is required')),
+      pathParameters: vandium.types.object().keys({
+        appId: vandium.types.string().required()
+          .error(new UserError('Parameter appId is required')),
       }),
     },
   },
-}).handler((event, context, callback) => {
-  log.start('appsApprove', event);
+}).handler((event, context, callback) => request.errorHandler(() => {
   db.connect({
     host: env.RDS_HOST,
     user: env.RDS_USER,
@@ -33,56 +35,56 @@ module.exports.handler = vandium.createInstance({
     port: env.RDS_PORT,
   });
   async.waterfall([
-    function (callbackLocal) {
-      identity.getUser(env.REGION, event.headers.Authorization, callbackLocal);
+    function (cb) {
+      identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
-    function (user, callbackLocal) {
-      db.checkAppAccess(event.path.appId, user.vendor, err => callbackLocal(err));
+    function (user, cb) {
+      db.checkAppAccess(event.pathParameters.appId, user.vendor, err => cb(err));
     },
-    function (callbackLocal) {
-      db.getApp(event.path.appId, null, (err, data) => {
+    function (cb) {
+      db.getApp(event.pathParameters.appId, null, (err, data) => {
         if (err) {
-          return callbackLocal(err);
+          return cb(err);
         }
 
         if (data.isApproved) {
-          return callbackLocal(Error('[400] Already approved'));
+          return cb(new UserError('Already approved'));
         }
-        return callbackLocal(err, data);
+        return cb(err, data);
       });
     },
-    function (app, callbackLocal) {
+    function (app, cb) {
       if (!app.repository.type) {
-        return callbackLocal(Error('[400] App property repository.type cannot be empty'));
+        return cb(new UserError('App property repository.type cannot be empty'));
       }
       if (!app.repository.uri) {
-        return callbackLocal(Error('[400] App property repository.uri cannot be empty'));
+        return cb(new UserError('App property repository.uri cannot be empty'));
       }
       if (!app.repository.tag) {
-        return callbackLocal(Error('[400] App property repository.tag cannot be empty'));
+        return cb(new UserError('App property repository.tag cannot be empty'));
       }
       if (!app.shortDescription) {
-        return callbackLocal(Error('[400] App property shortDescription cannot be empty'));
+        return cb(new UserError('App property shortDescription cannot be empty'));
       }
       if (!app.longDescription) {
-        return callbackLocal(Error('[400] App property longDescription cannot be empty'));
+        return cb(new UserError('App property longDescription cannot be empty'));
       }
       if (!app.licenseUrl) {
-        return callbackLocal(Error('[400] App property licenseUrl cannot be empty'));
+        return cb(new UserError('App property licenseUrl cannot be empty'));
       }
       if (!app.documentationUrl) {
-        return callbackLocal(Error('[400] App property documentationUrl cannot be empty'));
+        return cb(new UserError('App property documentationUrl cannot be empty'));
       }
       if (!app.icon32) {
-        return callbackLocal(Error('[400] App icon of size 32px is missing, upload it first.'));
+        return cb(new UserError('App icon of size 32px is missing, upload it first.'));
       }
       if (!app.icon64) {
-        return callbackLocal(Error('[400] App icon of size 64px is missing, upload it first.'));
+        return cb(new UserError('App icon of size 64px is missing, upload it first.'));
       }
-      return callbackLocal();
+      return cb();
     },
   ], (err) => {
     db.end();
-    return callback(err);
+    return request.response(err, null, event, context, callback, 202);
   });
-});
+}, context, callback));
