@@ -150,7 +150,7 @@ setup.getCloudFormationOutput = function (region, name, stage, cb) {
     const res = JSON.parse(out);
 
     if (!_.has(res, 'Stacks') || res.Stacks.length < 1) {
-      cb(Error(`Describe CloudFormation stack error: ${JSON.stringify(res)}`));
+      cb(`Describe CloudFormation stack error: ${JSON.stringify(res)}`);
     }
 
     const result = {};

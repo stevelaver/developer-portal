@@ -22,7 +22,7 @@ const rds = mysql.createConnection({
 const vendor = process.env.FUNC_VENDOR;
 const appName1 = `a1_${Date.now()}`;
 const appName2 = `a2_${Date.now()}`;
-const appId1 = `${vendor}.appName1`;
+const appId1 = `${vendor}.${appName1}`;
 let token;
 
 describe('apps', () => {

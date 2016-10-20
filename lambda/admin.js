@@ -6,10 +6,9 @@ const async = require('async');
 const aws = require('aws-sdk');
 const db = require('../lib/db');
 const env = require('../env.yml');
+const error = require('../lib/error');
 const identity = require('../lib/identity');
-const log = require('../lib/log');
 const request = require('../lib/request');
-const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 
@@ -20,89 +19,15 @@ module.exports.appApprove = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required')),
+        Authorization: vandium.types.string().required()
+          .error(Error('Authorization header is required')),
       }),
-      path: vandium.types.object().keys({
+      pathParameters: vandium.types.object().keys({
         id: vandium.types.string().required(),
       }),
     },
   },
-}).handler(function(event, context, callback) {
-  log.start('adminAppApprove', event);
-  db.connect({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
-  });
-  async.waterfall([
-    function (cb) {
-      identity.getAdmin(env.REGION, event.headers.Authorization, cb);
-    },
-    function(user, cb) {
-      db.getApp(event.path.id, null, function(err, data) {
-        if (data.isApproved) {
-          return cb(Error('[404] Already Approved'));
-        }
-        cb(err, user, data);
-      });
-    },
-    function(user, app, cb) {
-      db.updateApp({isApproved: 1}, event.path.id, user.email, function(err) {
-        cb(err, app);
-      });
-    },
-    function(app, cb) {
-      db.getVendor(app.vendor, function(err, data) {
-        cb(err, data, vendor);
-      });
-    },
-    function(app, vendor, cb) {
-      const ses = new aws.SES({apiVersion: '2010-12-01', region: env.REGION});
-      ses.sendEmail({
-        Source: env.SES_EMAIL_FROM,
-        Destination: { ToAddresses: [vendor.email] },
-        Message: {
-          Subject: {
-            Data: 'App approval in Keboola Developer Portal'
-          },
-          Body: {
-            Text: {
-              Data: 'Your app ' + app.id + ' has been approved'
-            }
-          }
-        }
-      }, function(err) {
-        return cb(err);
-      });
-    }
-  ], function(err, res) {
-    db.end();
-    return callback(err, res);
-  });
-});
-
-
-/**
- * Apps List
- */
-module.exports.apps = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required'))
-      }),
-      query: vandium.types.object().keys({
-        offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow(''),
-        filter: vandium.types.string()
-      })
-    }
-  }
-}).handler(function(event, context, callback) {
-  log.start('adminApps', event);
+}).handler((event, context, callback) => request.errorHandler(() => {
   db.connect({
     host: env.RDS_HOST,
     user: env.RDS_USER,
@@ -116,13 +41,90 @@ module.exports.apps = vandium.createInstance({
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
     function (user, cb) {
-      db.listApps(event.query.filter, event.query.offset, event.query.limit, function(err, result) {
-        db.end();
-        return cb(err, result);
+      db.getApp(event.pathParameters.id, null, (err, data) => {
+        if (data.isApproved) {
+          return cb(Error('[404] Already Approved'));
+        }
+        return cb(err, user, data);
       });
-    }
+    },
+    function (user, app, cb) {
+      db.updateApp({ isApproved: 1 }, event.pathParameters.id, user.email, (err) => {
+        cb(err, app);
+      });
+    },
+    function (app, cb) {
+      db.getVendor(app.vendor, (err, data) => {
+        cb(err, data, app.vendor);
+      });
+    },
+    function (app, vendor, cb) {
+      const ses = new aws.SES({ apiVersion: '2010-12-01', region: env.REGION });
+      ses.sendEmail({
+        Source: env.SES_EMAIL_FROM,
+        Destination: { ToAddresses: [vendor.email] },
+        Message: {
+          Subject: {
+            Data: 'App approval in Keboola Developer Portal',
+          },
+          Body: {
+            Text: {
+              Data: `Your app ${app.id} has been approved`,
+            },
+          },
+        },
+      }, err => cb(err));
+    },
+  ], (err, res) => {
+    db.end();
+    return callback(err, res);
+  });
+}, context, callback));
+
+
+/**
+ * Apps List
+ */
+module.exports.apps = vandium.createInstance({
+  validation: {
+    schema: {
+      headers: vandium.types.object().keys({
+        Authorization: vandium.types.string().required()
+          .error(Error('Authorization header is required')),
+      }),
+      queryStringParameters: vandium.types.object().keys({
+        offset: vandium.types.number().integer().default(0).allow(''),
+        limit: vandium.types.number().integer().default(100).allow(''),
+        filter: vandium.types.string(),
+      }),
+    },
+  },
+}).handler((event, context, callback) => request.errorHandler(() => {
+  db.connect({
+    host: env.RDS_HOST,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL,
+    port: env.RDS_PORT,
+  });
+  async.waterfall([
+    function (cb) {
+      identity.getAdmin(env.REGION, event.headers.Authorization, cb);
+    },
+    function (user, cb) {
+      db.listApps(
+        event.queryStringParameters.filter,
+        _.get(event, 'queryStringParameters.offset', null),
+        _.get(event, 'queryStringParameters.limit', null),
+        (err, result) => {
+          db.end();
+          return cb(err, result);
+        }
+      );
+    },
   ], callback);
-});
+}, context, callback));
 
 
 /**
@@ -132,30 +134,34 @@ module.exports.userAdmin = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required'))
+        Authorization: vandium.types.string().required()
+          .error(Error('Authorization header is required')),
       }),
-      path: vandium.types.object().keys({
-        email: vandium.types.email().error(Error('Parameter email must have format of email address'))
-      })
-    }
-  }
-}).handler(function(event, context, callback) {
-  log.start('adminUserAdmin', event);
-  const provider = new aws.CognitoIdentityServiceProvider({region: env.REGION});
+      pathParameters: vandium.types.object().keys({
+        email: vandium.types.email()
+          .error(Error('Parameter email must have format of email address')),
+      }),
+    },
+  },
+}).handler((event, context, callback) => request.errorHandler(() => {
+  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
   async.waterfall([
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
-    function(user, cb) {
+    function (user, cb) {
       provider.adminGetUser({
         UserPoolId: env.COGNITO_POOL_ID,
-        Username: event.path.email
-      }, function(err, data) {
+        Username: event.pathParameters.email,
+      }, (err, data) => {
         if (err) {
           return cb(err);
         }
 
-        const isAdmin = _.get(_.find(data.UserAttributes, function(o) { return o.Name == 'custom:isAdmin'; }), 'Value', null);
+        const isAdmin = _.get(_.find(
+          data.UserAttributes,
+          o => o.Name === 'custom:isAdmin'
+        ), 'Value', null);
         if (isAdmin) {
           return cb(Error('[404] Already is admin'));
         }
@@ -163,22 +169,20 @@ module.exports.userAdmin = vandium.createInstance({
         return cb(null, data);
       });
     },
-    function(user, cb) {
+    function (user, cb) {
       provider.adminUpdateUserAttributes({
         UserPoolId: env.COGNITO_POOL_ID,
-        Username: event.path.email,
+        Username: event.pathParameters.email,
         UserAttributes: [
           {
             Name: 'custom:isAdmin',
-            Value: '1'
-          }
-        ]
-      }, function(err) {
-        return cb(err);
-      });
-    }
+            Value: '1',
+          },
+        ],
+      }, err => cb(err));
+    },
   ], callback);
-});
+}, context, callback));
 
 
 /**
@@ -188,66 +192,67 @@ module.exports.userEnable = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required'))
+        Authorization: vandium.types.string().required()
+          .error(Error('Authorization header is required')),
       }),
-      path: vandium.types.object().keys({
-        email: vandium.types.email().error(Error('Parameter email must have format of email address'))
-      })
-    }
-  }
-}).handler(function(event, context, callback) {
-  log.start('adminUserEnable', event);
-  const provider = new aws.CognitoIdentityServiceProvider({region: env.REGION});
+      pathParameters: vandium.types.object().keys({
+        email: vandium.types.email()
+          .error(Error('Parameter email must have format of email address')),
+      }),
+    },
+  },
+}).handler((event, context, callback) => request.errorHandler(() => {
+  const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
   async.waterfall([
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
-    function(user, cb) {
+    function (user, cb) {
       provider.adminGetUser({
         UserPoolId: env.COGNITO_POOL_ID,
-        Username: event.path.email
-      }, function(err, data) {
+        Username: event.pathParameters.email,
+      }, (err, data) => {
         if (err) {
           return cb(err);
         }
 
         if (data.Enabled) {
-          return cb(Error('[404] Already Enabled'));
+          return cb(error.notFound('Already Enabled'));
         }
 
         return cb(null, data);
       });
     },
-    function(user, cb) {
+    function (user, cb) {
       provider.adminEnableUser({
         UserPoolId: env.COGNITO_POOL_ID,
-        Username: event.path.email
-      }, function(err) {
-        return err ? cb(err) : cb(null, user);
-      });
+        Username: event.pathParameters.email,
+      }, err => (err ? cb(err) : cb(null, user))
+      );
     },
-    function(user, cb) {
-      const vendor = _.get(_.find(user.UserAttributes, function(o) { return o.Name == 'profile'; }), 'Value', null);
-      const ses = new aws.SES({apiVersion: '2010-12-01', region: env.REGION});
+    function (user, cb) {
+      const vendor = _.get(_.find(
+        user.UserAttributes,
+        o => (o.Name === 'profile')
+      ), 'Value', null);
+      const ses = new aws.SES({ apiVersion: '2010-12-01', region: env.REGION });
       ses.sendEmail({
         Source: env.SES_EMAIL_FROM,
-        Destination: { ToAddresses: [event.path.email] },
+        Destination: { ToAddresses: [event.pathParameters.email] },
         Message: {
           Subject: {
-            Data: 'Welcome to Keboola Developer Portal'
+            Data: 'Welcome to Keboola Developer Portal',
           },
           Body: {
             Text: {
-              Data: 'Your account in Keboola Developer Portal for vendor ' + vendor + ' has been approved'
-            }
-          }
-        }
-      }, function(err) {
-        return cb(err);
-      });
-    }
+              Data: `Your account in Keboola Developer Portal for vendor ${vendor} has been approved`,
+            },
+          },
+        },
+      }, err => cb(err));
+    },
   ], callback);
-});
+}, context, callback));
 
 
 /**
@@ -257,19 +262,19 @@ module.exports.users = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required().error(new UserError('Authorization header is required'))
+        Authorization: vandium.types.string().required()
+          .error(Error('Authorization header is required')),
       }),
-      query: vandium.types.object().keys({
+      queryStringParameters: vandium.types.object().keys({
         offset: vandium.types.number().integer().default(0).allow(''),
         limit: vandium.types.number().integer().default(100).allow(''),
-        filter: vandium.types.string()
-      })
-    }
-  }
-}).handler(function(event, context, callback) {
-  log.start('adminUsers', event);
-  var filter = '';
-  switch (event.query.filter) {
+        filter: vandium.types.string(),
+      }),
+    },
+  },
+}).handler((event, context, callback) => request.errorHandler(() => {
+  let filter;
+  switch (event.queryStringParameters.filter) {
     case 'enabled':
       filter = 'status = "Enabled"';
       break;
@@ -282,6 +287,8 @@ module.exports.users = vandium.createInstance({
     case 'confirmed':
       filter = 'cognito:user_status = "Confirmed"';
       break;
+    default:
+      filter = '';
   }
   const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
   async.waterfall([
@@ -294,24 +301,16 @@ module.exports.users = vandium.createInstance({
         Filter: filter,
       }, cb);
     },
-    function(data, cb) {
-      cb(null, _.map(data.Users, function(item) {
-        return {
-          email: item.Username,
-          name: _.get(_.find(item.Attributes, function(o) {
-            return o.Name == 'name';
-          }), 'Value', null),
-          vendor: _.get(_.find(item.Attributes, function(o) {
-            return o.Name == 'profile';
-          }), 'Value', null),
-          createdOn: item.UserCreateDate,
-          isEnabled: item.Enabled,
-          status: item.UserStatus,
-          id: _.get(_.find(item.Attributes, function(o) {
-            return o.Name == 'sub';
-          }), 'Value', null),
-        };
+    function (data, cb) {
+      cb(null, _.map(data.Users, item => {
+        email: item.Username,
+        name: _.get(_.find(item.Attributes, o => (o.Name === 'name')), 'Value', null),
+        vendor: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', null),
+        createdOn: item.UserCreateDate,
+        isEnabled: item.Enabled,
+        status: item.UserStatus,
+        id: _.get(_.find(item.Attributes, o => (o.Name === 'sub')), 'Value', null),
       }));
-    }
+    },
   ], callback);
-});
+}, context, callback));

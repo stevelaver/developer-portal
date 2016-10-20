@@ -4,6 +4,7 @@ require('babel-polyfill');
 const async = require('async');
 const aws = require('aws-sdk');
 const env = require('../env.yml');
+const error = require('../lib/error');
 const identity = require('../lib/identity');
 const moment = require('moment');
 const mysql = require('mysql');
@@ -47,10 +48,10 @@ module.exports.confirm = vandium.createInstance({
     schema: {
       pathParameters: vandium.types.object().keys({
         email: vandium.types.string().required()
-          .error(new UserError('Parameter email is required and should have ' +
+          .error(Error('Parameter email is required and should have ' +
           'format of email address')),
         code: vandium.types.string().required()
-          .error(new UserError('Parameter code is required')),
+          .error(Error('Parameter code is required')),
       }),
     },
   },
@@ -91,10 +92,10 @@ module.exports.confirmResend = vandium.createInstance({
     schema: {
       body: vandium.types.object().keys({
         email: vandium.types.string().required()
-          .error(new UserError('Parameter email is required and should have ' +
+          .error(Error('Parameter email is required and should have ' +
           'format of email address')),
         password: vandium.types.string().required()
-          .error(new UserError('Parameter password is required')),
+          .error(Error('Parameter password is required')),
       }),
     },
   },
@@ -118,7 +119,7 @@ module.exports.confirmResend = vandium.createInstance({
       }, err2 => request.response(err2, null, event, context, callback, 204));
     } else if (err && err.code === 'NotAuthorizedException') {
       return request.response(
-        new UserError('Already confirmed'),
+        error.badRequest('Already confirmed'),
         null,
         event,
         context,
@@ -139,7 +140,7 @@ module.exports.forgot = vandium.createInstance({
     schema: {
       pathParameters: vandium.types.object().allow(null).keys({
         email: vandium.types.string().required()
-          .error(new UserError('Parameter email is required and should have ' +
+          .error(Error('Parameter email is required and should have ' +
           'format of email address')),
       }),
     },
@@ -170,17 +171,17 @@ module.exports.forgotConfirm = vandium.createInstance({
     schema: {
       pathParameters: vandium.types.object().allow(null).keys({
         email: vandium.types.string().required()
-          .error(new UserError('Parameter email is required and should have ' +
+          .error(Error('Parameter email is required and should have ' +
           'format of email address')),
       }),
       body: vandium.types.object().keys({
         password: vandium.types.string().required().min(8)
           .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-          .error(new UserError('Parameter newPassword is required, must have ' +
+          .error(Error('Parameter newPassword is required, must have ' +
           'at least 8 characters and contain at least one lowercase letter, ' +
           'one uppercase letter and one number')),
         code: vandium.types.string().required()
-          .error(new UserError('Parameter code is required')),
+          .error(Error('Parameter code is required')),
       }),
     },
   },
@@ -212,10 +213,10 @@ module.exports.login = vandium.createInstance({
     schema: {
       body: vandium.types.object().keys({
         email: vandium.types.email().required()
-          .error(new UserError('Parameter email is required and should have ' +
+          .error(Error('Parameter email is required and should have ' +
           'format of email address')),
         password: vandium.types.string().required()
-          .error(new UserError('Parameter password is required')),
+          .error(Error('Parameter password is required')),
       }),
     },
   },
@@ -257,7 +258,7 @@ module.exports.profile = vandium.createInstance({
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(new UserError('Authorization header is required')),
+          .error(Error('Authorization header is required')),
       }),
     },
   },
@@ -278,14 +279,14 @@ module.exports.profileChange = vandium.createInstance({
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(new UserError('Authorization header is required')),
+          .error(Error('Authorization header is required')),
       }),
       body: vandium.types.object().keys({
         oldPassword: vandium.types.string().required()
-          .error(new UserError('Parameter oldPassword is required')),
+          .error(Error('Parameter oldPassword is required')),
         newPassword: vandium.types.string().required().min(8)
           .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-          .error(new UserError('Parameter newPassword is required, must have ' +
+          .error(Error('Parameter newPassword is required, must have ' +
             'at least 8 characters and contain at least one lowercase ' +
             'letter, one uppercase letter and one number')),
       }),
@@ -312,17 +313,17 @@ module.exports.signup = vandium.createInstance({
     schema: {
       body: vandium.types.object().keys({
         name: vandium.types.string().required()
-          .error(new UserError('Parameter name is required')),
+          .error(Error('Parameter name is required')),
         email: vandium.types.email().required()
-          .error(new UserError('Parameter email is required and should have ' +
+          .error(Error('Parameter email is required and should have ' +
           'format of email address')),
         password: vandium.types.string().required().min(8)
           .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-          .error(new UserError('Parameter password is required, must have ' +
+          .error(Error('Parameter password is required, must have ' +
           'at least 8 characters and contain at least one lowercase letter, ' +
           'one uppercase letter and one number')),
         vendor: vandium.types.string().required()
-          .error(new UserError('Parameter vendor is required')),
+          .error(Error('Parameter vendor is required')),
       }),
     },
   },
@@ -345,7 +346,7 @@ module.exports.signup = vandium.createInstance({
           if (err) return cb(err);
 
           if (result.length === 0) {
-            return cb(new UserError(`Vendor ${event.body.vendor} does not exist`));
+            return cb(error.notFound(`Vendor ${event.body.vendor} does not exist`));
           }
 
           return cb();

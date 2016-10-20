@@ -6,93 +6,92 @@ const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
 const request = require('../lib/request');
-const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 const commonValidationBody = {
   name: vandium.types.string().max(128)
-    .error(new UserError('Parameter name is required and may have ' +
+    .error(Error('Parameter name is required and may have ' +
     '128 characters at most')),
   type: vandium.types.string().valid('extractor', 'application',
     'writer', 'other', 'transformation', 'processor')
-    .error(new UserError('Parameter type is required and must be one of' +
+    .error(Error('Parameter type is required and must be one of' +
     ': extractor, application, writer, other, transformation, processor')),
   repository: vandium.types.object().keys({
     type: vandium.types.string().valid('dockerhub', 'quay')
-      .error(new UserError('Parameter repository.type must be one of: ' +
+      .error(Error('Parameter repository.type must be one of: ' +
       'dockerhub, quay')),
     uri: vandium.types.string().max(128)
-      .error(new UserError('Parameter repository.uri must be uri and ' +
+      .error(Error('Parameter repository.uri must be uri and ' +
       'may have 128 characters at most')),
     tag: vandium.types.string().max(20)
-      .error(new UserError('Parameter repository.tag must be string ' +
+      .error(Error('Parameter repository.tag must be string ' +
       'and may have 20 characters at most')),
     options: vandium.types.object()
-      .error(new UserError('Parameter repository.options must be object')),
+      .error(Error('Parameter repository.options must be object')),
   }),
   shortDescription: vandium.types.string()
-    .error(new UserError('Parameter shortDescription must be string')),
+    .error(Error('Parameter shortDescription must be string')),
   longDescription: vandium.types.string()
-    .error(new UserError('Parameter longDescription must be string')),
+    .error(Error('Parameter longDescription must be string')),
   licenseUrl: vandium.types.string().max(255).uri()
-    .error(new UserError('Parameter licenseUrl must be url and may ' +
+    .error(Error('Parameter licenseUrl must be url and may ' +
     'have 255 characters at most')),
   documentationUrl: vandium.types.string().max(255).uri()
-    .error(new UserError('Parameter documentationUrl must be url and ' +
+    .error(Error('Parameter documentationUrl must be url and ' +
     'may have 255 characters at most')),
   encryption: vandium.types.boolean()
-    .error(new UserError('Parameter encryption must be boolean')),
+    .error(Error('Parameter encryption must be boolean')),
   defaultBucket: vandium.types.boolean()
-    .error(new UserError('Parameter defaultBucket must be boolean')),
+    .error(Error('Parameter defaultBucket must be boolean')),
   defaultBucketStage: vandium.types.string().valid('in', 'out')
-    .error(new UserError('Parameter defaultBucketStage must be one ' +
+    .error(Error('Parameter defaultBucketStage must be one ' +
     'of: in, out')),
   uiOptions: vandium.types.array()
-    .error(new UserError('Parameter uiOptions must be array')),
+    .error(Error('Parameter uiOptions must be array')),
   testConfiguration: vandium.types.object(),
   configurationSchema: vandium.types.object(),
   configurationDescription: vandium.types.string(),
   emptyConfiguration: vandium.types.object(),
   actions: vandium.types.array()
-    .error(new UserError('Parameter actions must be array')),
+    .error(Error('Parameter actions must be array')),
   fees: vandium.types.boolean()
-    .error(new UserError('Parameter fees must be boolean')),
+    .error(Error('Parameter fees must be boolean')),
   limits: vandium.types.string()
-    .error(new UserError('Parameter limits must be string')),
+    .error(Error('Parameter limits must be string')),
   logger: vandium.types.string().valid('standard', 'gelf')
-    .error(new UserError('Parameter logger must be one of: standard, gelf')),
+    .error(Error('Parameter logger must be one of: standard, gelf')),
   loggerConfiguration: vandium.types.object(),
   isVisible: vandium.types.boolean()
-    .error(new UserError('Parameter isVisible must be boolean')),
+    .error(Error('Parameter isVisible must be boolean')),
   vendor: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter vendor is forbidden')),
+    .error(Error('Setting of parameter vendor is forbidden')),
   isApproved: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter isApproved is forbidden')),
+    .error(Error('Setting of parameter isApproved is forbidden')),
   createdOn: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter createdOn is forbidden')),
+    .error(Error('Setting of parameter createdOn is forbidden')),
   createdBy: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter createdBy is forbidden')),
+    .error(Error('Setting of parameter createdBy is forbidden')),
   version: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter version is forbidden')),
+    .error(Error('Setting of parameter version is forbidden')),
   forwardToken: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter forwardToken is forbidden')),
+    .error(Error('Setting of parameter forwardToken is forbidden')),
   requiredMemory: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter requiredMemory is forbidden')),
+    .error(Error('Setting of parameter requiredMemory is forbidden')),
   processTimeout: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter processTimeout is forbidden')),
+    .error(Error('Setting of parameter processTimeout is forbidden')),
   icon32: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter icon32 is forbidden')),
+    .error(Error('Setting of parameter icon32 is forbidden')),
   icon64: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter icon64 is forbidden')),
+    .error(Error('Setting of parameter icon64 is forbidden')),
   legacyUri: vandium.types.any().forbidden()
-    .error(new UserError('Setting of parameter legacyUri is forbidden')),
+    .error(Error('Setting of parameter legacyUri is forbidden')),
 };
 
 const createValidationBody = commonValidationBody;
 createValidationBody.id = vandium.types.string().min(3).max(50)
   .regex(/^[a-zA-Z0-9-_]+$/)
   .required()
-  .error(new UserError('Parameter id is required, must have between ' +
+  .error(Error('Parameter id is required, must have between ' +
   '3 and 50 characters and contain only letters, numbers, dashes ' +
   'and underscores'));
 createValidationBody.name.required();
@@ -103,7 +102,7 @@ module.exports.appsCreate = vandium.createInstance({
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(new UserError('Authorization header is required')),
+          .error(Error('Authorization header is required')),
       }),
       body: vandium.types.object().keys(commonValidationBody),
     },
@@ -147,14 +146,14 @@ module.exports.appsCreate = vandium.createInstance({
 
 const updateValidationBody = commonValidationBody;
 updateValidationBody.id = vandium.types.any().forbidden()
-  .error(new UserError('Setting of parameter id is forbidden'));
+  .error(Error('Setting of parameter id is forbidden'));
 
 module.exports.appsUpdate = vandium.createInstance({
   validation: {
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(new UserError('Authorization header is required')),
+          .error(Error('Authorization header is required')),
       }),
       pathParameters: vandium.types.object().keys({
         appId: vandium.types.string().required(),

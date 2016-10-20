@@ -4,9 +4,9 @@ require('babel-polyfill');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
+const error = require('../lib/error');
 const identity = require('../lib/identity');
 const request = require('../lib/request');
-const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 /**
@@ -17,11 +17,11 @@ module.exports.handler = vandium.createInstance({
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(new UserError('Authorization header is required')),
+          .error(Error('Authorization header is required')),
       }),
       pathParameters: vandium.types.object().keys({
         appId: vandium.types.string().required()
-          .error(new UserError('Parameter appId is required')),
+          .error(Error('Parameter appId is required')),
       }),
     },
   },
@@ -48,38 +48,38 @@ module.exports.handler = vandium.createInstance({
         }
 
         if (data.isApproved) {
-          return cb(new UserError('Already approved'));
+          return cb(error.badRequest('Already approved'));
         }
         return cb(err, data);
       });
     },
     function (app, cb) {
       if (!app.repository.type) {
-        return cb(new UserError('App property repository.type cannot be empty'));
+        return cb(error.badRequest('App property repository.type cannot be empty'));
       }
       if (!app.repository.uri) {
-        return cb(new UserError('App property repository.uri cannot be empty'));
+        return cb(error.badRequest('App property repository.uri cannot be empty'));
       }
       if (!app.repository.tag) {
-        return cb(new UserError('App property repository.tag cannot be empty'));
+        return cb(error.badRequest('App property repository.tag cannot be empty'));
       }
       if (!app.shortDescription) {
-        return cb(new UserError('App property shortDescription cannot be empty'));
+        return cb(error.badRequest('App property shortDescription cannot be empty'));
       }
       if (!app.longDescription) {
-        return cb(new UserError('App property longDescription cannot be empty'));
+        return cb(error.badRequest('App property longDescription cannot be empty'));
       }
       if (!app.licenseUrl) {
-        return cb(new UserError('App property licenseUrl cannot be empty'));
+        return cb(error.badRequest('App property licenseUrl cannot be empty'));
       }
       if (!app.documentationUrl) {
-        return cb(new UserError('App property documentationUrl cannot be empty'));
+        return cb(error.badRequest('App property documentationUrl cannot be empty'));
       }
       if (!app.icon32) {
-        return cb(new UserError('App icon of size 32px is missing, upload it first.'));
+        return cb(error.badRequest('App icon of size 32px is missing, upload it first.'));
       }
       if (!app.icon64) {
-        return cb(new UserError('App icon of size 64px is missing, upload it first.'));
+        return cb(error.badRequest('App icon of size 64px is missing, upload it first.'));
       }
       return cb();
     },

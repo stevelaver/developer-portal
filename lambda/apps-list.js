@@ -7,7 +7,6 @@ const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
 const request = require('../lib/request');
-const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 module.exports.appsList = vandium.createInstance({
@@ -15,7 +14,7 @@ module.exports.appsList = vandium.createInstance({
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(new UserError('Authorization header is required')),
+          .error(Error('Authorization header is required')),
       }),
       queryStringParameters: vandium.types.object().allow(null).keys({
         offset: vandium.types.number().integer().default(0).allow(''),
@@ -55,7 +54,7 @@ module.exports.appsDetail = vandium.createInstance({
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(new UserError('Authorization header is required')),
+          .error(Error('Authorization header is required')),
       }),
       pathParameters: vandium.types.object().keys({
         appId: vandium.types.string().required(),

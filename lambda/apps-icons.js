@@ -7,10 +7,8 @@ const aws = require('aws-sdk');
 const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
-const log = require('../lib/log');
 const moment = require('moment');
 const request = require('../lib/request');
-const UserError = require('../lib/UserError');
 const vandium = require('vandium');
 
 module.exports.links = vandium.createInstance({
@@ -18,7 +16,7 @@ module.exports.links = vandium.createInstance({
     schema: {
       headers: vandium.types.object().keys({
         Authorization: vandium.types.string().required()
-          .error(new UserError('Authorization header is required')),
+          .error(Error('Authorization header is required')),
       }),
       pathParameters: vandium.types.object().keys({
         appId: vandium.types.string().required(),
@@ -26,7 +24,6 @@ module.exports.links = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  log.start('appsIcons', event);
   db.connect({
     host: env.RDS_HOST,
     user: env.RDS_USER,
