@@ -1,38 +1,41 @@
 'use strict';
-require('dotenv').config({path: '.env-test', silent: true});
 
-var async = require('async');
-var db = require('../../lib/db');
-var execsql = require('../../lib/execsql');
-var expect = require('chai').expect;
-var mysql = require('mysql');
-var rds;
+require('dotenv').config({ path: '.env-test', silent: true });
+const db = require('../../lib/db');
+const execsql = require('../../lib/execsql');
+const expect = require('chai').expect;
+const mysql = require('mysql');
 
-describe('db', function() {
-  before(function(done) {
-    rds = mysql.createConnection({
-      host: process.env.TEST_RDS_HOST,
-      user: process.env.TEST_RDS_USER,
-      password: process.env.TEST_RDS_PASSWORD,
-      database: process.env.TEST_RDS_DATABASE,
-      ssl: process.env.TEST_RDS_SSL ? 'Amazon RDS' : false,
-      multipleStatements: true
-    });
-    execsql.execFile(rds, __dirname + '/../../rds-model.sql', function(err) {
+let rds;
+
+const dbConnectParams = {
+  host: process.env.TEST_RDS_HOST,
+  port: process.env.TEST_RDS_PORT,
+  user: process.env.TEST_RDS_USER,
+  password: process.env.TEST_RDS_PASSWORD,
+  database: process.env.TEST_RDS_DATABASE,
+  ssl: process.env.TEST_RDS_SSL,
+  multipleStatements: true,
+};
+
+describe('db', () => {
+  before((done) => {
+    rds = mysql.createConnection(dbConnectParams);
+    execsql.execFile(rds, `${__dirname}/../../rds-model.sql`, (err) => {
       if (err) throw err;
       done();
     });
   });
 
-  describe('format', function() {
-    it ('format app input', function(done) {
-      var input = {
+  describe('format', () => {
+    it('format app input', (done) => {
+      const input = {
         uiOptions: ['1', '2'],
-        testConfiguration: {one: 'two'},
-        configurationSchema: {three: 'four'},
-        actions: ['action']
+        testConfiguration: { one: 'two' },
+        configurationSchema: { three: 'four' },
+        actions: ['action'],
       };
-      var res = db.formatAppInput(input);
+      const res = db.formatAppInput(input);
       expect(res).to.have.property('uiOptions');
       expect(res).to.have.property('testConfiguration');
       expect(res).to.have.property('configurationSchema');
@@ -44,23 +47,23 @@ describe('db', function() {
       done();
     });
 
-    it ('format app output', function(done) {
-      var input = {
+    it('format app output', (done) => {
+      const input = {
         encryption: 1,
         defaultBucket: 0,
         forwardToken: 1,
         uiOptions: '["1","2"]',
         testConfiguration: '{"one":"two"}',
         configurationSchema: '{"three":"four"}',
-        actions: "[]",
+        actions: '[]',
         fees: 0,
         isApproved: 1,
         vendorId: 'keboola',
         vendorName: 'Keboola',
         vendorAddress: 'Křižíkova 115, Praha',
-        vendorEmail: 'test@test.com'
+        vendorEmail: 'test@test.com',
       };
-      var res = db.formatAppOutput(input);
+      const res = db.formatAppOutput(input);
       expect(res).to.have.property('encryption');
       expect(res).to.have.property('defaultBucket');
       expect(res).to.have.property('forwardToken');
@@ -83,8 +86,8 @@ describe('db', function() {
       expect(res.defaultBucket).to.equal(false);
       expect(res.forwardToken).to.equal(true);
       expect(res.uiOptions).to.eql(['1', '2']);
-      expect(res.testConfiguration).to.eql({one: 'two'});
-      expect(res.configurationSchema).to.eql({three: 'four'});
+      expect(res.testConfiguration).to.eql({ one: 'two' });
+      expect(res.configurationSchema).to.eql({ three: 'four' });
       expect(res.actions).to.eql([]);
       expect(res.fees).to.equal(false);
       expect(res.isApproved).to.equal(true);
@@ -96,33 +99,21 @@ describe('db', function() {
     });
   });
 
-  describe('init', function() {
-    it('db not connected', function(done) {
+  describe('init', () => {
+    it('db not connected', (done) => {
       expect(db.db()).to.be.undefined;
       done();
     });
 
-    it('db is connected', function(done) {
-      db.connect({
-        host: process.env.TEST_RDS_HOST,
-        user: process.env.TEST_RDS_USER,
-        password: process.env.TEST_RDS_PASSWORD,
-        database: process.env.TEST_RDS_DATABASE,
-        ssl: process.env.TEST_RDS_SSL
-      });
+    it('db is connected', (done) => {
+      db.connect(dbConnectParams);
       expect(db.db()).to.be.a('object');
       done();
     });
 
-    it('db is disconnected', function(done) {
-      db.connect({
-        host: process.env.TEST_RDS_HOST,
-        user: process.env.TEST_RDS_USER,
-        password: process.env.TEST_RDS_PASSWORD,
-        database: process.env.TEST_RDS_DATABASE,
-        ssl: process.env.TEST_RDS_SSL
-      });
-      db.db().query('SELECT 1', function(err) {
+    it('db is disconnected', (done) => {
+      db.connect(dbConnectParams);
+      db.db().query('SELECT 1', (err) => {
         if (err) throw err;
 
         expect(db.db().state).to.equal('authenticated');
@@ -133,39 +124,26 @@ describe('db', function() {
     });
   });
 
-  describe('checkAppNotExists', function() {
-    var appId = 'a-checkAppNotExists-' + Date.now();
-    var vendor = 'v-checkAppNotExists' + Date.now();
+  describe('checkAppNotExists', () => {
+    const appId = `a-checkAppNotExists-${Date.now()}`;
+    const vendor = `v-checkAppNotExists-${Date.now()}`;
 
-    it('app does not exist', function(done) {
-      db.connect({
-        host: process.env.TEST_RDS_HOST,
-        user: process.env.TEST_RDS_USER,
-        password: process.env.TEST_RDS_PASSWORD,
-        database: process.env.TEST_RDS_DATABASE,
-        ssl: process.env.TEST_RDS_SSL
-      });
-      db.checkAppNotExists(appId, function(err) {
+    it('app does not exist', (done) => {
+      db.connect(dbConnectParams);
+      db.checkAppNotExists(appId, (err) => {
         expect(err).to.be.undefined;
         done();
-      })
+      });
     });
 
-    it('app exists', function (done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+    it('app exists', (done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function() {
-          db.connect({
-            host: process.env.TEST_RDS_HOST,
-            user: process.env.TEST_RDS_USER,
-            password: process.env.TEST_RDS_PASSWORD,
-            database: process.env.TEST_RDS_DATABASE,
-            ssl: process.env.TEST_RDS_SSL
-          });
-          expect(function () {
-            db.checkAppNotExists(appId, function () {
-            });
-          }).to.throw(function () {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+          if (err1) throw err1;
+          db.connect(dbConnectParams);
+          db.checkAppNotExists(appId, (err2) => {
+            expect(err2).to.not.be.empty;
             done();
           });
         });
@@ -173,61 +151,49 @@ describe('db', function() {
     });
   });
 
-  describe('checkAppAccess', function() {
-    var appId = 'a-checkAppAccess-' + Date.now();
-    var vendor = 'v-checkAppAccess-' + Date.now();
+  describe('checkAppAccess', () => {
+    const appId = `a-checkAppAccess-${Date.now()}`;
+    const vendor = `v-checkAppAccess-${Date.now()}`;
 
-    before(function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+    before((done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function() {
-          db.connect({
-            host: process.env.TEST_RDS_HOST,
-            user: process.env.TEST_RDS_USER,
-            password: process.env.TEST_RDS_PASSWORD,
-            database: process.env.TEST_RDS_DATABASE,
-            ssl: process.env.TEST_RDS_SSL
-          });
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], () => {
+          db.connect(dbConnectParams);
           done();
         });
       });
     });
 
-    it('has access', function(done) {
-      db.checkAppAccess(appId, vendor, function (err) {
+    it('has access', (done) => {
+      db.checkAppAccess(appId, vendor, (err) => {
         expect(err).to.be.empty;
         done();
       });
     });
 
-    it('does not have access', function(done) {
-      var vendor2 = 'v2' + Date.now();
-      db.checkAppAccess(appId, vendor2, function (err) {
-        expect(err).to.be.an('error');
+    it('does not have access', (done) => {
+      const vendor2 = `v2-${Date.now()}`;
+      db.checkAppAccess(appId, vendor2, (err) => {
+        expect(err).to.not.be.empty;
         done();
       });
     });
   });
 
-  describe('insertApp', function() {
-    it('insert new app', function(done) {
-      var appId = 'a-insertApp-' + Date.now();
-      var vendor = 'v-insertApp-' + Date.now();
+  describe('insertApp', () => {
+    it('insert new app', (done) => {
+      const appId = `a-insertApp-${Date.now()}`;
+      const vendor = `v-insertApp-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function() {
-        db.connect({
-          host: process.env.TEST_RDS_HOST,
-          user: process.env.TEST_RDS_USER,
-          password: process.env.TEST_RDS_PASSWORD,
-          database: process.env.TEST_RDS_DATABASE,
-          ssl: process.env.TEST_RDS_SSL
-        });
-        db.insertApp({id: appId, vendor: vendor, name: 'test', type: 'extractor'}, function() {
-          rds.query('SELECT * FROM `apps` WHERE id=?', appId, function (err, res) {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, () => {
+        db.connect(dbConnectParams);
+        db.insertApp({ id: appId, vendor, name: 'test', type: 'extractor' }, () => {
+          rds.query('SELECT * FROM `apps` WHERE id=?', appId, (err, res) => {
             expect(res).to.have.length(1);
-            rds.query('SELECT * FROM `appVersions` WHERE id=?', appId, function (err, res) {
-              expect(res).to.have.length(1);
-              expect(res[0].version).to.equal(1);
+            rds.query('SELECT * FROM `appVersions` WHERE id=?', appId, (err1, res1) => {
+              expect(res1).to.have.length(1);
+              expect(res1[0].version).to.equal(1);
               done();
             });
           });
@@ -235,59 +201,44 @@ describe('db', function() {
       });
     });
 
-    it('insert already existing app', function(done) {
-      var appId = 'ex-' + Date.now();
-      var vendor = 'v' + Date.now();
+    it('insert already existing app', (done) => {
+      const appId = `a-alreadyExists-${Date.now()}`;
+      const vendor = `v-alreadyExists-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
-          if (err) throw err;
-          db.connect({
-            host: process.env.TEST_RDS_HOST,
-            user: process.env.TEST_RDS_USER,
-            password: process.env.TEST_RDS_PASSWORD,
-            database: process.env.TEST_RDS_DATABASE,
-            ssl: process.env.TEST_RDS_SSL
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+          if (err1) throw err1;
+          db.connect(dbConnectParams);
+          db.insertApp({ id: appId, vendor, name: 'test', type: 'extractor' }, (err2) => {
+            expect(err2).to.not.be.empty;
+            done();
           });
-          db.insertApp({id: appId, vendor: vendor, name: 'test', type: 'extractor'}, function() {
-            expect(function() {
-              rds.query('SELECT * FROM `apps` WHERE id=?', appId, function() {});
-            }).to.throw(function() {
-              done();
-            });
-          })
-        })
+        });
       });
     });
   });
 
-  describe('updateApp', function() {
-    it('update existing app', function(done) {
-      var appId = 'a-updateApp-' + Date.now();
-      var vendor = 'v-updateApp-' + Date.now();
+  describe('updateApp', () => {
+    it('update existing app', (done) => {
+      const appId = `a-updateApp-${Date.now()}`;
+      const vendor = `v-updateApp-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
-          if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], function(err) {
-            if (err) throw err;
-            db.connect({
-              host: process.env.TEST_RDS_HOST,
-              user: process.env.TEST_RDS_USER,
-              password: process.env.TEST_RDS_PASSWORD,
-              database: process.env.TEST_RDS_DATABASE,
-              ssl: process.env.TEST_RDS_SSL
-            });
-            db.updateApp({name: 'New name'}, appId, 'user', function() {
-              rds.query('SELECT * FROM `apps` WHERE id=? AND version=2', appId, function(err, res) {
-                if (err) throw err;
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+          if (err1) throw err1;
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], (err2) => {
+            if (err) throw err2;
+            db.connect(dbConnectParams);
+            db.updateApp({ name: 'New name' }, appId, 'user', () => {
+              rds.query('SELECT * FROM `apps` WHERE id=? AND version=2', appId, (err3, res) => {
+                if (err3) throw err3;
                 expect(res).to.have.length(1);
-                rds.query('SELECT * FROM `appVersions` WHERE id=? AND version=2', appId, function(err, res) {
-                  if (err) throw err;
-                  expect(res).to.have.length(1);
-                  expect(res[0].name).to.equal('New name');
+                rds.query('SELECT * FROM `appVersions` WHERE id=? AND version=2', appId, (err4, res4) => {
+                  if (err4) throw err4;
+                  expect(res4).to.have.length(1);
+                  expect(res4[0].name).to.equal('New name');
                   done();
                 });
               });
@@ -298,34 +249,28 @@ describe('db', function() {
     });
   });
 
-  describe('addAppIcon', function() {
-    it('add app icon', function(done) {
-      var appId = 'a-addAppIcon-' + Date.now();
-      var vendor = 'v-addAppIcon' + Date.now();
+  describe('addAppIcon', () => {
+    it('add app icon', (done) => {
+      const appId = `a-addAppIcon-${Date.now()}`;
+      const vendor = `v-addAppIcon-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
-          if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], function(err) {
-            if (err) throw err;
-            db.connect({
-              host: process.env.TEST_RDS_HOST,
-              user: process.env.TEST_RDS_USER,
-              password: process.env.TEST_RDS_PASSWORD,
-              database: process.env.TEST_RDS_DATABASE,
-              ssl: process.env.TEST_RDS_SSL
-            });
-            var size = 32;
-            db.addAppIcon(appId, size, function() {
-              rds.query('SELECT * FROM `apps` WHERE id=? AND version=2', appId, function(err, res) {
-                if (err) throw err;
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+          if (err1) throw err1;
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], (err2) => {
+            if (err2) throw err2;
+            db.connect(dbConnectParams);
+            const size = 32;
+            db.addAppIcon(appId, size, () => {
+              rds.query('SELECT * FROM `apps` WHERE id=? AND version=2', appId, (err3, res) => {
+                if (err3) throw err3;
                 expect(res).to.have.length(1);
-                expect(res[0].icon32).to.equal(appId+'/'+size+'/2.png');
-                rds.query('SELECT * FROM `appVersions` WHERE id=? AND version=2', appId, function(err, res) {
-                  if (err) throw err;
-                  expect(res).to.have.length(1);
-                  expect(res[0].icon32).to.equal(appId+'/'+size+'/2.png');
+                expect(res[0].icon32).to.equal(`${appId}/${size}/2.png`);
+                rds.query('SELECT * FROM appVersions WHERE id=? AND version=2', appId, (err4, res4) => {
+                  if (err4) throw err4;
+                  expect(res4).to.have.length(1);
+                  expect(res4[0].icon32).to.equal(`${appId}/${size}/2.png`);
                   done();
                 });
               });
@@ -336,63 +281,51 @@ describe('db', function() {
     });
   });
 
-  describe('getApp', function() {
-    var appId = 'a-getApp-' + Date.now();
-    var vendor = 'v-getApp-' + Date.now();
-    before(function(done) {
-      db.connect({
-        host: process.env.TEST_RDS_HOST,
-        user: process.env.TEST_RDS_USER,
-        password: process.env.TEST_RDS_PASSWORD,
-        database: process.env.TEST_RDS_DATABASE,
-        ssl: process.env.TEST_RDS_SSL
-      });
+  describe('getApp', () => {
+    const appId = `a-getApp-${Date.now()}`;
+    const vendor = `v-getApp-${Date.now()}`;
+    before((done) => {
+      db.connect(dbConnectParams);
       done();
     });
 
-    it('get non-existing app', function(done) {
-      db.getApp(appId, null, function(err) {
+    it('get non-existing app', (done) => {
+      db.getApp(appId, null, (err) => {
         expect(err).to.not.be.null;
         done();
       });
     });
 
-    it('get existing app', function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+    it('get existing app', (done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
-          if (err) throw err;
-          db.getApp(appId, null, function(err, res) {
-            expect(err).to.be.null;
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+          if (err1) throw err1;
+          db.getApp(appId, null, (err2, res) => {
+            expect(err2).to.be.null;
             expect(res).to.have.property('id');
             expect(res.id).to.be.equal(appId);
             done();
-          })
-        })
+          });
+        });
       });
     });
 
-    it('get app version', function(done) {
-      var appId = 'ex-' + Date.now();
-      var vendor = 'v' + Date.now();
+    it('get app version', (done) => {
+      const appId1 = `a-getAppVersion-${Date.now()}`;
+      const vendor1 = `v-getAppVersion-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], function(err) {
-          if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=?, name=?;', [appId, 2, 'test'], function(err) {
-            if (err) throw err;
-            db.connect({
-              host: process.env.TEST_RDS_HOST,
-              user: process.env.TEST_RDS_USER,
-              password: process.env.TEST_RDS_PASSWORD,
-              database: process.env.TEST_RDS_DATABASE,
-              ssl: process.env.TEST_RDS_SSL
-            });
-            db.getApp(appId, 2, function(err, res) {
-              expect(err).to.be.null;
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId1, vendor1, 'test'], (err1) => {
+          if (err1) throw err1;
+          rds.query('INSERT INTO `appVersions` SET id=?, version=?, name=?;', [appId1, 2, 'test'], (err2) => {
+            if (err2) throw err2;
+            db.connect(dbConnectParams);
+            db.getApp(appId1, 2, (err3, res) => {
+              expect(err3).to.be.null;
               expect(res).to.have.property('id');
-              expect(res.id).to.be.equal(appId);
+              expect(res.id).to.be.equal(appId1);
               done();
             });
           });
@@ -401,29 +334,23 @@ describe('db', function() {
     });
   });
 
-  describe('listAppsForVendor', function() {
-    var appId = 'a-listAppsForVendor-' + Date.now();
-    var vendor = 'v1-listAppsForVendor-' + Date.now();
-    var vendor2 = 'v2-listAppsForVendor-' + Date.now();
+  describe('listAppsForVendor', () => {
+    const appId = `a-listAppsForVendor-${Date.now()}`;
+    const vendor = `v-listAppsForVendor-${Date.now()}`;
+    const vendor2 = `v2-listAppsForVendor-${Date.now()}`;
 
-    before(function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+    before((done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId, vendor], function(err) {
-          if (err) throw err;
-          rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2, function(err) {
-            if (err) throw err;
-            rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', ['ex-' + Date.now(), vendor2], function(err) {
-              if (err) throw err;
-              rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId+'1', vendor], function(err) {
-                if (err) throw err;
-                db.connect({
-                  host: process.env.TEST_RDS_HOST,
-                  user: process.env.TEST_RDS_USER,
-                  password: process.env.TEST_RDS_PASSWORD,
-                  database: process.env.TEST_RDS_DATABASE,
-                  ssl: process.env.TEST_RDS_SSL
-                });
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId, vendor], (err2) => {
+          if (err2) throw err2;
+          rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2, (err3) => {
+            if (err3) throw err3;
+            rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [`ex-${Date.now()}`, vendor2], (err4) => {
+              if (err4) throw err4;
+              rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [`${appId}1`, vendor], (err5) => {
+                if (err5) throw err;
+                db.connect(dbConnectParams);
                 done();
               });
             });
@@ -432,8 +359,8 @@ describe('db', function() {
       });
     });
 
-    it('list all', function(done) {
-      db.listAppsForVendor(vendor, null, null, function(err, res) {
+    it('list all', (done) => {
+      db.listAppsForVendor(vendor, null, null, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.length(2);
         expect(res[0].id).to.be.equal(appId);
@@ -441,38 +368,32 @@ describe('db', function() {
       });
     });
 
-    it('list limited', function(done) {
-      db.listAppsForVendor(vendor, 1, 1, function(err, res) {
+    it('list limited', (done) => {
+      db.listAppsForVendor(vendor, 1, 1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.length(1);
-        expect(res[0].id).to.be.equal(appId+'1');
+        expect(res[0].id).to.be.equal(`${appId}1`);
         done();
       });
     });
   });
 
-  describe('listVersions', function() {
-    var appId = 'a-listVersions-' + Date.now();
-    var vendor = 'v-listVersions-' + Date.now();
+  describe('listVersions', () => {
+    const appId = `a-listVersions-${Date.now()}`;
+    const vendor = `v-listVersions-${Date.now()}`;
 
-    before(function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+    before((done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId, vendor], function(err) {
-          if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'], function(err) {
-            if (err) throw err;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test v2'], function(err) {
-              if (err) throw err;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?', [appId, 'test v3'], function(err) {
-                if (err) throw err;
-                db.connect({
-                  host: process.env.TEST_RDS_HOST,
-                  user: process.env.TEST_RDS_USER,
-                  password: process.env.TEST_RDS_PASSWORD,
-                  database: process.env.TEST_RDS_DATABASE,
-                  ssl: process.env.TEST_RDS_SSL
-                });
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId, vendor], (err1) => {
+          if (err1) throw err1;
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'], (err2) => {
+            if (err2) throw err2;
+            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test v2'], (err3) => {
+              if (err3) throw err3;
+              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?', [appId, 'test v3'], (err4) => {
+                if (err4) throw err4;
+                db.connect(dbConnectParams);
                 done();
               });
             });
@@ -481,8 +402,8 @@ describe('db', function() {
       });
     });
 
-    it('list all versions', function(done) {
-      db.listVersions(appId, null, null, function(err, res) {
+    it('list all versions', (done) => {
+      db.listVersions(appId, null, null, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.length(3);
         expect(res[2].name).to.be.equal('test v3');
@@ -490,8 +411,8 @@ describe('db', function() {
       });
     });
 
-    it('list limited versions', function(done) {
-      db.listVersions(appId, 1, 1, function(err, res) {
+    it('list limited versions', (done) => {
+      db.listVersions(appId, 1, 1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.length(1);
         expect(res[0].name).to.be.equal('test v2');
@@ -500,28 +421,22 @@ describe('db', function() {
     });
   });
 
-  describe('getPublishedApp', function() {
-    var appId = 'a-getPublishedApp-' + Date.now();
-    var vendor = 'v-getPublishedApp-' + Date.now();
+  describe('getPublishedApp', () => {
+    const appId = `a-getPublishedApp-${Date.now()}`;
+    const vendor = `v-getPublishedApp-${Date.now()}`;
 
-    before(function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+    before((done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor", isApproved=1;', [appId, vendor], function(err) {
-          if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'], function(err) {
-            if (err) throw err;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test v2'], function(err) {
-              if (err) throw err;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?', [appId, 'test v3'], function(err) {
-                if (err) throw err;
-                db.connect({
-                  host: process.env.TEST_RDS_HOST,
-                  user: process.env.TEST_RDS_USER,
-                  password: process.env.TEST_RDS_PASSWORD,
-                  database: process.env.TEST_RDS_DATABASE,
-                  ssl: process.env.TEST_RDS_SSL
-                });
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor", isApproved=1;', [appId, vendor], (err1) => {
+          if (err1) throw err1;
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'], (err2) => {
+            if (err2) throw err2;
+            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test v2'], (err3) => {
+              if (err3) throw err3;
+              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?', [appId, 'test v3'], (err4) => {
+                if (err4) throw err4;
+                db.connect(dbConnectParams);
                 done();
               });
             });
@@ -530,8 +445,8 @@ describe('db', function() {
       });
     });
 
-    it('get last version', function(done) {
-      db.getPublishedApp(appId, null, function(err, res) {
+    it('get last version', (done) => {
+      db.getPublishedApp(appId, null, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.property('version');
         expect(res.version).to.be.equal(3);
@@ -539,8 +454,8 @@ describe('db', function() {
       });
     });
 
-    it('get specific version', function(done) {
-      db.getPublishedApp(appId, 1, function(err, res) {
+    it('get specific version', (done) => {
+      db.getPublishedApp(appId, 1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.property('version');
         expect(res.version).to.be.equal(1);
@@ -548,41 +463,35 @@ describe('db', function() {
       });
     });
 
-    it('do not show unpublished app', function(done) {
-      var appId2 = 'app2' + Date.now();
-      rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor", isApproved=0;', [appId2, vendor], function(err) {
+    it('do not show unpublished app', (done) => {
+      const appId2 = `app2-${Date.now()}`;
+      rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor", isApproved=0;', [appId2, vendor], (err) => {
         if (err) throw err;
-        db.getPublishedApp(appId2, null, function(err) {
-          expect(err).to.not.be.null;
+        db.getPublishedApp(appId2, null, (err1) => {
+          expect(err1).to.not.be.null;
           done();
         });
       });
     });
   });
 
-  describe('listAllPublishedApps', function() {
-    var appId1 = 'a1-listAllPublishedApps-' + Date.now();
-    var appId2 = 'a2-listAllPublishedApps-' + Date.now();
-    var vendor = 'v-listAllPublishedApps-' + Date.now();
+  describe('listAllPublishedApps', () => {
+    const appId1 = `a1-listAllPublishedApps-${Date.now()}`;
+    const appId2 = `a2-listAllPublishedApps-${Date.now()}`;
+    const vendor = `v-listAllPublishedApps-${Date.now()}`;
 
-    before(function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
+    before((done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId1, vendor], function(err) {
-          if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId1, 'test'], function(err) {
-            if (err) throw err;
-            rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId2, vendor], function(err) {
-              if (err) throw err;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId2, 'test'], function(err) {
-                if (err) throw err;
-                db.connect({
-                  host: process.env.TEST_RDS_HOST,
-                  user: process.env.TEST_RDS_USER,
-                  password: process.env.TEST_RDS_PASSWORD,
-                  database: process.env.TEST_RDS_DATABASE,
-                  ssl: process.env.TEST_RDS_SSL
-                });
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId1, vendor], (err1) => {
+          if (err1) throw err1;
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId1, 'test'], (err2) => {
+            if (err2) throw err2;
+            rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId2, vendor], (err3) => {
+              if (err3) throw err3;
+              rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId2, 'test'], (err4) => {
+                if (err4) throw err4;
+                db.connect(dbConnectParams);
                 done();
               });
             });
@@ -591,16 +500,16 @@ describe('db', function() {
       });
     });
 
-    it('list all', function(done) {
-      db.listAllPublishedApps(null, null, function(err, res) {
+    it('list all', (done) => {
+      db.listAllPublishedApps(null, null, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.length.at.least(2);
         done();
       });
     });
 
-    it('list selected', function(done) {
-      db.listAllPublishedApps(1, 1, function(err, res) {
+    it('list selected', (done) => {
+      db.listAllPublishedApps(1, 1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.lengthOf(1);
         done();
@@ -608,26 +517,20 @@ describe('db', function() {
     });
   });
 
-  describe('listPublishedAppVersions', function() {
-    var appId = 'a1-listPublishedAppVersions-' + Date.now();
-    var vendor = 'v-listPublishedAppVersions-' + Date.now();
+  describe('listPublishedAppVersions', () => {
+    const appId = `a-listPublishedAppVersions-${Date.now()}`;
+    const vendor = `v-listPublishedAppVersions-${Date.now()}`;
 
-    before(function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, function(err) {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId, vendor], function(err) {
-          if (err) throw err;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], function(err) {
-            if (err) throw err;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test2'], function(err) {
-              if (err) throw err;
-              db.connect({
-                host: process.env.TEST_RDS_HOST,
-                user: process.env.TEST_RDS_USER,
-                password: process.env.TEST_RDS_PASSWORD,
-                database: process.env.TEST_RDS_DATABASE,
-                ssl: process.env.TEST_RDS_SSL
-              });
+    before((done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err1) => {
+        if (err1) throw err1;
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId, vendor], (err2) => {
+          if (err2) throw err2;
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], (err3) => {
+            if (err3) throw err3;
+            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test2'], (err4) => {
+              if (err4) throw err4;
+              db.connect(dbConnectParams);
               done();
             });
           });
@@ -635,8 +538,8 @@ describe('db', function() {
       });
     });
 
-    it('list all', function(done) {
-      db.listPublishedAppVersions(appId, null, null, function(err, res) {
+    it('list all', (done) => {
+      db.listPublishedAppVersions(appId, null, null, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.lengthOf(2);
         expect(res[0].name).to.equal('test');
@@ -645,8 +548,8 @@ describe('db', function() {
       });
     });
 
-    it('list selected', function(done) {
-      db.listPublishedAppVersions(appId, 1, 1, function(err, res) {
+    it('list selected', (done) => {
+      db.listPublishedAppVersions(appId, 1, 1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.lengthOf(1);
         expect(res[0].name).to.equal('test2');
@@ -655,37 +558,31 @@ describe('db', function() {
     });
   });
 
-  describe('listVendors', function() {
-    var vendor1 = 'v1-listVendors-' + Date.now();
-    var vendor2 = 'v2-listVendors-' + Date.now();
+  describe('listVendors', () => {
+    const vendor1 = `v1-listVendors-${Date.now()}`;
+    const vendor2 = `v2-listVendors-${Date.now()}`;
 
-    before(function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1, function(err) {
+    before((done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2, function(err) {
-          if (err) throw err;
-          db.connect({
-            host: process.env.TEST_RDS_HOST,
-            user: process.env.TEST_RDS_USER,
-            password: process.env.TEST_RDS_PASSWORD,
-            database: process.env.TEST_RDS_DATABASE,
-            ssl: process.env.TEST_RDS_SSL
-          });
+        rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2, (err1) => {
+          if (err1) throw err1;
+          db.connect(dbConnectParams);
           done();
         });
       });
     });
 
-    it('list all', function(done) {
-      db.listVendors(null, null, function(err, res) {
+    it('list all', (done) => {
+      db.listVendors(null, null, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.length.at.least(2);
         done();
       });
     });
 
-    it('list selected', function(done) {
-      db.listVendors(1, 1, function(err, res) {
+    it('list selected', (done) => {
+      db.listVendors(1, 1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.lengthOf(1);
         done();
@@ -693,25 +590,19 @@ describe('db', function() {
     });
   });
 
-  describe('getVendor', function() {
-    var vendor1 = 'v1-getVendor-' + Date.now();
+  describe('getVendor', () => {
+    const vendor1 = `v1-getVendor-${Date.now()}`;
 
-    before(function(done) {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1, function(err) {
+    before((done) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1, (err) => {
         if (err) throw err;
-        db.connect({
-          host: process.env.TEST_RDS_HOST,
-          user: process.env.TEST_RDS_USER,
-          password: process.env.TEST_RDS_PASSWORD,
-          database: process.env.TEST_RDS_DATABASE,
-          ssl: process.env.TEST_RDS_SSL
-        });
+        db.connect(dbConnectParams);
         done();
       });
     });
 
-    it('get', function(done) {
-      db.getVendor(vendor1, function(err, res) {
+    it('get', (done) => {
+      db.getVendor(vendor1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.property('id');
         expect(res).to.have.property('name');
