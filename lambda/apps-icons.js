@@ -24,14 +24,7 @@ module.exports.links = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  db.connect({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
-  });
+  db.connectEnv(env);
   async.waterfall([
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
@@ -105,14 +98,7 @@ module.exports.upload = vandium.createInstance()
   const appId = key.split('/').shift();
   const size = key.split('/')[1];
 
-  db.connect({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
-  });
+  db.connectEnv(env);
   const s3 = new aws.S3();
   async.waterfall([
     function (cb) {

@@ -18,17 +18,6 @@ const addIcons = function (app) {
   delete res.icon64;
 };
 
-const dbConnect = function () {
-  db.connect({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
-  });
-};
-
 const defaultCallback = function (err, res, cb) {
   db.end();
   cb(err, res);
@@ -48,7 +37,7 @@ module.exports.detail = vandium.createInstance({
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
   // log.init(env.LOG_HOST, env.LOG_PORT, env.SERVICE_NAME);
-  dbConnect();
+  db.connectEnv(env);
   async.waterfall([
     function (cb) {
       db.getPublishedApp(
@@ -83,7 +72,7 @@ module.exports.list = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  dbConnect();
+  db.connectEnv(env);
   async.waterfall([
     function (cb) {
       db.listAllPublishedApps(
@@ -121,7 +110,7 @@ module.exports.versions = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  dbConnect();
+  db.connectEnv(env);
   async.waterfall([
     function (cb) {
       db.listPublishedAppVersions(
@@ -157,7 +146,7 @@ module.exports.vendorsList = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  dbConnect();
+  db.connectEnv(env);
   db.listVendors(
     _.get(event, 'queryStringParameters.offset', null),
     _.get(event, 'queryStringParameters.limit', null),
@@ -181,7 +170,7 @@ module.exports.vendorDetail = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  dbConnect();
+  db.connectEnv(env);
   db.getVendor(event.pathParameters.vendor, (err, res) => {
     db.end();
     return request.response(err, res, event, context, callback);

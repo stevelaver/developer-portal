@@ -28,14 +28,7 @@ module.exports.appApprove = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  db.connect({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
-  });
+  db.connectEnv(env);
   async.waterfall([
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
@@ -100,14 +93,7 @@ module.exports.apps = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  db.connect({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
-  });
+  db.connectEnv(env);
   async.waterfall([
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
@@ -302,7 +288,7 @@ module.exports.users = vandium.createInstance({
       }, cb);
     },
     function (data, cb) {
-      cb(null, _.map(data.Users, item => {
+      cb(null, _.map(data.Users, item => ({
         email: item.Username,
         name: _.get(_.find(item.Attributes, o => (o.Name === 'name')), 'Value', null),
         vendor: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', null),
@@ -310,7 +296,7 @@ module.exports.users = vandium.createInstance({
         isEnabled: item.Enabled,
         status: item.UserStatus,
         id: _.get(_.find(item.Attributes, o => (o.Name === 'sub')), 'Value', null),
-      }));
+      })));
     },
   ], callback);
 }, context, callback));

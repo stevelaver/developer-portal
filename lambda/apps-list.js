@@ -23,14 +23,7 @@ module.exports.appsList = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  db.connect({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
-  });
+  db.connectEnv(env);
   async.waterfall([
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
@@ -63,14 +56,7 @@ module.exports.appsDetail = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  db.connect({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
-  });
+  db.connectEnv(env);
   async.waterfall([
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
