@@ -107,16 +107,18 @@ setup.subscribeLogs = function (region, service, stage, cb) {
           });
         },
         (cb3) => {
-          exec(`aws logs put-subscription-filter --region ${region} \
-            --filter-pattern '' \
-            --filter-name LambdaToPapertrail-${service}-${stage} \
-            --log-group-name /aws/lambda/${service}-${stage}-${item} \
-            --destination-arn arn:aws:lambda:${region}:${setup.accountId}:function:${service}-${stage}-logger`, (err) => {
-            if (err) {
-              console.warn(`Put subscription filter ${item} error: ${err}`);
-            }
-            cb3(err);
-          });
+          setTimeout(() => {
+            exec(`aws logs put-subscription-filter --region ${region} \
+              --filter-pattern '' \
+              --filter-name LambdaToPapertrail-${service}-${stage} \
+              --log-group-name /aws/lambda/${service}-${stage}-${item} \
+              --destination-arn arn:aws:lambda:${region}:${setup.accountId}:function:${service}-${stage}-logger`, (err) => {
+              if (err) {
+                console.warn(`Put subscription filter ${item} error: ${err}`);
+              }
+              cb3(err);
+            });
+          }, 5000);
         },
       ], cb2);
     } else {

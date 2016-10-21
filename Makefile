@@ -1,4 +1,4 @@
-all: pre-deploy deploy post-deploy
+all: pre-deploy deploy post-deploy deploy
 
 pre-deploy:
 	node scripts/pre-deploy.js

@@ -36,8 +36,14 @@ Optionally you can import data from KBC:
 1. download `https://connection.keboola.com/admin/manage-apps/apis-list` to a file
 2. run `node scripts/import.js data <path-to-the-file.json>` to load data to db
 3. run `node scripts/import.js icons <path-to-the-file.json>` to get app icons and upload to s3
+4. run `node scripts/import.js vendors <path-to-the-file.sql>` to fill default vendors (sql should contain inserts to vendors table)
 
 You can set created user as admin using command: `node scripts/setup-admin.js <email> enable`
+
+### Run functional tests
+
+1. Look to `env.yml` for `API_ENDPOINT` and create user. Confirm email and enable user in Cognito console
+2. Run `env FUNC_USER_EMAIL=<userEmail> FUNC_USER_PASSWORD=<userPass> FUNC_VENDOR=<vendorId> mocha --timeout 0 test/functional`
 
 ### Cleanup
 

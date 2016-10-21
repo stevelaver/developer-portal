@@ -234,11 +234,7 @@ module.exports.login = vandium.createInstance({
     },
   }, (err, data) => {
     if (err) {
-      const newErr = authError(err);
-      if (newErr.type === 'NotAuthorizedException') {
-        newErr.message = 'User is not approved yet.';
-      }
-      return request.response(newErr, null, event, context, callback);
+      return request.response(authError(err), null, event, context, callback);
     }
 
     return request.response(null, {

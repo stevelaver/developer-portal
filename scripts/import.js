@@ -4,6 +4,7 @@ const _ = require('lodash');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../lib/env').load();
+const execsql = require('../lib/execsql');
 const fs = require('fs');
 const mysql = require('mysql');
 const request = require('request');
@@ -255,6 +256,21 @@ if (args[0] === 'data') {
       }
       process.exit();
     });
+  });
+} else if (args[0] === 'vendors') {
+  execsql.execFile(mysql.createConnection({
+    host: env.RDS_HOST,
+    port: env.RDS_PORT,
+    user: env.RDS_USER,
+    password: env.RDS_PASSWORD,
+    database: env.RDS_DATABASE,
+    ssl: env.RDS_SSL,
+    multipleStatements: true,
+  }), args[1], (err) => {
+    if (err) {
+      throw err;
+    }
+    process.exit();
   });
 } else {
   console.warn('No valid arguments, run with "data" or "icons" argument');
