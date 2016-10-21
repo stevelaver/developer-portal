@@ -16,7 +16,7 @@ if resources with same identifiers already exist, the installation will fail.
 
 1. Install Serverless 1.0: `npm install -g serverless`
 2. Install AWS CLI (e.g. `pip install awscli` on Mac)
-3. Checkout git repository: `git clone git@github.com:keboola/developer-portal.git`
+3. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
 4. Cd into directory: `cd developer-portal`
 5. Install npm dependencies: `npm install` and dev dependencies `npm install --only=dev`
 6. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= make`

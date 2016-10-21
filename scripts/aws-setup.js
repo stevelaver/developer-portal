@@ -70,10 +70,13 @@ setup.createCognitoPool = function (region, name, email, cb) {
   ], cb);
 };
 
-setup.updateCognitoPool = function (region, poolId, name, stage, cb) {
+setup.updateCognitoPool = function (region, poolId, name, stage, email, cb) {
+  const emailArn = `arn:aws:ses:${region}:${setup.accountId}:identity/${email}`;
   const messageHandlerArn = `arn:aws:lambda:${region}:${setup.accountId}:function:${name}-${stage}-authEmailTrigger`;
   exec(`aws cognito-idp update-user-pool --region ${region} --user-pool-id ${poolId} \
-        --lambda-config '{"CustomMessage": "${messageHandlerArn}"}'`, (err) => {
+    --policies '{"PasswordPolicy":{"MinimumLength":8,"RequireUppercase":true,"RequireLowercase":true,"RequireNumbers":true,"RequireSymbols":false}}' \
+    --email-configuration SourceArn=${emailArn} --auto-verified-attributes email \
+    --lambda-config '{"CustomMessage": "${messageHandlerArn}"}'`, (err) => {
     if (err) {
       cb(`Cognito Update Pool error: ${err}`);
     }
