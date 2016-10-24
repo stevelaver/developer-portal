@@ -32,7 +32,7 @@ const downloadIcon = function (uri, id, size, callback) {
   request({ uri })
     .pipe(fs.createWriteStream(`icons/${id}/${size}/1.png`))
     .on('close', () => callback())
-    .on('error', err => console.log(err));
+    .on('error', err => console.log(`Error downloading icon ${uri}' for app ${id}: ${err}`));
 };
 
 const getIcons = function (cb) {
@@ -246,7 +246,6 @@ if (args[0] === 'data') {
   });
 } else if (args[0] === 'icons') {
   getIcons((err) => {
-    console.log('ERR', err);
     if (err) {
       throw err;
     }

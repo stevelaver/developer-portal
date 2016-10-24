@@ -247,7 +247,7 @@ describe('apps', () => {
             },
           }, (err, res, body) => {
             expect(err).to.be.null;
-            expect(body).to.be.equal('null');
+            expect(body).to.be.empty;
             callback();
           });
         }, 5000);

@@ -25,7 +25,7 @@ if (args[0] === 'delete-cognito') {
     env.REGION,
     env.SERVICE_NAME,
     env.STAGE,
-    err => done(err)
+    () => done()
   );
 } else {
   console.warn('No valid arguments');

@@ -49,7 +49,7 @@ describe('auth', () => {
           },
         }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.null;
+          expect(body, JSON.stringify(body)).to.be.empty;
           cb();
         });
       },
