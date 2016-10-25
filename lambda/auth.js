@@ -9,36 +9,7 @@ const identity = require('../lib/identity');
 const moment = require('moment');
 const mysql = require('mysql');
 const request = require('../lib/request');
-const UserError = require('../lib/UserError');
 const vandium = require('vandium');
-
-const authError = function (err) {
-  if (!err) {
-    return null;
-  }
-  let newErr = new UserError(err.message);
-  newErr.type = err.code;
-  switch (err.code) {
-    case 'UserNotFoundException':
-      newErr.message = 'User not found.';
-      newErr.code = 404;
-      break;
-    case 'ExpiredCodeException':
-    case 'CodeMismatchException':
-      newErr.code = 404;
-      break;
-    case 'LimitExceededException':
-      newErr.code = 400;
-      break;
-    case 'NotAuthorizedException':
-    case 'UserNotConfirmedException':
-      newErr.code = 401;
-      break;
-    default:
-      newErr = err;
-  }
-  return newErr;
-};
 
 /**
  * Confirm
@@ -65,7 +36,7 @@ module.exports.confirm = vandium.createInstance({
         ClientId: env.COGNITO_CLIENT_ID,
         ConfirmationCode: event.pathParameters.code,
         Username: event.pathParameters.email,
-      }, err => cb(authError(err)));
+      }, err => cb(error.authError(err)));
     },
     function (cb) {
       provider.adminDisableUser({
@@ -126,7 +97,7 @@ module.exports.confirmResend = vandium.createInstance({
         callback
       );
     } else {
-      return request.response(authError(err), null, event, context, callback);
+      return request.response(error.authError(err), null, event, context, callback);
     }
   });
 }, context, callback));
@@ -153,7 +124,7 @@ module.exports.forgot = vandium.createInstance({
     ClientId: env.COGNITO_CLIENT_ID,
     Username: event.pathParameters.email,
   }, err => request.response(
-    authError(err),
+    error.authError(err),
     null,
     event,
     context,
@@ -195,7 +166,7 @@ module.exports.forgotConfirm = vandium.createInstance({
     Password: event.body.password,
     Username: event.pathParameters.email,
   }, err => request.response(
-    authError(err),
+    error.authError(err),
     null,
     event,
     context,
@@ -234,7 +205,7 @@ module.exports.login = vandium.createInstance({
     },
   }, (err, data) => {
     if (err) {
-      return request.response(authError(err), null, event, context, callback);
+      return request.response(error.authError(err), null, event, context, callback);
     }
 
     return request.response(null, {
@@ -296,7 +267,7 @@ module.exports.profileChange = vandium.createInstance({
     PreviousPassword: event.body.oldPassword,
     ProposedPassword: event.body.newPassword,
     AccessToken: event.headers.Authorization,
-  }, err => request.response(authError(err), null, event, context, callback, 204));
+  }, err => request.response(error.authError(err), null, event, context, callback, 204));
 }, context, callback));
 
 
@@ -371,7 +342,7 @@ module.exports.signup = vandium.createInstance({
             Value: event.body.vendor,
           },
         ],
-      }, err => cb(authError(err)));
+      }, err => cb(error.authError(err)));
     },
   ], (err) => {
     db.destroy();

@@ -36,7 +36,7 @@ module.exports.appApprove = vandium.createInstance({
     function (user, cb) {
       db.getApp(event.pathParameters.id, null, (err, data) => {
         if (data.isApproved) {
-          return cb(Error('[404] Already Approved'));
+          return cb(error.badRequest('Already approved'));
         }
         return cb(err, user, data);
       });
@@ -48,10 +48,10 @@ module.exports.appApprove = vandium.createInstance({
     },
     function (app, cb) {
       db.getVendor(app.vendor, (err, data) => {
-        cb(err, data, app.vendor);
+        cb(err, app.id, data);
       });
     },
-    function (app, vendor, cb) {
+    function (appId, vendor, cb) {
       const ses = new aws.SES({ apiVersion: '2010-12-01', region: env.REGION });
       ses.sendEmail({
         Source: env.SES_EMAIL_FROM,
@@ -62,15 +62,15 @@ module.exports.appApprove = vandium.createInstance({
           },
           Body: {
             Text: {
-              Data: `Your app ${app.id} has been approved`,
+              Data: `Your app ${appId} has been approved`,
             },
           },
         },
       }, err => cb(err));
     },
-  ], (err, res) => {
+  ], (err) => {
     db.end();
-    return callback(err, res);
+    return request.response(err, null, event, context, callback, 204);
   });
 }, context, callback));
 
@@ -109,7 +109,10 @@ module.exports.apps = vandium.createInstance({
         }
       );
     },
-  ], callback);
+  ], (err, res) => {
+    db.end();
+    return request.response(err, res, event, context, callback);
+  });
 }, context, callback));
 
 
@@ -141,7 +144,7 @@ module.exports.userAdmin = vandium.createInstance({
         Username: event.pathParameters.email,
       }, (err, data) => {
         if (err) {
-          return cb(err);
+          return cb(error.authError(err));
         }
 
         const isAdmin = _.get(_.find(
@@ -149,7 +152,7 @@ module.exports.userAdmin = vandium.createInstance({
           o => o.Name === 'custom:isAdmin'
         ), 'Value', null);
         if (isAdmin) {
-          return cb(Error('[404] Already is admin'));
+          return cb(error.badRequest('Is already admin'));
         }
 
         return cb(null, data);
@@ -165,9 +168,9 @@ module.exports.userAdmin = vandium.createInstance({
             Value: '1',
           },
         ],
-      }, err => cb(err));
+      }, err => cb(error.authError(err)));
     },
-  ], callback);
+  ], err => request.response(err, null, event, context, callback, 204));
 }, context, callback));
 
 
@@ -199,7 +202,7 @@ module.exports.userEnable = vandium.createInstance({
         Username: event.pathParameters.email,
       }, (err, data) => {
         if (err) {
-          return cb(err);
+          return cb(error.authError(err));
         }
 
         if (data.Enabled) {
@@ -213,7 +216,7 @@ module.exports.userEnable = vandium.createInstance({
       provider.adminEnableUser({
         UserPoolId: env.COGNITO_POOL_ID,
         Username: event.pathParameters.email,
-      }, err => (err ? cb(err) : cb(null, user))
+      }, err => (err ? cb(error.authError(err)) : cb(null, user))
       );
     },
     function (user, cb) {
@@ -237,7 +240,7 @@ module.exports.userEnable = vandium.createInstance({
         },
       }, err => cb(err));
     },
-  ], callback);
+  ], err => request.response(err, null, event, context, callback, 204));
 }, context, callback));
 
 
@@ -298,5 +301,5 @@ module.exports.users = vandium.createInstance({
         id: _.get(_.find(item.Attributes, o => (o.Name === 'sub')), 'Value', null),
       })));
     },
-  ], callback);
+  ], (err, res) => request.response(err, res, event, context, callback));
 }, context, callback));

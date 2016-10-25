@@ -34,7 +34,7 @@ describe('auth', () => {
     );
   });
 
-  it('create user flow', (done) => {
+  it('approve user flow', (done) => {
     async.waterfall([
       (cb) => {
         // 1) Signup

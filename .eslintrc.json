@@ -1,15 +1,15 @@
 {
   "extends": "airbnb",
-  "plugins": [],
+  "plugins": ["chai-expect"],
   "rules": {
     "func-names": 0,
     "no-console": 0,
 
-    // doesn't work in node v4 :(
     "strict": 0,
     "prefer-rest-params": 0,
     "react/require-extension" : 0,
-    "import/no-extraneous-dependencies" : 0
+    "import/no-extraneous-dependencies" : 0,
+    "chai-expect/terminating-properties": 1
   },
   "env": {
     "mocha": true
