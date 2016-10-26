@@ -23,7 +23,7 @@ if (args[0] === 'update-cognito') {
     env.COGNITO_POOL_ID,
     env.SERVICE_NAME,
     env.STAGE,
-    process.env.SES_EMAIL_FROM,
+    env.SES_EMAIL_FROM,
     err => done(err)
   );
 } else if (args[0] === 'save-cloudformation-output') {

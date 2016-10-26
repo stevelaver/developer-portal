@@ -121,7 +121,7 @@ setup.subscribeLogs = function (region, service, stage, cb) {
               }
               cb3(err);
             });
-          }, 5000);
+          }, 10000);
         },
       ], cb2);
     } else {
