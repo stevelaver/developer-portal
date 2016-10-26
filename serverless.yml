@@ -211,8 +211,8 @@ functions:
 
   authEmailTrigger:
     handler: auth.emailTrigger
-  authConfirm:
-    handler: auth.confirm
+  authConfirmPost:
+    handler: auth.confirmPost
     events:
       -
         http:
@@ -220,6 +220,9 @@ functions:
           method: post
           path: "auth/confirm/{email}/{code}"
           integration: lambda-proxy
+  authConfirmGet:
+    handler: auth.confirmGet
+    events:
       -
         http:
           cors: true

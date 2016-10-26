@@ -1,6 +1,7 @@
 'use strict';
 
 require('babel-polyfill');
+const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
 const env = require('../env.yml');
@@ -10,29 +11,24 @@ const moment = require('moment');
 const mysql = require('mysql');
 const notification = require('../lib/notification');
 const request = require('../lib/request');
-const validator = require('validator');
 const vandium = require('vandium');
 
 /**
  * Confirm
  */
-module.exports.confirm = vandium.createInstance({
-  validation: {
-    schema: {
-      pathParameters: vandium.types.object().keys({
-        email: vandium.types.string().required()
-          .error(Error('Parameter email is required and should have ' +
-          'format of email address')),
-        code: vandium.types.string().required()
-          .error(Error('Parameter code is required')),
-      }),
-    },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+const confirm = function (event, context, callback) {
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
   async.waterfall([
+    function (cb) {
+      if (!_.has(event.pathParameters, 'code')) {
+        cb(error.badRequest('Parameter code is required'));
+      } else if (!_.has(event.pathParameters, 'email')) {
+        cb(error.badRequest('Parameter email is required'));
+      }
+      cb();
+    },
     function (cb) {
       provider.confirmSignUp({
         ClientId: env.COGNITO_CLIENT_ID,
@@ -57,8 +53,21 @@ module.exports.confirm = vandium.createInstance({
       notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
       notification.approveUser(user, cb);
     },
-  ], err => request.response(err, null, event, context, callback, 204));
-}, context, callback));
+  ], err => callback(err));
+};
+module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandler(() => {
+  confirm(event, context, (err) => {
+    request.htmlResponse(err, {
+      header: 'Account confirmation',
+      content: 'Your account has been successfuly confirmed. You can login now.',
+    }, event, context, callback);
+  });
+}, context, callback);
+module.exports.confirmPost = (event, context, callback) => request.errorHandler(() => {
+  confirm(event, context, (err) => {
+    request.response(err, null, event, context, callback, 204);
+  });
+}, context, callback);
 
 
 /**
