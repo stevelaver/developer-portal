@@ -8,7 +8,9 @@ const error = require('../lib/error');
 const identity = require('../lib/identity');
 const moment = require('moment');
 const mysql = require('mysql');
+const notification = require('../lib/notification');
 const request = require('../lib/request');
+const validator = require('validator');
 const vandium = require('vandium');
 
 /**
@@ -44,14 +46,18 @@ module.exports.confirm = vandium.createInstance({
         Username: event.pathParameters.email,
       }, err => cb(err));
     },
-  ], (err) => {
-    if (err) {
-      return request.response(err, null, event, context, callback);
-    }
-
-    // @TODO SNS message User ${event.pathParameters.email} requests approval
-    return request.response(null, null, event, context, callback, 204);
-  });
+    function (cb) {
+      provider.adminGetUser({
+        UserPoolId: env.COGNITO_POOL_ID,
+        Username: event.pathParameters.email,
+      }, cb);
+    },
+    function (userData, cb) {
+      const user = identity.formatUser(userData);
+      notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
+      notification.approveUser(user, cb);
+    },
+  ], err => request.response(err, null, event, context, callback, 204));
 }, context, callback));
 
 

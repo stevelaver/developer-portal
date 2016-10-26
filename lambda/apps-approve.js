@@ -6,6 +6,7 @@ const db = require('../lib/db');
 const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
+const notification = require('../lib/notification');
 const request = require('../lib/request');
 const vandium = require('vandium');
 
@@ -74,7 +75,11 @@ module.exports.handler = vandium.createInstance({
       if (!app.icon64) {
         return cb(error.badRequest('App icon of size 64px is missing, upload it first.'));
       }
-      return cb();
+      return cb(null, app);
+    },
+    function (app, cb) {
+      notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
+      notification.approveApp(app, cb);
     },
   ], (err) => {
     db.end();

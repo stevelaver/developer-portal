@@ -147,18 +147,15 @@ module.exports.userAdmin = vandium.createInstance({
           return cb(error.authError(err));
         }
 
-        const isAdmin = _.get(_.find(
-          data.UserAttributes,
-          o => o.Name === 'custom:isAdmin'
-        ), 'Value', null);
-        if (isAdmin) {
+        const userData = identity.formatUser(data);
+        if (userData.isAdmin) {
           return cb(error.badRequest('Is already admin'));
         }
 
         return cb(null, data);
       });
     },
-    function (user, cb) {
+    function (cb) {
       provider.adminUpdateUserAttributes({
         UserPoolId: env.COGNITO_POOL_ID,
         Username: event.pathParameters.email,
@@ -219,22 +216,19 @@ module.exports.userEnable = vandium.createInstance({
       }, err => (err ? cb(error.authError(err)) : cb(null, user))
       );
     },
-    function (user, cb) {
-      const vendor = _.get(_.find(
-        user.UserAttributes,
-        o => (o.Name === 'profile')
-      ), 'Value', null);
+    function (userData, cb) {
+      const user = identity.formatUser(userData);
       const ses = new aws.SES({ apiVersion: '2010-12-01', region: env.REGION });
       ses.sendEmail({
         Source: env.SES_EMAIL_FROM,
-        Destination: { ToAddresses: [event.pathParameters.email] },
+        Destination: { ToAddresses: [user.email] },
         Message: {
           Subject: {
             Data: 'Welcome to Keboola Developer Portal',
           },
           Body: {
             Text: {
-              Data: `Your account in Keboola Developer Portal for vendor ${vendor} has been approved`,
+              Data: `Your account in Keboola Developer Portal for vendor ${user.vendor} has been approved`,
             },
           },
         },
