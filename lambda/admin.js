@@ -81,7 +81,7 @@ module.exports.apps = vandium.createInstance({
         Authorization: vandium.types.string().required()
           .error(Error('Authorization header is required')),
       }),
-      queryStringParameters: vandium.types.object().keys({
+      queryStringParameters: vandium.types.object().allow(null).keys({
         offset: vandium.types.number().integer().default(0).allow(''),
         limit: vandium.types.number().integer().default(100).allow(''),
         filter: vandium.types.string(),
@@ -96,7 +96,7 @@ module.exports.apps = vandium.createInstance({
     },
     function (user, cb) {
       db.listApps(
-        event.queryStringParameters.filter,
+        _.get(event, 'queryStringParameters.filter', null),
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null),
         (err, result) => {
@@ -148,7 +148,7 @@ module.exports.userAdmin = vandium.createInstance({
           return cb(error.badRequest('Is already admin'));
         }
 
-        return cb(null, data);
+        return cb();
       });
     },
     function (cb) {
@@ -239,7 +239,7 @@ module.exports.users = vandium.createInstance({
         Authorization: vandium.types.string().required()
           .error(Error('Authorization header is required')),
       }),
-      queryStringParameters: vandium.types.object().keys({
+      queryStringParameters: vandium.types.object().allow(null).keys({
         offset: vandium.types.number().integer().default(0).allow(''),
         limit: vandium.types.number().integer().default(100).allow(''),
         filter: vandium.types.string(),
@@ -247,22 +247,24 @@ module.exports.users = vandium.createInstance({
     },
   },
 }).handler((event, context, callback) => request.errorHandler(() => {
-  let filter;
-  switch (event.queryStringParameters.filter) {
-    case 'enabled':
-      filter = 'status = "Enabled"';
-      break;
-    case 'disabled':
-      filter = 'status = "Disabled"';
-      break;
-    case 'unconfirmed':
-      filter = 'cognito:user_status = "Unconfirmed"';
-      break;
-    case 'confirmed':
-      filter = 'cognito:user_status = "Confirmed"';
-      break;
-    default:
-      filter = '';
+  let filter = '';
+  if (_.has(event, 'queryStringParameters.filter')) {
+    switch (event.queryStringParameters.filter) {
+      case 'enabled':
+        filter = 'status = "Enabled"';
+        break;
+      case 'disabled':
+        filter = 'status = "Disabled"';
+        break;
+      case 'unconfirmed':
+        filter = 'cognito:user_status = "Unconfirmed"';
+        break;
+      case 'confirmed':
+        filter = 'cognito:user_status = "Confirmed"';
+        break;
+      default:
+        filter = '';
+    }
   }
   const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
   async.waterfall([
