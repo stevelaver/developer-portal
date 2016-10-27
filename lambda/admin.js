@@ -5,6 +5,7 @@ const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
 const db = require('../lib/db');
+const email = require('../lib/email');
 const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
@@ -52,21 +53,16 @@ module.exports.appApprove = vandium.createInstance({
       });
     },
     function (appId, vendor, cb) {
-      const ses = new aws.SES({ apiVersion: '2010-12-01', region: env.REGION });
-      ses.sendEmail({
-        Source: env.SES_EMAIL_FROM,
-        Destination: { ToAddresses: [vendor.email] },
-        Message: {
-          Subject: {
-            Data: 'App approval in Keboola Developer Portal',
-          },
-          Body: {
-            Text: {
-              Data: `Your app ${appId} has been approved`,
-            },
-          },
-        },
-      }, err => cb(err));
+      email.init(env.REGION, env.SES_EMAIL_FROM);
+      email.send(
+        vendor.email,
+        'App approval in Keboola Developer Portal',
+        'Keboola Developer Portal',
+        `Your app <strong>${appId}</strong> has been approved.`,
+        null,
+        null,
+        err => cb(err)
+      );
     },
   ], (err) => {
     db.end();
@@ -218,21 +214,16 @@ module.exports.userEnable = vandium.createInstance({
     },
     function (userData, cb) {
       const user = identity.formatUser(userData);
-      const ses = new aws.SES({ apiVersion: '2010-12-01', region: env.REGION });
-      ses.sendEmail({
-        Source: env.SES_EMAIL_FROM,
-        Destination: { ToAddresses: [user.email] },
-        Message: {
-          Subject: {
-            Data: 'Welcome to Keboola Developer Portal',
-          },
-          Body: {
-            Text: {
-              Data: `Your account in Keboola Developer Portal for vendor ${user.vendor} has been approved`,
-            },
-          },
-        },
-      }, err => cb(err));
+      email.init(env.REGION, env.SES_EMAIL_FROM);
+      email.send(
+        user.email,
+        'Welcome to Keboola Developer Portal',
+        'Welcome to Keboola Developer Portal',
+        `Your account in Keboola Developer Portal for vendor ${user.vendor} has been approved.`,
+        null,
+        null,
+        err => cb(err)
+      );
     },
   ], err => request.response(err, null, event, context, callback, 204));
 }, context, callback));
