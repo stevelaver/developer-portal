@@ -210,7 +210,7 @@ functions:
 
 
   authEmailTrigger:
-    handler: auth.emailTrigger
+    handler: auth-email.emailTrigger
   authConfirmPost:
     handler: auth.confirmPost
     events:

@@ -367,23 +367,3 @@ module.exports.signup = vandium.createInstance({
   db.destroy();
   callback(err, res);
 }));
-
-module.exports.emailTrigger = function (event, context, callback) {
-  const newEvent = event;
-  switch (event.triggerSource) {
-    case 'CustomMessage_SignUp':
-      newEvent.response.emailSubject = 'Welcome to Keboola Developer Portal';
-      newEvent.response.emailMessage = `Thank you for signing up. Confirm your email using this link: ${env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
-      break;
-    case 'CustomMessage_ForgotPassword':
-      newEvent.response.emailSubject = 'Forgot Password to Keboola Developer Portal';
-      newEvent.response.emailMessage = `Your confirmation code is ${event.request.codeParameter}`;
-      break;
-    case 'CustomMessage_ResendCode':
-      newEvent.response.emailSubject = 'Confirmation code for Keboola Developer Portal';
-      newEvent.response.emailMessage = `Confirm your email using this link: ${env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
-      break;
-    default:
-  }
-  callback(null, newEvent);
-};

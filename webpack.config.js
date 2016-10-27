@@ -10,6 +10,7 @@ module.exports = {
     'apps-update': ['babel-polyfill', './lambda/apps-update.js'],
     'apps-versions': ['babel-polyfill', './lambda/apps-versions.js'],
     auth: ['babel-polyfill', './lambda/auth.js'],
+    'auth-email': ['babel-polyfill', './lambda/auth-email.js'],
     authorizer: ['babel-polyfill', './lambda/authorizer.js'],
     logger: ['babel-polyfill', './lambda/logger.js'],
     public: ['babel-polyfill', './lambda/public.js'],
@@ -32,6 +33,10 @@ module.exports = {
       {
         test: /env\.yml$/,
         loader: 'yml',
+      },
+      {
+        test: /\.html$/,
+        loader: 'mustache',
       },
     ],
   },
