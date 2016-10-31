@@ -134,7 +134,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null;
-          expect(body).to.have.property('error');
+          expect(body).to.have.property('errorMessage');
           callback();
         });
       },
@@ -148,7 +148,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.have.property('error');
+          expect(body, JSON.stringify(body)).to.have.property('errorMessage');
           callback();
         });
       },
@@ -187,8 +187,8 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.have.property('error');
-          expect(body.error).to.include('App icon');
+          expect(body, JSON.stringify(body)).to.have.property('errorMessage');
+          expect(body.errorMessage).to.include('App icon');
           callback();
         });
       },
@@ -202,7 +202,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.not.have.property('error');
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body, JSON.stringify(body)).to.have.property('32');
           expect(body, JSON.stringify(body)).to.have.property('64');
           callback(null, body);
@@ -267,7 +267,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.not.have.property('error');
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
           callback();
         });
@@ -282,7 +282,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null;
-          expect(body).to.not.have.property('error');
+          expect(body).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(1);
           callback();
         });
@@ -297,7 +297,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           expect(err).to.be.null;
           const body = JSON.parse(bodyRaw);
-          expect(body, JSON.stringify(body)).to.not.have.property('error');
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
           callback();
         });
@@ -309,7 +309,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null;
-          expect(body).to.not.have.property('error');
+          expect(body).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(0);
           expect(body[0]).to.have.property('id');
           callback();
@@ -322,7 +322,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           expect(err).to.be.null;
           const body = JSON.parse(bodyRaw);
-          expect(body, JSON.stringify(body)).to.not.have.property('error');
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
           callback();
         });
@@ -334,7 +334,7 @@ describe('apps', () => {
         }, (err, res, bodyRaw) => {
           expect(err).to.be.null;
           const body = JSON.parse(bodyRaw);
-          expect(body, JSON.stringify(body)).to.not.have.property('error');
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(0);
           callback();
         });

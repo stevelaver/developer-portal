@@ -5,8 +5,9 @@ const _ = require('lodash');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
+const joi = require('joi');
 const request = require('../lib/request');
-const vandium = require('vandium');
+const validation = require('../lib/validation');
 
 const addIcons = function (app) {
   const res = app;
@@ -26,19 +27,18 @@ const defaultCallback = function (err, res, cb) {
 /**
  * App Detail
  */
-module.exports.detail = vandium.createInstance({
-  validation: {
-    schema: {
-      pathParameters: vandium.types.object().allow(null).keys({
-        appId: vandium.types.string().required(),
-        version: vandium.types.number().integer(),
-      }),
+module.exports.detail = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    path: {
+      appId: joi.string().required(),
+      version: joi.number().integer(),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
-  // log.init(env.LOG_HOST, env.LOG_PORT, env.SERVICE_NAME);
+  });
   db.connectEnv(env);
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       db.getPublishedApp(
         event.pathParameters.appId,
@@ -56,24 +56,21 @@ module.exports.detail = vandium.createInstance({
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, (err, res) => defaultCallback(err, res, callback)));
+}, context, (err, res) => defaultCallback(err, res, callback));
 
 
 /**
  * Apps List
  */
-module.exports.list = vandium.createInstance({
-  validation: {
-    schema: {
-      queryStringParameters: vandium.types.object().allow(null).keys({
-        offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow(''),
-      }),
-    },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+module.exports.list = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    pagination: true,
+  });
   db.connectEnv(env);
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       db.listAllPublishedApps(
         _.get(event, 'queryStringParameters.offset', null),
@@ -91,27 +88,24 @@ module.exports.list = vandium.createInstance({
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, (err, res) => defaultCallback(err, res, callback)));
+}, context, (err, res) => defaultCallback(err, res, callback));
 
 
 /**
  * App Versions
  */
-module.exports.versions = vandium.createInstance({
-  validation: {
-    schema: {
-      pathParameters: vandium.types.object().keys({
-        appId: vandium.types.string().required(),
-      }),
-      queryStringParameters: vandium.types.object().allow(null).keys({
-        offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow(''),
-      }),
+module.exports.versions = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    path: {
+      appId: joi.string().required(),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+    pagination: true,
+  });
   db.connectEnv(env);
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       db.listPublishedAppVersions(
         event.pathParameters.appId,
@@ -130,49 +124,54 @@ module.exports.versions = vandium.createInstance({
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, (err, res) => defaultCallback(err, res, callback)));
+}, context, (err, res) => defaultCallback(err, res, callback));
 
 
 /**
  * Vendors List
  */
-module.exports.vendorsList = vandium.createInstance({
-  validation: {
-    schema: {
-      queryStringParameters: vandium.types.object().allow(null).keys({
-        offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow(''),
-      }),
-    },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+module.exports.vendorsList = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    pagination: true,
+  });
   db.connectEnv(env);
-  db.listVendors(
-    _.get(event, 'queryStringParameters.offset', null),
-    _.get(event, 'queryStringParameters.limit', null),
-    (err, res) => {
-      db.end();
-      return request.response(err, res, event, context, callback);
-    }
-  );
-}, context, (err, res) => defaultCallback(err, res, callback)));
+  async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
+    function (cb) {
+      db.listVendors(
+        _.get(event, 'queryStringParameters.offset', null),
+        _.get(event, 'queryStringParameters.limit', null),
+        cb
+      );
+    },
+  ], (err, res) => {
+    db.end();
+    return request.response(err, res, event, context, callback);
+  });
+}, context, (err, res) => defaultCallback(err, res, callback));
 
 
 /**
  * Vendor Detail
  */
-module.exports.vendorDetail = vandium.createInstance({
-  validation: {
-    schema: {
-      pathParameters: vandium.types.object().keys({
-        vendor: vandium.types.string().required(),
-      }),
+module.exports.vendorDetail = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    path: {
+      vendor: joi.string().required(),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+  });
   db.connectEnv(env);
-  db.getVendor(event.pathParameters.vendor, (err, res) => {
+  async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
+    function (cb) {
+      db.getVendor(event.pathParameters.vendor, cb);
+    },
+  ], (err, res) => {
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, (err, res) => defaultCallback(err, res, callback)));
+}, context, (err, res) => defaultCallback(err, res, callback));

@@ -9,28 +9,28 @@ const email = require('../lib/email');
 const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
+const joi = require('joi');
 const request = require('../lib/request');
+const validation = require('../lib/validation');
 const vandium = require('vandium');
 
 
 /**
  * Approve app
  */
-module.exports.appApprove = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
-          .error(Error('Authorization header is required')),
-      }),
-      pathParameters: vandium.types.object().keys({
-        id: vandium.types.string().required(),
-      }),
+module.exports.appApprove = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    auth: true,
+    path: {
+      id: joi.string().required(),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+  });
   db.connectEnv(env);
+
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
@@ -68,7 +68,7 @@ module.exports.appApprove = vandium.createInstance({
     db.end();
     return request.response(err, null, event, context, callback, 204);
   });
-}, context, callback));
+}, context, callback);
 
 
 /**
