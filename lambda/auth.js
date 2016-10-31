@@ -59,7 +59,7 @@ module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandl
   confirm(event, context, (err) => {
     request.htmlResponse(err, {
       header: 'Account confirmation',
-      content: 'Your account has been successfuly confirmed. Now you have to wait for account approval from our staff.',
+      content: 'Your account has been successfuly confirmed. Now you have to wait for approval from our staff.',
     }, event, context, callback);
   });
 }, context, callback);
