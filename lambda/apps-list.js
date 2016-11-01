@@ -6,25 +6,20 @@ const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
+const joi = require('joi');
 const request = require('../lib/request');
-const vandium = require('vandium');
+const validation = require('../lib/validation');
 
-module.exports.appsList = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
-          .error(Error('Authorization header is required')),
-      }),
-      queryStringParameters: vandium.types.object().allow(null).keys({
-        offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow(''),
-      }),
-    },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+module.exports.appsList = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    auth: true,
+    pagination: true,
+  });
   db.connectEnv(env);
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
@@ -40,24 +35,21 @@ module.exports.appsList = vandium.createInstance({
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback));
+}, context, callback);
 
-module.exports.appsDetail = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
-          .error(Error('Authorization header is required')),
-      }),
-      pathParameters: vandium.types.object().keys({
-        appId: vandium.types.string().required(),
-        version: vandium.types.number().integer(),
-      }),
+module.exports.appsDetail = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    auth: true,
+    path: {
+      appId: joi.string().required(),
+      version: joi.number().integer(),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+  });
   db.connectEnv(env);
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
@@ -85,4 +77,4 @@ module.exports.appsDetail = vandium.createInstance({
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback));
+}, context, callback);

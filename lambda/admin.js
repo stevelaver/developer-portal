@@ -12,7 +12,6 @@ const identity = require('../lib/identity');
 const joi = require('joi');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
-const vandium = require('vandium');
 
 
 /**
@@ -74,23 +73,19 @@ module.exports.appApprove = (event, context, callback) => request.errorHandler((
 /**
  * Apps List
  */
-module.exports.apps = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
-          .error(Error('Authorization header is required')),
-      }),
-      queryStringParameters: vandium.types.object().allow(null).keys({
-        offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow(''),
-        filter: vandium.types.string(),
-      }),
+module.exports.apps = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    auth: true,
+    pagination: true,
+    query: {
+      filter: joi.string(),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+  });
   db.connectEnv(env);
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
@@ -109,28 +104,25 @@ module.exports.apps = vandium.createInstance({
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback));
+}, context, callback);
 
 
 /**
  * Make user admin
  */
-module.exports.userAdmin = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
-          .error(Error('Authorization header is required')),
-      }),
-      pathParameters: vandium.types.object().keys({
-        email: vandium.types.email()
-          .error(Error('Parameter email must have format of email address')),
-      }),
+module.exports.userAdmin = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    auth: true,
+    path: {
+      email: joi.string().email()
+        .error(Error('Parameter email must have format of email address')),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+  });
   const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
@@ -164,28 +156,25 @@ module.exports.userAdmin = vandium.createInstance({
       }, err => cb(error.authError(err)));
     },
   ], err => request.response(err, null, event, context, callback, 204));
-}, context, callback));
+}, context, callback);
 
 
 /**
  * Enable user
  */
-module.exports.userEnable = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
-          .error(Error('Authorization header is required')),
-      }),
-      pathParameters: vandium.types.object().keys({
-        email: vandium.types.email()
-          .error(Error('Parameter email must have format of email address')),
-      }),
+module.exports.userEnable = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    auth: true,
+    path: {
+      email: joi.string().email()
+        .error(Error('Parameter email must have format of email address')),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+  });
   const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
@@ -226,27 +215,20 @@ module.exports.userEnable = vandium.createInstance({
       );
     },
   ], err => request.response(err, null, event, context, callback, 204));
-}, context, callback));
+}, context, callback);
 
 
 /**
  * Users List
  */
-module.exports.users = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
-          .error(Error('Authorization header is required')),
-      }),
-      queryStringParameters: vandium.types.object().allow(null).keys({
-        offset: vandium.types.number().integer().default(0).allow(''),
-        limit: vandium.types.number().integer().default(100).allow(''),
-        filter: vandium.types.string(),
-      }),
+module.exports.users = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    auth: true,
+    pagination: true,
+    query: {
+      filter: joi.string(),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+  });
   let filter = '';
   if (_.has(event, 'queryStringParameters.filter')) {
     switch (event.queryStringParameters.filter) {
@@ -269,6 +251,9 @@ module.exports.users = vandium.createInstance({
   const provider = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
   async.waterfall([
     function (cb) {
+      validation.validate(event, schema, cb);
+    },
+    function (cb) {
       identity.getAdmin(env.REGION, event.headers.Authorization, cb);
     },
     function (user, cb) {
@@ -289,4 +274,4 @@ module.exports.users = vandium.createInstance({
       })));
     },
   ], (err, res) => request.response(err, res, event, context, callback));
-}, context, callback));
+}, context, callback);

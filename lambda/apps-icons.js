@@ -7,25 +7,23 @@ const aws = require('aws-sdk');
 const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
+const joi = require('joi');
 const moment = require('moment');
 const request = require('../lib/request');
-const vandium = require('vandium');
+const validation = require('../lib/validation');
 
-module.exports.links = vandium.createInstance({
-  validation: {
-    schema: {
-      headers: vandium.types.object().keys({
-        Authorization: vandium.types.string().required()
-          .error(Error('Authorization header is required')),
-      }),
-      pathParameters: vandium.types.object().keys({
-        appId: vandium.types.string().required(),
-      }),
+module.exports.links = (event, context, callback) => request.errorHandler(() => {
+  const schema = validation.schema({
+    auth: true,
+    path: {
+      appId: joi.string().required(),
     },
-  },
-}).handler((event, context, callback) => request.errorHandler(() => {
+  });
   db.connectEnv(env);
   async.waterfall([
+    function (cb) {
+      validation.validate(event, schema, cb);
+    },
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
@@ -76,11 +74,10 @@ module.exports.links = vandium.createInstance({
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback));
+}, context, callback);
 
 
-module.exports.upload = vandium.createInstance()
-.handler((event, context, callback) => request.errorHandler(() => {
+module.exports.upload = (event, context, callback) => request.errorHandler(() => {
   if (!_.has(event, 'Records') || !event.Records.length ||
     !_.has(event.Records[0], 's3') || !_.has(event.Records[0].s3, 'bucket') ||
     !_.has(event.Records[0].s3, 'object') ||
@@ -121,4 +118,4 @@ module.exports.upload = vandium.createInstance()
     db.end();
     return callback(err, result);
   });
-}, context, callback));
+}, context, callback);

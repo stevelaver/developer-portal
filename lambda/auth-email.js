@@ -4,7 +4,7 @@ require('babel-polyfill');
 const env = require('../env.yml');
 // const template = require('../views/email.html');
 
-module.exports.emailTrigger = function (event, context, callback) {
+module.exports.emailTrigger = (event, context, callback) => {
   const newEvent = event;
   switch (event.triggerSource) {
     case 'CustomMessage_SignUp':

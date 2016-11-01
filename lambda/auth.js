@@ -84,6 +84,7 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
         .error(Error('Parameter password is required')),
     },
   });
+  const body = JSON.parse(event.body);
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
@@ -97,8 +98,8 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
         ClientId: env.COGNITO_CLIENT_ID,
         UserPoolId: env.COGNITO_POOL_ID,
         AuthParameters: {
-          USERNAME: event.body.email,
-          PASSWORD: event.body.password,
+          USERNAME: body.email,
+          PASSWORD: body.password,
         },
       }, cb);
     },
@@ -106,7 +107,7 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
     if (err && err.code === 'UserNotConfirmedException') {
       provider.resendConfirmationCode({
         ClientId: env.COGNITO_CLIENT_ID,
-        Username: event.body.email,
+        Username: body.email,
       }, err2 => request.response(err2, null, event, context, callback, 204));
     } else if (err && err.code === 'NotAuthorizedException') {
       return request.response(
@@ -181,6 +182,7 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
+  const body = JSON.parse(event.body);
   async.waterfall([
     function (cb) {
       validation.validate(event, schema, cb);
@@ -188,8 +190,8 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
     function () {
       provider.confirmForgotPassword({
         ClientId: env.COGNITO_CLIENT_ID,
-        ConfirmationCode: event.body.code,
-        Password: event.body.password,
+        ConfirmationCode: body.code,
+        Password: body.password,
         Username: event.pathParameters.email,
       }, err => request.response(
         error.authError(err),
@@ -220,6 +222,7 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
+  const body = JSON.parse(event.body);
   async.waterfall([
     function (cb) {
       validation.validate(event, schema, cb);
@@ -230,8 +233,8 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
         ClientId: env.COGNITO_CLIENT_ID,
         UserPoolId: env.COGNITO_POOL_ID,
         AuthParameters: {
-          USERNAME: event.body.email,
-          PASSWORD: event.body.password,
+          USERNAME: body.email,
+          PASSWORD: body.password,
         },
       }, (err, data) => {
         if (err) {
@@ -290,14 +293,15 @@ module.exports.profileChange = (event, context, callback) => request.errorHandle
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
+  const body = JSON.parse(event.body);
   async.waterfall([
     function (cb) {
       validation.validate(event, schema, cb);
     },
     function () {
       provider.changePassword({
-        PreviousPassword: event.body.oldPassword,
-        ProposedPassword: event.body.newPassword,
+        PreviousPassword: body.oldPassword,
+        ProposedPassword: body.newPassword,
         AccessToken: event.headers.Authorization,
       }, err => request.response(error.authError(err), null, event, context, callback, 204));
     },
@@ -334,6 +338,7 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     ssl: env.RDS_SSL,
     port: env.RDS_PORT,
   });
+  const body = JSON.parse(event.body);
 
   async.waterfall([
     function (cb) {
@@ -342,12 +347,12 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     function (cb) {
       db.query(
         'SELECT * FROM `vendors` WHERE `id` = ?',
-        [event.body.vendor],
+        [body.vendor],
         (err, result) => {
           if (err) return cb(err);
 
           if (result.length === 0) {
-            return cb(error.notFound(`Vendor ${event.body.vendor} does not exist`));
+            return cb(error.notFound(`Vendor ${body.vendor} does not exist`));
           }
 
           return cb();
@@ -360,20 +365,20 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
       });
       provider.signUp({
         ClientId: env.COGNITO_CLIENT_ID,
-        Username: event.body.email,
-        Password: event.body.password,
+        Username: body.email,
+        Password: body.password,
         UserAttributes: [
           {
             Name: 'email',
-            Value: event.body.email,
+            Value: body.email,
           },
           {
             Name: 'name',
-            Value: event.body.name,
+            Value: body.name,
           },
           {
             Name: 'profile',
-            Value: event.body.vendor,
+            Value: body.vendor,
           },
         ],
       }, err => cb(error.authError(err)));
