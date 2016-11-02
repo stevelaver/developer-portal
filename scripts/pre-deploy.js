@@ -33,7 +33,7 @@ async.waterfall([
     });
   },
   (cb) => {
-    awsSetup.registerEmail(process.env.REGION, process.env.SES_EMAIL_FROM, cb);
+    awsSetup.addEmailPolicy(process.env.REGION, process.env.SES_EMAIL_FROM, cb);
   },
   (cb) => {
     awsSetup.createCognitoPool(

@@ -30,6 +30,17 @@ setup.registerEmail = function (region, email, cb) {
   });
 };
 
+setup.addEmailPolicy = function (region, email, cb) {
+  exec(`aws ses put-identity-policy --region ${region} --identity ${email} \
+    --policy-name Cognito-SES-Policy --policy '{ "Statement":[{"Effect": "Allow","Principal": {"Service": "cognito-idp.amazonaws.com"}, "Action": ["ses:SendEmail", "ses:SendRawEmail"],"Resource": "arn:aws:ses:${region}:${setup.accountId}:identity/${email}" }] }'`, (err) => {
+    if (err) {
+      return cb(`SES registration error: ${err}`);
+    }
+    console.info(`- Email policy applied in SES: ${email}`);
+    return cb();
+  });
+};
+
 setup.createCognitoPool = function (region, name, email, cb) {
   async.waterfall([
     (cb2) => {

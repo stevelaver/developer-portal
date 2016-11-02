@@ -19,8 +19,9 @@ if resources with same identifiers already exist, the installation will fail.
 3. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
 4. Cd into directory: `cd developer-portal`
 5. Install npm dependencies: `npm install` and dev dependencies `npm install --only=dev`
-6. Setup Slack channel for notifications about users and apps approval requirements and create incoming webook
-6. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make`
+6. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
+7. Verify email sender. Run `node scripts/verify-email.js <region> <email>` and confirm link from the email you get
+8. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make`
   - The script will put created identifiers to file `env.yml`
   - Required env variables:
     - `SERVICE_NAME` - Name of the Serverless service. Will be used as prefix for created AWS services, should be only alphanumeric with optional dashes
@@ -32,7 +33,6 @@ if resources with same identifiers already exist, the installation will fail.
     - `LOG_HOST` - Papertrail endpoint hostname
     - `LOG_PORT` - Papertrail endpoint port
     - `SLACK_HOOK_URL` - Slack webhook url for notifications
-7. Confirm email sender, AWS should send you confirmation request
 
 Optionally you can import data from KBC:
 
