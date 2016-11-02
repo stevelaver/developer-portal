@@ -20,11 +20,11 @@ package:
     - .env
 
 provider:
-  memory: 256
   name: aws
-  region: us-east-1
+  region: ${file(./env.yml):REGION}
+  stage: ${file(./env.yml):STAGE}
   runtime: nodejs4.3
-  stage: dev
+  memory: 256
   timeout: 30
   stackTags:
     DeveloperPortalStack: "${file(./env.yml):SERVICE_NAME}_${file(./env.yml):STAGE}"
