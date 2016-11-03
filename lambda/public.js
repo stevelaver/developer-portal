@@ -2,7 +2,6 @@
 
 require('babel-polyfill');
 const _ = require('lodash');
-const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
 const joi = require('joi');
@@ -28,34 +27,25 @@ const defaultCallback = function (err, res, cb) {
  * App Detail
  */
 module.exports.detail = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     path: {
       appId: joi.string().required(),
       version: joi.number().integer(),
     },
-  });
+  }));
   db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      db.getPublishedApp(
-        event.pathParameters.appId,
-        _.get(event, 'pathParameters.version', null),
-        (err, app) => {
-          if (err) {
-            return cb(err);
-          }
-          addIcons(app);
-          return cb(null, app);
-        }
-      );
-    },
-  ], (err, res) => {
-    db.end();
-    return request.response(err, res, event, context, callback);
-  });
+  db.getPublishedApp(
+    event.pathParameters.appId,
+    _.get(event, 'pathParameters.version', null),
+    (err, app) => {
+      db.end();
+      if (err) {
+        return request.response(err, null, event, context, callback);
+      }
+      addIcons(app);
+      return request.response(null, app, event, context, callback);
+    }
+  );
 }, context, (err, res) => defaultCallback(err, res, callback));
 
 
@@ -63,31 +53,22 @@ module.exports.detail = (event, context, callback) => request.errorHandler(() =>
  * Apps List
  */
 module.exports.list = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     pagination: true,
-  });
+  }));
   db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      db.listAllPublishedApps(
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null),
-        (err, res) => {
-          if (err) {
-            return cb(err);
-          }
-          res.map(addIcons);
-          return cb(null, res);
-        }
-      );
-    },
-  ], (err, res) => {
-    db.end();
-    return request.response(err, res, event, context, callback);
-  });
+  db.listAllPublishedApps(
+    _.get(event, 'queryStringParameters.offset', null),
+    _.get(event, 'queryStringParameters.limit', null),
+    (err, res) => {
+      db.end();
+      if (err) {
+        return request.response(err, null, event, context, callback);
+      }
+      res.map(addIcons);
+      return request.response(null, res, event, context, callback);
+    }
+  );
 }, context, (err, res) => defaultCallback(err, res, callback));
 
 
@@ -95,35 +76,26 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
  * App Versions
  */
 module.exports.versions = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     path: {
       appId: joi.string().required(),
     },
     pagination: true,
-  });
+  }));
   db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      db.listPublishedAppVersions(
-        event.pathParameters.appId,
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null),
-        (err, res) => {
-          if (err) {
-            return cb(err);
-          }
-          res.map(addIcons);
-          return cb(null, res);
-        }
-      );
-    },
-  ], (err, res) => {
-    db.end();
-    return request.response(err, res, event, context, callback);
-  });
+  db.listPublishedAppVersions(
+    event.pathParameters.appId,
+    _.get(event, 'queryStringParameters.offset', null),
+    _.get(event, 'queryStringParameters.limit', null),
+    (err, res) => {
+      db.end();
+      if (err) {
+        return request.response(err, null, event, context, callback);
+      }
+      res.map(addIcons);
+      return request.response(null, res, event, context, callback);
+    }
+  );
 }, context, (err, res) => defaultCallback(err, res, callback));
 
 
@@ -131,25 +103,18 @@ module.exports.versions = (event, context, callback) => request.errorHandler(() 
  * Vendors List
  */
 module.exports.vendorsList = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     pagination: true,
-  });
+  }));
   db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      db.listVendors(
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null),
-        cb
-      );
-    },
-  ], (err, res) => {
-    db.end();
-    return request.response(err, res, event, context, callback);
-  });
+  db.listVendors(
+    _.get(event, 'queryStringParameters.offset', null),
+    _.get(event, 'queryStringParameters.limit', null),
+    (err, res) => {
+      db.end();
+      return request.response(err, res, event, context, callback);
+    }
+  );
 }, context, (err, res) => defaultCallback(err, res, callback));
 
 
@@ -157,20 +122,13 @@ module.exports.vendorsList = (event, context, callback) => request.errorHandler(
  * Vendor Detail
  */
 module.exports.vendorDetail = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     path: {
       vendor: joi.string().required(),
     },
-  });
+  }));
   db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      db.getVendor(event.pathParameters.vendor, cb);
-    },
-  ], (err, res) => {
+  db.getVendor(event.pathParameters.vendor, (err, res) => {
     db.end();
     return request.response(err, res, event, context, callback);
   });

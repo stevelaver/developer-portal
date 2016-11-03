@@ -26,6 +26,7 @@ provider:
   runtime: nodejs4.3
   memory: 256
   timeout: 30
+  #cfLogs: true
   stackTags:
     DeveloperPortalStack: "${file(./env.yml):SERVICE_NAME}_${file(./env.yml):STAGE}"
   iamRoleStatements:

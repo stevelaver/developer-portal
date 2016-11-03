@@ -11,18 +11,15 @@ const request = require('../lib/request');
 const validation = require('../lib/validation');
 
 module.exports.list = (event, context, callback) => request.errorHandler(() => {
-  const schema = {
+  validation.validate(event, validation.schema({
     auth: true,
     pagination: true,
     path: {
       appId: joi.string().required(),
     },
-  };
+  }));
   db.connectEnv(env);
   async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
@@ -49,18 +46,15 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
 
 
 module.exports.rollback = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     auth: true,
     path: {
       appId: joi.string().required(),
       version: joi.number(),
     },
-  });
+  }));
   db.connectEnv(env);
   async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },

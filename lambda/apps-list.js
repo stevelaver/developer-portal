@@ -11,15 +11,12 @@ const request = require('../lib/request');
 const validation = require('../lib/validation');
 
 module.exports.appsList = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     auth: true,
     pagination: true,
-  });
+  }));
   db.connectEnv(env);
   async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
@@ -38,18 +35,15 @@ module.exports.appsList = (event, context, callback) => request.errorHandler(() 
 }, context, callback);
 
 module.exports.appsDetail = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     auth: true,
     path: {
       appId: joi.string().required(),
       version: joi.number().integer(),
     },
-  });
+  }));
   db.connectEnv(env);
   async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },

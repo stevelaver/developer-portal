@@ -148,12 +148,24 @@ switch (args[0]) {
     break;
   }
   case 'update-cognito':
-    exec(`aws cognito-idp update-user-pool --region ${env.REGION} \
-      --user-pool-id ${env.COGNITO_POOL_ID} \
-      --policies '{"PasswordPolicy":{"MinimumLength":8,"RequireUppercase":true,"RequireLowercase":true,"RequireNumbers":true,"RequireSymbols":false}}' \
-      --email-configuration SourceArn=arn:aws:ses:${env.REGION}:${env.ACCOUNT_ID}:identity/${env.SES_EMAIL_FROM} \
-      --auto-verified-attributes email \
-      --lambda-config '{"CustomMessage": "arn:aws:lambda:${env.REGION}:${env.ACCOUNT_ID}:function:${env.SERVICE_NAME}-${env.STAGE}-authEmailTrigger"}'`, (err) => {
+    async.waterfall([
+      (cb2) => {
+        exec(`aws cognito-idp update-user-pool --region ${env.REGION} \
+          --user-pool-id ${env.COGNITO_POOL_ID} \
+          --policies '{"PasswordPolicy":{"MinimumLength":8,"RequireUppercase":true,"RequireLowercase":true,"RequireNumbers":true,"RequireSymbols":false}}' \
+          --email-configuration SourceArn=arn:aws:ses:${env.REGION}:${env.ACCOUNT_ID}:identity/${env.SES_EMAIL_FROM} \
+          --auto-verified-attributes email \
+          --lambda-config '{"CustomMessage": "arn:aws:lambda:${env.REGION}:${env.ACCOUNT_ID}:function:${env.SERVICE_NAME}-${env.STAGE}-authEmailTrigger"}'`, cb2);
+      },
+      (cb2) => {
+        exec(`aws lambda add-permission --region ${env.REGION} \
+          --statement-id CSI_customMessage \
+          --function-name ${env.SERVICE_NAME}-${env.STAGE}-authEmailTrigger \
+          --principal 'cognito-idp.amazonaws.com' \
+          --action lambda:InvokeFunction \
+          --source-arn 'arn:aws:cognito-idp:${env.REGION}:${env.ACCOUNT_ID}:userpool/${env.COGNITO_POOL_ID}'`, cb2);
+      },
+    ], (err) => {
       if (err) {
         console.error(`Cognito update pool update error: ${err}`);
       } else {

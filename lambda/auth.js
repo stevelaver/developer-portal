@@ -4,13 +4,14 @@ require('babel-polyfill');
 const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
+const db = require('mysql-promise')();
 const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
 const moment = require('moment');
-const mysql = require('mysql');
 const notification = require('../lib/notification');
+const Promise = require('bluebird');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
 
@@ -18,49 +19,44 @@ const validation = require('../lib/validation');
  * Confirm
  */
 const confirm = function (event, context, callback) {
+  if (!_.has(event.pathParameters, 'code')) {
+    throw error.badRequest('Parameter code is required');
+  } else if (!_.has(event.pathParameters, 'email')) {
+    throw error.badRequest('Parameter email is required');
+  }
+
+  aws.config.setPromisesDependency(Promise);
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
-  async.waterfall([
-    function (cb) {
-      if (!_.has(event.pathParameters, 'code')) {
-        cb(error.badRequest('Parameter code is required'));
-      } else if (!_.has(event.pathParameters, 'email')) {
-        cb(error.badRequest('Parameter email is required'));
-      }
-      cb();
-    },
-    function (cb) {
-      provider.confirmSignUp({
-        ClientId: env.COGNITO_CLIENT_ID,
-        ConfirmationCode: event.pathParameters.code,
-        Username: event.pathParameters.email,
-      }, err => cb(error.authError(err)));
-    },
-    function (cb) {
-      provider.adminDisableUser({
-        UserPoolId: env.COGNITO_POOL_ID,
-        Username: event.pathParameters.email,
-      }, err => cb(err));
-    },
-    function (cb) {
-      provider.adminGetUser({
-        UserPoolId: env.COGNITO_POOL_ID,
-        Username: event.pathParameters.email,
-      }, cb);
-    },
-    function (userData, cb) {
+  provider.confirmSignUp({
+    ClientId: env.COGNITO_CLIENT_ID,
+    ConfirmationCode: event.pathParameters.code,
+    Username: event.pathParameters.email,
+  }).promise()
+    .then(() => provider.adminDisableUser({
+      UserPoolId: env.COGNITO_POOL_ID,
+      Username: event.pathParameters.email,
+    }).promise())
+    .then(() => provider.adminGetUser({
+      UserPoolId: env.COGNITO_POOL_ID,
+      Username: event.pathParameters.email,
+    }).promise())
+    .then((userData) => {
       const user = identity.formatUser(userData);
       notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
-      notification.approveUser(user, cb);
-    },
-  ], err => callback(err));
+      notification.approveUser(user);
+    })
+    .then(() => request.response(null, null, event, context, callback, 204))
+    .catch(err => callback(error.authError(err)));
 };
 module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandler(() => {
   confirm(event, context, (err) => {
     request.htmlResponse(err, {
       header: 'Account confirmation',
-      content: 'Your account has been successfuly confirmed. Now you have to wait for approval from our staff.',
+      content: 'Your account has been successfuly confirmed. Now you have ' +
+        'to wait for approval from our staff. Your account is disabled ' +
+        'until then.',
     }, event, context, callback);
   });
 }, context, callback);
@@ -75,7 +71,7 @@ module.exports.confirmPost = (event, context, callback) => request.errorHandler(
  * Confirm Resend
  */
 module.exports.confirmResend = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     body: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
@@ -83,32 +79,30 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
       password: joi.string().required()
         .error(Error('Parameter password is required')),
     },
-  });
+  }));
   const body = JSON.parse(event.body);
+  aws.config.setPromisesDependency(Promise);
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
+  provider.adminInitiateAuth({
+    AuthFlow: 'ADMIN_NO_SRP_AUTH',
+    ClientId: env.COGNITO_CLIENT_ID,
+    UserPoolId: env.COGNITO_POOL_ID,
+    AuthParameters: {
+      USERNAME: body.email,
+      PASSWORD: body.password,
     },
-    function (cb) {
-      provider.adminInitiateAuth({
-        AuthFlow: 'ADMIN_NO_SRP_AUTH',
-        ClientId: env.COGNITO_CLIENT_ID,
-        UserPoolId: env.COGNITO_POOL_ID,
-        AuthParameters: {
-          USERNAME: body.email,
-          PASSWORD: body.password,
-        },
-      }, cb);
-    },
-  ], (err) => {
+  }).promise()
+  .then(() => request.response(null, null, event, context, callback, 204))
+  .catch((err) => {
     if (err && err.code === 'UserNotConfirmedException') {
       provider.resendConfirmationCode({
         ClientId: env.COGNITO_CLIENT_ID,
         Username: body.email,
-      }, err2 => request.response(err2, null, event, context, callback, 204));
+      }).promise()
+      .then(() => request.response(null, null, event, context, callback, 204))
+      .catch(err2 => request.response(err2, null, event, context, callback));
     } else if (err && err.code === 'NotAuthorizedException') {
       return request.response(
         error.badRequest('Already confirmed'),
@@ -312,9 +306,8 @@ module.exports.profileChange = (event, context, callback) => request.errorHandle
 /**
  * Signup
  */
-let db;
 module.exports.signup = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     body: {
       name: joi.string().required()
         .error(Error('Parameter name is required')),
@@ -329,8 +322,8 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
       vendor: joi.string().required()
         .error(Error('Parameter vendor is required')),
     },
-  });
-  db = mysql.createConnection({
+  }));
+  db.configure({
     host: env.RDS_HOST,
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
@@ -340,54 +333,45 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
   });
   const body = JSON.parse(event.body);
 
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      db.query(
-        'SELECT * FROM `vendors` WHERE `id` = ?',
-        [body.vendor],
-        (err, result) => {
-          if (err) return cb(err);
+  aws.config.setPromisesDependency(Promise);
+  const provider = new aws.CognitoIdentityServiceProvider({
+    region: env.REGION,
+  });
 
-          if (result.length === 0) {
-            return cb(error.notFound(`Vendor ${body.vendor} does not exist`));
-          }
-
-          return cb();
-        }
-      );
-    },
-    (cb) => {
-      const provider = new aws.CognitoIdentityServiceProvider({
-        region: env.REGION,
-      });
-      provider.signUp({
-        ClientId: env.COGNITO_CLIENT_ID,
-        Username: body.email,
-        Password: body.password,
-        UserAttributes: [
-          {
-            Name: 'email',
-            Value: body.email,
-          },
-          {
-            Name: 'name',
-            Value: body.name,
-          },
-          {
-            Name: 'profile',
-            Value: body.vendor,
-          },
-        ],
-      }, err => cb(error.authError(err)));
-    },
-  ], (err) => {
-    db.destroy();
-    return request.response(err, null, event, context, callback, 201);
+  db.query('SELECT * FROM `vendors` WHERE `id` = ?', [body.vendor])
+  .then((rows) => {
+    if (rows.length === 0) {
+      throw error.notFound(`Vendor ${body.vendor} does not exist`);
+    }
+  })
+  .then(() => provider.signUp({
+    ClientId: env.COGNITO_CLIENT_ID,
+    Username: body.email,
+    Password: body.password,
+    UserAttributes: [
+      {
+        Name: 'email',
+        Value: body.email,
+      },
+      {
+        Name: 'name',
+        Value: body.name,
+      },
+      {
+        Name: 'profile',
+        Value: body.vendor,
+      },
+    ],
+  }).promise())
+  .then(() => {
+    db.end();
+    return request.response(null, null, event, context, callback, 201);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(error.authError(err), null, event, context, callback);
   });
 }, context, (err, res) => {
-  db.destroy();
+  db.end();
   callback(err, res);
 });
