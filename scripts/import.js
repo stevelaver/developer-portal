@@ -4,11 +4,11 @@ const _ = require('lodash');
 const async = require('async');
 const db = require('../lib/db');
 const env = require('../lib/env').load();
+const exec = require('child_process').exec;
 const execsql = require('../lib/execsql');
 const fs = require('fs');
 const mysql = require('mysql');
 const request = require('request');
-const awsSetup = require('./aws-setup');
 
 const rds = mysql.createConnection({
   host: env.RDS_HOST,
@@ -249,7 +249,7 @@ if (args[0] === 'data') {
     if (err) {
       throw err;
     }
-    awsSetup.s3Upload('icons', env.S3_BUCKET, (err2) => {
+    exec(`aws s3 sync icons s3://${env.S3_BUCKET} --acl public-read`, (err2) => {
       if (err2) {
         throw err2;
       }

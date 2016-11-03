@@ -42,6 +42,7 @@ admin.env
 **/event.json
 **/event-*.json
 **/.serverless
+**/.webpack
 
 #Ignore _meta folder
 _meta

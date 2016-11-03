@@ -1,28 +1,32 @@
 all: pre-deploy deploy save-output init-database update-cognito subscribe-logs finish-deploy
 
 pre-deploy:
-	node scripts/pre-deploy.js
+	node scripts/setup.js save-env
+	node scripts/setup.js save-account-id
+	node scripts/setup.js add-email-policy
+	node scripts/setup.js create-cognito
 
 deploy:
 	sls deploy
 
 save-output:
-	node scripts/post-deploy.js save-cloudformation-output
+	node scripts/setup.js save-cloudformation-output
 
 init-database:
-	node scripts/post-deploy.js init-database
+	node scripts/setup.js init-database
 
 update-cognito:
-	node scripts/post-deploy.js update-cognito
+	node scripts/setup.js update-cognito
 
 subscribe-logs:
-	node scripts/post-deploy.js subscribe-logs
+	node scripts/setup.js subscribe-logs
 
 finish-deploy:
 	sls deploy
 	cat ./env.yml
 
 remove:
+	node scripts/setup.js empty-bucket
 	sls remove
-	node scripts/remove-setup.js delete-cognito
-	node scripts/remove-setup.js delete-logs
+	node scripts/setup.js delete-cognito
+	node scripts/setup.js delete-logs

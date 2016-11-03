@@ -20,7 +20,7 @@ if resources with same identifiers already exist, the installation will fail.
 4. Cd into directory: `cd developer-portal`
 5. Install npm dependencies: `npm install` and dev dependencies `npm install --only=dev`
 6. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
-7. Verify email sender. Run `node scripts/verify-email.js <region> <email>` and confirm link from the email you get
+7. Verify email sender. Run `node scripts/setup.js register-email <region> <email>` and confirm link from the email you get
 8. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make`
   - The script will put created identifiers to file `env.yml`
   - Required env variables:
@@ -34,6 +34,9 @@ if resources with same identifiers already exist, the installation will fail.
     - `LOG_PORT` - Papertrail endpoint port
     - `SLACK_HOOK_URL` - Slack webhook url for notifications
 
+Please note that your SES service must be out of a sandbox or you have to verify
+each email or domain before you use it for account signup.
+
 Optionally you can import data from KBC:
 
 1. download `https://connection.keboola.com/admin/manage-apps/apis-list` to a file
@@ -42,6 +45,7 @@ Optionally you can import data from KBC:
 4. run `node scripts/import.js vendors <path-to-the-file.sql>` to fill default vendors (sql should contain inserts to vendors table)
 
 You can set created user as admin using command: `node scripts/setup-admin.js <email> enable`
+
 
 ### Run functional tests
 
