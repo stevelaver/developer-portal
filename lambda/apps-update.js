@@ -3,8 +3,7 @@
 require('babel-polyfill');
 const _ = require('lodash');
 const request = require('../lib/request');
-const async = require('async');
-const db = require('../lib/db');
+const db = require('../lib/dbp');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
 const joi = require('joi');
@@ -38,7 +37,7 @@ const commonValidationBody = {
     .error(Error('Parameter licenseUrl must be url and may have 255 ' +
     'characters at most')),
   documentationUrl: joi.string().max(255).uri()
-    .error(Error('Parameter documentationUrl must be url and may have 255' +
+    .error(Error('Parameter documentationUrl must be url and may have 255 ' +
     'characters at most')),
   encryption: joi.boolean()
     .error(Error('Parameter encryption must be boolean')),
@@ -82,7 +81,7 @@ const commonValidationBody = {
     .error(Error('Setting of parameter legacyUri is forbidden')),
 };
 
-const createValidationBody = commonValidationBody;
+const createValidationBody = _.clone(commonValidationBody);
 createValidationBody.id = joi.string().min(3).max(50)
   .regex(/^[a-zA-Z0-9-_]+$/)
   .required()
@@ -92,75 +91,63 @@ createValidationBody.name.required();
 createValidationBody.type.required();
 
 module.exports.appsCreate = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     auth: true,
     body: createValidationBody,
-  });
+  }));
   const body = JSON.parse(event.body);
 
-  db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      identity.getUser(env.REGION, event.headers.Authorization, (err, data) => {
-        if (err) {
-          return cb(err);
-        }
-
-        body.createdBy = data.email;
-        return cb(null, data);
-      });
-    },
-    function (user, cb) {
-      body.vendor = user.vendor;
-      body.id = `${user.vendor}.${body.id}`;
-
-      db.checkAppNotExists(body.id, err => cb(err));
-    },
-    function (cb) {
-      db.insertApp(body, err => cb(err));
-    },
-  ], (err) => {
+  db.connect(env);
+  identity.getUser(env.REGION, event.headers.Authorization)
+  .then((user) => {
+    body.createdBy = user.email;
+    body.vendor = user.vendor;
+    body.id = `${user.vendor}.${body.id}`;
+  })
+  .then(() => db.checkAppNotExists(body.id))
+  .then(() => db.insertApp(body))
+  .then(() => {
     db.end();
-    return request.response(err, null, event, context, callback, 204);
+    return request.response(null, null, event, context, callback, 204);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
   });
 }, context, callback);
 
 
-const updateValidationBody = commonValidationBody;
+const updateValidationBody = _.clone(commonValidationBody);
 updateValidationBody.id = joi.any().forbidden()
   .error(Error('Setting of parameter id is forbidden'));
 
 module.exports.appsUpdate = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     auth: true,
     path: {
       appId: joi.string().required(),
     },
     body: updateValidationBody,
-  });
-  db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      identity.getUser(env.REGION, event.headers.Authorization, cb);
-    },
-    function (user, cb) {
-      db.checkAppAccess(
-        event.pathParameters.appId,
-        user.vendor,
-        err => cb(err, user)
-      );
-    },
-    function (user, cb) {
-      db.updateApp(JSON.parse(event.body), event.pathParameters.appId, user.email, cb);
-    },
-  ], (err) => {
+  }));
+  db.connect(env);
+
+  let user;
+  identity.getUser(env.REGION, event.headers.Authorization)
+  .then((u) => {
+    user = u;
+    db.checkAppAccess(event.pathParameters.appId, user.vendor);
+  })
+  .then(() => db.updateApp(
+    JSON.parse(event.body),
+    event.pathParameters.appId,
+    user.email,
+  ))
+  .then(() => {
     db.end();
-    return request.response(err, null, event, context, callback, 204);
+    return request.response(null, null, event, context, callback, 204);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
   });
 }, context, callback);

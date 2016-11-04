@@ -4,7 +4,7 @@ require('babel-polyfill');
 const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
-const db = require('mysql-promise')();
+const mysql = require('mysql');
 const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
@@ -14,6 +14,10 @@ const notification = require('../lib/notification');
 const Promise = require('bluebird');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
+
+Promise.promisifyAll(mysql);
+Promise.promisifyAll(require('mysql/lib/Connection').prototype);
+
 
 /**
  * Confirm
@@ -45,7 +49,7 @@ const confirm = function (event, context, callback) {
     .then((userData) => {
       const user = identity.formatUser(userData);
       notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
-      notification.approveUser(user);
+      return notification.approveUser(user);
     })
     .then(() => request.response(null, null, event, context, callback, 204))
     .catch(err => callback(error.authError(err)));
@@ -163,7 +167,7 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
         .error(Error('Parameter email is required and should have ' +
         'format of email address')),
     },
-    body: joi.object().keys({
+    body: {
       password: joi.string().required().min(8)
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
         .error(Error('Parameter newPassword is required, must have ' +
@@ -171,7 +175,7 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
         'one uppercase letter and one number')),
       code: joi.string().required()
         .error(Error('Parameter code is required')),
-    }),
+    },
   });
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
@@ -306,6 +310,7 @@ module.exports.profileChange = (event, context, callback) => request.errorHandle
 /**
  * Signup
  */
+let db;
 module.exports.signup = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, validation.schema({
     body: {
@@ -323,7 +328,7 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
         .error(Error('Parameter vendor is required')),
     },
   }));
-  db.configure({
+  db = mysql.createConnection({
     host: env.RDS_HOST,
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
@@ -338,12 +343,14 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     region: env.REGION,
   });
 
-  db.query('SELECT * FROM `vendors` WHERE `id` = ?', [body.vendor])
-  .then((rows) => {
+  db.queryAsync('SELECT * FROM `vendors` WHERE `id` = ?', [body.vendor])
+  .spread(rows => new Promise((resolve, reject) => {
     if (rows.length === 0) {
-      throw error.notFound(`Vendor ${body.vendor} does not exist`);
+      reject(error.notFound(`Vendor ${body.vendor} does not exist`));
+    } else {
+      resolve();
     }
-  })
+  }))
   .then(() => provider.signUp({
     ClientId: env.COGNITO_CLIENT_ID,
     Username: body.email,
@@ -372,6 +379,8 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     return request.response(error.authError(err), null, event, context, callback);
   });
 }, context, (err, res) => {
-  db.end();
+  if (db) {
+    db.end();
+  }
   callback(err, res);
 });

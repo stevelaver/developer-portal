@@ -57,6 +57,27 @@ describe('apps', () => {
   it('new app flow', (done) => {
     async.waterfall([
       function (callback) {
+        // Try to create app with forbidden attribute
+        request.post({
+          url: `${env.API_ENDPOINT}/vendor/apps`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            id: appName1,
+            name: appName1,
+            type: 'extractor',
+            isApproved: true,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null;
+          expect(body, JSON.stringify(body)).to.have.property('errorType');
+          expect(body.errorType).to.be.equal('UnprocessableEntity');
+          callback();
+        });
+      },
+      function (callback) {
         // Create app
         request.post({
           url: `${env.API_ENDPOINT}/vendor/apps`,
