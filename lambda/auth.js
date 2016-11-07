@@ -345,7 +345,7 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
 
   db.queryAsync('SELECT * FROM `vendors` WHERE `id` = ?', [body.vendor])
   .spread(rows => new Promise((resolve, reject) => {
-    if (rows.length === 0) {
+    if (!rows) {
       reject(error.notFound(`Vendor ${body.vendor} does not exist`));
     } else {
       resolve();

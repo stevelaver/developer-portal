@@ -37,6 +37,23 @@ describe('auth', () => {
   it('approve user flow', (done) => {
     async.waterfall([
       (cb) => {
+        // 1) Signup with non-existing vendor
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/signup`,
+          json: true,
+          body: {
+            email: userEmail,
+            password: userPassword1,
+            name: `T.vendor.${Date.now()}`,
+            vendor,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null;
+          expect(body, JSON.stringify(body)).to.be.empty;
+          cb();
+        });
+      },
+      (cb) => {
         // 1) Signup
         request.post({
           url: `${env.API_ENDPOINT}/auth/signup`,
