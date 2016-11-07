@@ -8,6 +8,9 @@ services:
 
 sudo: true
 
+before_install:
+  - pip install --user awscli
+
 install:
   - npm install
   - npm install --only=dev
