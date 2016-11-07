@@ -1,4 +1,4 @@
-all: pre-deploy deploy save-output init-database update-cognito subscribe-logs finish-deploy
+install: pre-deploy deploy-sls save-output init-database update-cognito subscribe-logs finish-deploy-sls
 
 pre-deploy:
 	node scripts/setup.js save-env
@@ -6,7 +6,7 @@ pre-deploy:
 	node scripts/setup.js add-email-policy
 	node scripts/setup.js create-cognito
 
-deploy:
+deploy-sls:
 	sls deploy
 
 save-output:
@@ -21,9 +21,11 @@ update-cognito:
 subscribe-logs:
 	node scripts/setup.js subscribe-logs
 
-finish-deploy:
+finish-deploy-sls:
 	sls deploy
 	cat ./env.yml
+
+
 
 remove:
 	node scripts/setup.js empty-bucket
