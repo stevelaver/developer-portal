@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const async = require('async');
+const aws = require('aws-sdk');
 const exec = require('child_process').exec;
 const execsql = require('../lib/execsql');
 const fs = require('fs');
@@ -92,6 +93,54 @@ switch (args[0]) {
       }
       return done();
     });
+    break;
+  }
+  case 'create-vpc': {
+    const cf = new aws.CloudFormation({ region: env.REGION });
+    async.waterfall([
+      (cb) => {
+        cf.createStack({
+          StackName: `${env.SERVICE_NAME}-vpc`,
+          TemplateBody: fs.readFileSync(`${__dirname}/cf-vpc.json`, 'utf8'),
+        }, (err, res) => {
+          if (err) {
+            cb(err);
+          } else {
+            cb(null, res.StackId);
+          }
+        });
+      },
+      (stackId, cb) => {
+        env.VPC_CF_STACK_ID = stackId;
+        cf.waitFor('stackCreateComplete', { StackName: stackId }, (err, res) => {
+          if (err) {
+            cb(err);
+          }
+          cb(null, _.keyBy(res.Stacks[0].Outputs, 'OutputKey'));
+        });
+      },
+      (output, cb) => {
+        env.VPC_SECURITY_GROUP = output.vpcSecurityGroup.OutputValue;
+        env.VPC_SUBNET = output.vpcSubnet.OutputValue;
+        fs.writeFile(
+          `${__dirname}/../env.yml`,
+          yaml.stringify(env),
+          err2 => cb(err2)
+        );
+      },
+    ], done);
+    break;
+  }
+  case 'delete-vpc': {
+    const cf = new aws.CloudFormation({ region: env.REGION });
+    async.waterfall([
+      (cb) => {
+        cf.deleteStack({ StackName: env.VPC_CF_STACK_ID }, err => cb(err));
+      },
+      (cb) => {
+        cf.waitFor('stackDeleteComplete', { StackName: env.VPC_CF_STACK_ID }, err => cb(err));
+      },
+    ], done);
     break;
   }
   case 'create-cognito': {

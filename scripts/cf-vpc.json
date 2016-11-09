@@ -1,0 +1,55 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "VPC for Developer Portal",
+  "Resources": {
+    "DevPortalVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalVPCSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "CidrBlock": "10.0.1.0/24",
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Developer Portal",
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    }
+  },
+  "Outputs": {
+    "vpcSubnet": {
+      "Description": "Id of the Subnet",
+      "Value" : { "Ref" : "DevPortalVPCSubnet" }
+    },
+    "vpcSecurityGroup": {
+      "Description": "Id of the SecurityGroup",
+      "Value" : { "Ref" : "DevPortalSecurityGroup" }
+    }
+  }
+}

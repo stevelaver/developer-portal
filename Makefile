@@ -3,6 +3,7 @@ install: pre-deploy deploy-sls save-output init-database update-cognito subscrib
 pre-deploy:
 	node scripts/setup.js save-env
 	node scripts/setup.js save-account-id
+	node scripts/setup.js create-vpc
 	node scripts/setup.js add-email-policy
 	node scripts/setup.js create-cognito
 
@@ -31,4 +32,5 @@ remove:
 	node scripts/setup.js empty-bucket
 	sls remove
 	node scripts/setup.js delete-cognito
+	node scripts/setup.js delete-vpc
 	node scripts/setup.js delete-logs

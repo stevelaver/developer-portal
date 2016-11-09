@@ -26,8 +26,13 @@ provider:
   timeout: 30
   #cfLogs: true
   environment: ${file(./env.yml)}
+  vpc:
+    securityGroupIds:
+      - ${file(./env.yml):VPC_SECURITY_GROUP}
+    subnetIds:
+      - ${file(./env.yml):VPC_SUBNET}
   stackTags:
-    DeveloperPortalStack: "${file(./env.yml):SERVICE_NAME}_${file(./env.yml):STAGE}"
+    KeboolaStack: "developer-portal"
   iamRoleStatements:
     -
       Action:
@@ -45,16 +50,16 @@ provider:
     -
       Action:
         - "ses:SendEmail"
-        - "cloudwatchlogs:*"
         - "iam:CreateRole"
         - "iam:PutRolePolicy"
         - "ecr:*"
-      Effect: Allow
-      Resource:
-        - "*"
-    -
-      Action:
         - "sts:AssumeRole"
+        - "logs:CreateLogGroup"
+        - "logs:CreateLogStream"
+        - "logs:PutLogEvents"
+        - "ec2:CreateNetworkInterface"
+        - "ec2:DescribeNetworkInterfaces"
+        - "ec2:DeleteNetworkInterface"
       Effect: Allow
       Resource:
         - "*"
@@ -393,7 +398,10 @@ resources:
         EngineVersion: "5.7"
         MasterUsername: "${file(./env.yml):RDS_USER}"
         MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}"
-        PubliclyAccessible: "true"
+        MultiAZ: "true"
+        PubliclyAccessible: "false"
+        VPCSecurityGroups:
+          - ${file(./env.yml):VPC_SECURITY_GROUP}
     CloudFront:
       Type: AWS::CloudFront::Distribution
       Properties:
@@ -404,19 +412,19 @@ resources:
               Id: "S3-${file(./env.yml):S3_BUCKET}"
               S3OriginConfig:
                 OriginAccessIdentity: ""
-          Enabled: 'true'
+          Enabled: "true"
           DefaultCacheBehavior:
             AllowedMethods:
               - GET
               - HEAD
             TargetOriginId: "S3-${file(./env.yml):S3_BUCKET}"
             ForwardedValues:
-              QueryString: 'false'
+              QueryString: "false"
               Cookies:
                 Forward: none
             ViewerProtocolPolicy: https-only
           ViewerCertificate:
-            CloudFrontDefaultCertificate: 'true'
+            CloudFrontDefaultCertificate: "true"
   Outputs:
     RdsUri:
       Description: "RDS Endpoint"
