@@ -121,7 +121,9 @@ switch (args[0]) {
       },
       (output, cb) => {
         env.VPC_SECURITY_GROUP = output.vpcSecurityGroup.OutputValue;
-        env.VPC_SUBNET = output.vpcSubnet.OutputValue;
+        env.VPC_SUBNET1 = output.vpcSubnet1.OutputValue;
+        env.VPC_SUBNET2 = output.vpcSubnet2.OutputValue;
+        env.RDS_SUBNET_GROUP = output.rdsSubnetGroup.OutputValue;
         fs.writeFile(
           `${__dirname}/../env.yml`,
           yaml.stringify(env),

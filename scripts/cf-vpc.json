@@ -9,13 +9,43 @@
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
     },
-    "DevPortalVPCSubnet": {
+    "DevPortalVPCSubnet1": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "VpcId": {
           "Ref": "DevPortalVPC"
         },
         "CidrBlock": "10.0.1.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalVPCSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "CidrBlock": "10.0.2.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "1",
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
     },
@@ -40,16 +70,35 @@
         ],
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
+    },
+    "DevPortalDbSubnetGroup": {
+      "Type" : "AWS::RDS::DBSubnetGroup",
+      "Properties" : {
+        "DBSubnetGroupDescription" : "Subnet for Developer Portal rds",
+        "SubnetIds" : [
+          { "Ref": "DevPortalVPCSubnet1" },
+          { "Ref": "DevPortalVPCSubnet2" }
+        ],
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
     }
   },
   "Outputs": {
-    "vpcSubnet": {
+    "vpcSubnet1": {
       "Description": "Id of the Subnet",
-      "Value" : { "Ref" : "DevPortalVPCSubnet" }
+      "Value" : { "Ref" : "DevPortalVPCSubnet1" }
+    },
+    "vpcSubnet2": {
+      "Description": "Id of the Subnet",
+      "Value" : { "Ref" : "DevPortalVPCSubnet2" }
     },
     "vpcSecurityGroup": {
       "Description": "Id of the SecurityGroup",
       "Value" : { "Ref" : "DevPortalSecurityGroup" }
+    },
+    "rdsSubnetGroup": {
+      "Description": "Id of RDS Subnet Group",
+      "Value" : { "Ref" : "DevPortalDbSubnetGroup" }
     }
   }
 }

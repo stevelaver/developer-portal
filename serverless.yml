@@ -26,43 +26,15 @@ provider:
   timeout: 30
   #cfLogs: true
   environment: ${file(./env.yml)}
+  role: developerPortalLambdaRole
   vpc:
     securityGroupIds:
       - ${file(./env.yml):VPC_SECURITY_GROUP}
     subnetIds:
-      - ${file(./env.yml):VPC_SUBNET}
+      - ${file(./env.yml):VPC_SUBNET1}
+      - ${file(./env.yml):VPC_SUBNET2}
   stackTags:
     KeboolaStack: "developer-portal"
-  iamRoleStatements:
-    -
-      Action:
-        - "s3:*"
-      Effect: Allow
-      Resource:
-        - "arn:aws:s3:::${file(./env.yml):S3_BUCKET}/*"
-    -
-      Action:
-        - "cognito-identity:*"
-        - "cognito-idp:*"
-      Effect: Allow
-      Resource:
-        - "arn:aws:cognito-idp:${file(./env.yml):REGION}:${file(./env.yml):ACCOUNT_ID}:userpool/${file(./env.yml):COGNITO_POOL_ID}"
-    -
-      Action:
-        - "ses:SendEmail"
-        - "iam:CreateRole"
-        - "iam:PutRolePolicy"
-        - "ecr:*"
-        - "sts:AssumeRole"
-        - "logs:CreateLogGroup"
-        - "logs:CreateLogStream"
-        - "logs:PutLogEvents"
-        - "ec2:CreateNetworkInterface"
-        - "ec2:DescribeNetworkInterfaces"
-        - "ec2:DeleteNetworkInterface"
-      Effect: Allow
-      Resource:
-        - "*"
 
 functions:
   authorizer:
@@ -387,6 +359,52 @@ functions:
 
 resources:
   Resources:
+    developerPortalLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: DeveloperPortalLambdaRole
+        AssumeRolePolicyDocument:
+          Version: '2017'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: DeveloperPortalLambdaPolicy
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: "arn:aws:logs:${file(./env.yml):REGION}:${file(./env.yml):ACCOUNT_ID}:log-group:/aws/lambda/*:*:*"
+                - Effect: Allow
+                  Action:
+                    - "s3:*"
+                  Resource:
+                    - "arn:aws:s3:::${file(./env.yml):S3_BUCKET}/*"
+                - Effect: Allow
+                  Action:
+                    - "cognito-identity:*"
+                    - "cognito-idp:*"
+                  Resource:
+                    - "arn:aws:cognito-idp:${file(./env.yml):REGION}:${file(./env.yml):ACCOUNT_ID}:userpool/${file(./env.yml):COGNITO_POOL_ID}"
+                - Effect: Allow
+                  Action:
+                    - ec2:CreateNetworkInterface
+                    - ec2:DescribeNetworkInterfaces
+                    - ec2:DetachNetworkInterface
+                    - ec2:DeleteNetworkInterface
+                    - ses:SendEmail
+                    - iam:CreateRole
+                    - iam:PutRolePolicy
+                    - ecr:*
+                    - sts:AssumeRole
+                  Resource: "*"
     Rds:
       Type: AWS::RDS::DBInstance
       Properties:
@@ -400,6 +418,7 @@ resources:
         MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}"
         MultiAZ: "true"
         PubliclyAccessible: "false"
+        DBSubnetGroupName: "${file(./env.yml):RDS_SUBNET_GROUP}"
         VPCSecurityGroups:
           - ${file(./env.yml):VPC_SECURITY_GROUP}
     CloudFront:
