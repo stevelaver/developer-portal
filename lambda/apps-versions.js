@@ -42,7 +42,7 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);
 
 
 module.exports.rollback = (event, context, callback) => request.errorHandler(() => {
@@ -81,4 +81,4 @@ module.exports.rollback = (event, context, callback) => request.errorHandler(() 
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);

@@ -32,7 +32,7 @@ module.exports.appsList = (event, context, callback) => request.errorHandler(() 
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);
 
 module.exports.appsDetail = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, validation.schema({
@@ -71,4 +71,4 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);

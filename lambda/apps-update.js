@@ -114,7 +114,7 @@ module.exports.appsCreate = (event, context, callback) => request.errorHandler((
     db.end();
     return request.response(err, null, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);
 
 
 const updateValidationBody = _.clone(commonValidationBody);
@@ -150,4 +150,4 @@ module.exports.appsUpdate = (event, context, callback) => request.errorHandler((
     db.end();
     return request.response(err, null, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);

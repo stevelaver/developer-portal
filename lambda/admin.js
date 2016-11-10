@@ -67,7 +67,7 @@ module.exports.appApprove = (event, context, callback) => request.errorHandler((
     db.end();
     return request.response(err, null, event, context, callback, 204);
   });
-}, context, callback);
+}, event, context, callback);
 
 
 /**
@@ -104,7 +104,7 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);
 
 
 /**
@@ -156,7 +156,7 @@ module.exports.userAdmin = (event, context, callback) => request.errorHandler(()
       }, err => cb(error.authError(err)));
     },
   ], err => request.response(err, null, event, context, callback, 204));
-}, context, callback);
+}, event, context, callback);
 
 
 /**
@@ -215,7 +215,7 @@ module.exports.userEnable = (event, context, callback) => request.errorHandler((
       );
     },
   ], err => request.response(err, null, event, context, callback, 204));
-}, context, callback);
+}, event, context, callback);
 
 
 /**
@@ -274,4 +274,4 @@ module.exports.users = (event, context, callback) => request.errorHandler(() => 
       })));
     },
   ], (err, res) => request.response(err, res, event, context, callback));
-}, context, callback);
+}, event, context, callback);

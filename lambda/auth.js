@@ -2,7 +2,6 @@
 
 require('babel-polyfill');
 const _ = require('lodash');
-const async = require('async');
 const aws = require('aws-sdk');
 const mysql = require('mysql');
 const env = require('../env.yml');
@@ -63,12 +62,12 @@ module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandl
         'until then.',
     }, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);
 module.exports.confirmPost = (event, context, callback) => request.errorHandler(() => {
   confirm(event, context, (err) => {
     request.response(err, null, event, context, callback, 204);
   });
-}, context, callback);
+}, event, context, callback);
 
 
 /**
@@ -119,49 +118,42 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
       return request.response(error.authError(err), null, event, context, callback);
     }
   });
-}, context, callback);
+}, event, context, callback);
 
 
 /**
  * Forgot
  */
 module.exports.forgot = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     path: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
         'format of email address')),
     },
-  });
+  }));
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function () {
-      provider.forgotPassword({
-        ClientId: env.COGNITO_CLIENT_ID,
-        Username: event.pathParameters.email,
-      }, err => request.response(
-        error.authError(err),
-        null,
-        event,
-        context,
-        callback,
-        204
-      ));
-    },
-  ], (err, res) => request.response(err, res, event, context, callback));
-}, context, callback);
+  provider.forgotPassword({
+    ClientId: env.COGNITO_CLIENT_ID,
+    Username: event.pathParameters.email,
+  }, err => request.response(
+    error.authError(err),
+    null,
+    event,
+    context,
+    callback,
+    204
+  ));
+}, event, context, callback);
 
 
 /**
  * Forgot Confirm
  */
 module.exports.forgotConfirm = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     path: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
@@ -176,39 +168,32 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
       code: joi.string().required()
         .error(Error('Parameter code is required')),
     },
-  });
+  }));
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
   const body = JSON.parse(event.body);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function () {
-      provider.confirmForgotPassword({
-        ClientId: env.COGNITO_CLIENT_ID,
-        ConfirmationCode: body.code,
-        Password: body.password,
-        Username: event.pathParameters.email,
-      }, err => request.response(
-        error.authError(err),
-        null,
-        event,
-        context,
-        callback,
-        204
-      ));
-    },
-  ], (err, res) => request.response(err, res, event, context, callback));
-}, context, callback);
+  provider.confirmForgotPassword({
+    ClientId: env.COGNITO_CLIENT_ID,
+    ConfirmationCode: body.code,
+    Password: body.password,
+    Username: event.pathParameters.email,
+  }, err => request.response(
+    error.authError(err),
+    null,
+    event,
+    context,
+    callback,
+    204
+  ));
+}, event, context, callback);
 
 
 /**
  * Login
  */
 module.exports.login = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     body: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
@@ -216,67 +201,53 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
       password: joi.string().required()
         .error(Error('Parameter password is required')),
     },
-  });
+  }));
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
   const body = JSON.parse(event.body);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
+  provider.adminInitiateAuth({
+    AuthFlow: 'ADMIN_NO_SRP_AUTH',
+    ClientId: env.COGNITO_CLIENT_ID,
+    UserPoolId: env.COGNITO_POOL_ID,
+    AuthParameters: {
+      USERNAME: body.email,
+      PASSWORD: body.password,
     },
-    function () {
-      provider.adminInitiateAuth({
-        AuthFlow: 'ADMIN_NO_SRP_AUTH',
-        ClientId: env.COGNITO_CLIENT_ID,
-        UserPoolId: env.COGNITO_POOL_ID,
-        AuthParameters: {
-          USERNAME: body.email,
-          PASSWORD: body.password,
-        },
-      }, (err, data) => {
-        if (err) {
-          return request.response(error.authError(err), null, event, context, callback);
-        }
+  }, (err, data) => {
+    if (err) {
+      return request.response(error.authError(err), null, event, context, callback);
+    }
 
-        return request.response(null, {
-          token: data.AuthenticationResult.AccessToken, // data.AuthenticationResult.IdToken,
-          expires: moment().add(data.AuthenticationResult.ExpiresIn, 's').utc()
-            .format(),
-        }, event, context, callback);
-      });
-    },
-  ], (err, res) => request.response(err, res, event, context, callback));
-}, context, callback);
+    return request.response(null, {
+      token: data.AuthenticationResult.AccessToken, // data.AuthenticationResult.IdToken,
+      expires: moment().add(data.AuthenticationResult.ExpiresIn, 's').utc()
+        .format(),
+    }, event, context, callback);
+  });
+}, event, context, callback);
 
 
 /**
  * Profile
  */
 module.exports.profile = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     auth: true,
-  });
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function (cb) {
-      identity.getUser(
-        env.REGION,
-        event.headers.Authorization,
-        cb,
-      );
-    },
-  ], (err, res) => request.response(err, res, event, context, callback));
-}, context, callback);
+  }));
+  identity.getUser(
+    env.REGION,
+    event.headers.Authorization,
+    (err, res) => request.response(err, res, event, context, callback),
+  );
+}, event, context, callback);
 
 
 /**
  * Profile Change
  */
 module.exports.profileChange = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     auth: true,
     body: {
       oldPassword: joi.string().required()
@@ -287,24 +258,17 @@ module.exports.profileChange = (event, context, callback) => request.errorHandle
           'at least 8 characters and contain at least one lowercase ' +
           'letter, one uppercase letter and one number')),
     },
-  });
+  }));
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
   const body = JSON.parse(event.body);
-  async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
-    function () {
-      provider.changePassword({
-        PreviousPassword: body.oldPassword,
-        ProposedPassword: body.newPassword,
-        AccessToken: event.headers.Authorization,
-      }, err => request.response(error.authError(err), null, event, context, callback, 204));
-    },
-  ], (err, res) => request.response(err, res, event, context, callback));
-}, context, callback);
+  provider.changePassword({
+    PreviousPassword: body.oldPassword,
+    ProposedPassword: body.newPassword,
+    AccessToken: event.headers.Authorization,
+  }, err => request.response(error.authError(err), null, event, context, callback, 204));
+}, event, context, callback);
 
 
 /**
@@ -383,4 +347,4 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     db.end();
   }
   callback(err, res);
-});
+}, event, context, callback);

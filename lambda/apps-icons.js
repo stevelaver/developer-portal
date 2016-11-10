@@ -13,17 +13,14 @@ const request = require('../lib/request');
 const validation = require('../lib/validation');
 
 module.exports.links = (event, context, callback) => request.errorHandler(() => {
-  const schema = validation.schema({
+  validation.validate(event, validation.schema({
     auth: true,
     path: {
       appId: joi.string().required(),
     },
-  });
+  }));
   db.connectEnv(env);
   async.waterfall([
-    function (cb) {
-      validation.validate(event, schema, cb);
-    },
     function (cb) {
       identity.getUser(env.REGION, event.headers.Authorization, cb);
     },
@@ -74,7 +71,7 @@ module.exports.links = (event, context, callback) => request.errorHandler(() => 
     db.end();
     return request.response(err, res, event, context, callback);
   });
-}, context, callback);
+}, event, context, callback);
 
 
 module.exports.upload = (event, context, callback) => request.errorHandler(() => {
@@ -118,4 +115,4 @@ module.exports.upload = (event, context, callback) => request.errorHandler(() =>
     db.end();
     return callback(err, result);
   });
-}, context, callback);
+}, event, context, callback);
