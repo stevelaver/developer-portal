@@ -44,12 +44,13 @@ describe('auth', () => {
           body: {
             email: userEmail,
             password: userPassword1,
-            name: `T.vendor.${Date.now()}`,
-            vendor,
+            name: 'Test',
+            vendor: `T.vendor.${Date.now()}`,
           },
         }, (err, res, body) => {
           expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(body, JSON.stringify(body)).to.have.property('errorType');
+          expect(body.errorType, JSON.stringify(body)).to.equal('NotFound');
           cb();
         });
       },
