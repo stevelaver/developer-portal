@@ -342,9 +342,9 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     db.end();
     return request.response(error.authError(err), null, event, context, callback);
   });
-}, context, (err, res) => {
+}, event, context, (err, res) => {
   if (db) {
     db.end();
   }
   callback(err, res);
-}, event, context, callback);
+});
