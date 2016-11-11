@@ -2,7 +2,7 @@
 
 require('babel-polyfill');
 const async = require('async');
-const db = require('../lib/db');
+const db = require('../lib/dbp');
 const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
@@ -21,62 +21,51 @@ module.exports.handler = (event, context, callback) => request.errorHandler(() =
       appId: joi.string().required(),
     },
   }));
-  db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      identity.getUser(env.REGION, event.headers.Authorization, cb);
-    },
-    function (user, cb) {
-      db.checkAppAccess(event.pathParameters.appId, user.vendor, err => cb(err));
-    },
-    function (cb) {
-      db.getApp(event.pathParameters.appId, null, (err, data) => {
-        if (err) {
-          return cb(err);
-        }
+  db.connect(env);
+  identity.getUser(env.REGION, event.headers.Authorization)
+  .then(user => db.checkAppAccess(event.pathParameters.appId, user.vendor))
+  .then(() => db.getApp(event.pathParameters.appId))
+  .then((app) => {console.log(app);
+    if (app.isApproved) {
+      throw error.badRequest('Already approved');
+    }
+    if (!app.repository.type) {
+      throw error.badRequest('App property repository.type cannot be empty');
+    }
+    if (!app.repository.uri) {
+      throw error.badRequest('App property repository.uri cannot be empty');
+    }
+    if (!app.repository.tag) {
+      throw error.badRequest('App property repository.tag cannot be empty');
+    }
+    if (!app.shortDescription) {
+      throw error.badRequest('App property shortDescription cannot be empty');
+    }
+    if (!app.longDescription) {
+      throw error.badRequest('App property longDescription cannot be empty');
+    }
+    if (!app.licenseUrl) {
+      throw error.badRequest('App property licenseUrl cannot be empty');
+    }
+    if (!app.documentationUrl) {
+      throw error.badRequest('App property documentationUrl cannot be empty');
+    }
+    if (!app.icon32) {
+      throw error.badRequest('App icon of size 32px is missing, upload it first.');
+    }
+    if (!app.icon64) {
+      throw error.badRequest('App icon of size 64px is missing, upload it first.');
+    }
 
-        if (data.isApproved) {
-          return cb(error.badRequest('Already approved'));
-        }
-        return cb(err, data);
-      });
-    },
-    function (app, cb) {
-      if (!app.repository.type) {
-        return cb(error.badRequest('App property repository.type cannot be empty'));
-      }
-      if (!app.repository.uri) {
-        return cb(error.badRequest('App property repository.uri cannot be empty'));
-      }
-      if (!app.repository.tag) {
-        return cb(error.badRequest('App property repository.tag cannot be empty'));
-      }
-      if (!app.shortDescription) {
-        return cb(error.badRequest('App property shortDescription cannot be empty'));
-      }
-      if (!app.longDescription) {
-        return cb(error.badRequest('App property longDescription cannot be empty'));
-      }
-      if (!app.licenseUrl) {
-        return cb(error.badRequest('App property licenseUrl cannot be empty'));
-      }
-      if (!app.documentationUrl) {
-        return cb(error.badRequest('App property documentationUrl cannot be empty'));
-      }
-      if (!app.icon32) {
-        return cb(error.badRequest('App icon of size 32px is missing, upload it first.'));
-      }
-      if (!app.icon64) {
-        return cb(error.badRequest('App icon of size 64px is missing, upload it first.'));
-      }
-      return cb(null, app);
-    },
-    function (app, cb) {
-      notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
-      notification.approveApp(app, cb);
-    },
-  ], (err) => {
+    notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
+    return notification.approveApp(app);
+  })
+  .then(() => {
     db.end();
-    return request.response(err, null, event, context, callback, 202);
+    return request.response(null, null, event, context, callback, 202);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
   });
 }, event, context, callback);
