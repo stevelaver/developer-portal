@@ -2,7 +2,6 @@
 
 require('babel-polyfill');
 const _ = require('lodash');
-const async = require('async');
 const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
@@ -10,65 +9,64 @@ const joi = require('joi');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
 
+const dbCallback = (err, res, callback) => {
+  if (db) {
+    try {
+      db.end();
+    } catch (err2) {
+      // Ignore
+    }
+  }
+  callback(err, res);
+};
+
 module.exports.appsList = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     auth: true,
     pagination: true,
-  }));
-  db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      identity.getUser(env.REGION, event.headers.Authorization, cb);
-    },
-    function (user, cb) {
-      db.listAppsForVendor(
-        user.vendor,
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null),
-        cb
-      );
-    },
-  ], (err, res) => {
-    db.end();
-    return request.response(err, res, event, context, callback);
   });
-}, event, context, callback);
+  db.connect(env);
+  identity.getUser(env.REGION, event.headers.Authorization)
+  .then(user => db.listAppsForVendor(
+    user.vendor,
+    _.get(event, 'queryStringParameters.offset', null),
+    _.get(event, 'queryStringParameters.limit', null),
+  ))
+  .then((res) => {
+    db.end();
+    return request.response(null, res, event, context, callback);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
+  });
+}, event, context, (err, res) => dbCallback(err, res, callback));
 
 module.exports.appsDetail = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     auth: true,
     path: {
       appId: joi.string().required(),
       version: joi.number().integer(),
     },
-  }));
-  db.connectEnv(env);
-  async.waterfall([
-    function (cb) {
-      identity.getUser(env.REGION, event.headers.Authorization, cb);
-    },
-    function (user, cb) {
-      db.checkAppAccess(
-        event.pathParameters.appId,
-        user.vendor,
-        err => cb(err)
-      );
-    },
-    function (cb) {
-      db.getApp(event.pathParameters.appId, event.pathParameters.version, cb);
-    },
-    function (appIn, cb) {
-      const app = appIn;
-      app.icon = {
-        32: `https://${env.CLOUDFRONT_URI}/${app.icon32}`,
-        64: `https://${env.CLOUDFRONT_URI}/${app.icon64}`,
-      };
-      delete app.icon32;
-      delete app.icon64;
-      cb(null, app);
-    },
-  ], (err, res) => {
-    db.end();
-    return request.response(err, res, event, context, callback);
   });
-}, event, context, callback);
+  db.connect(env);
+  identity.getUser(env.REGION, event.headers.Authorization)
+  .then(user => db.checkAppAccess(event.pathParameters.appId, user.vendor))
+  .then(() => db.getApp(event.pathParameters.appId, event.pathParameters.version))
+  .then((appIn) => {
+    const app = appIn;
+    app.icon = {
+      32: `https://${env.CLOUDFRONT_URI}/${app.icon32}`,
+      64: `https://${env.CLOUDFRONT_URI}/${app.icon64}`,
+    };
+    delete app.icon32;
+    delete app.icon64;
+    db.end();
+    return request.response(null, app, event, context, callback);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
+  });
+}, event, context, (err, res) => dbCallback(err, res, callback));

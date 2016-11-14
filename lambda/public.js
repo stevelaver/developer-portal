@@ -18,118 +18,135 @@ const addIcons = function (app) {
   delete res.icon64;
 };
 
-const defaultCallback = function (err, res, cb) {
-  db.end();
-  cb(err, res);
+const dbCallback = (err, res, callback) => {
+  if (db) {
+    try {
+      db.end();
+    } catch (err2) {
+      // Ignore
+    }
+  }
+  callback(err);
 };
 
 /**
  * App Detail
  */
 module.exports.detail = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     path: {
       appId: joi.string().required(),
       version: joi.number().integer(),
     },
-  }));
-  db.connectEnv(env);
+  });
+  db.connect(env);
   db.getPublishedApp(
     event.pathParameters.appId,
     _.get(event, 'pathParameters.version', null),
-    (err, app) => {
-      db.end();
-      if (err) {
-        return request.response(err, null, event, context, callback);
-      }
-      addIcons(app);
-      return request.response(null, app, event, context, callback);
-    }
-  );
-}, context, (err, res) => defaultCallback(err, res, callback));
+  )
+  .then((app) => {
+    addIcons(app);
+    db.end();
+    return request.response(null, app, event, context, callback);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
+  });
+}, event, context, (err, res) => dbCallback(err, res, callback));
 
 
 /**
  * Apps List
  */
 module.exports.list = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     pagination: true,
-  }));
-  db.connectEnv(env);
+  });
+  db.connect(env);
   db.listAllPublishedApps(
     _.get(event, 'queryStringParameters.offset', null),
-    _.get(event, 'queryStringParameters.limit', null),
-    (err, res) => {
-      db.end();
-      if (err) {
-        return request.response(err, null, event, context, callback);
-      }
-      res.map(addIcons);
-      return request.response(null, res, event, context, callback);
-    }
-  );
-}, context, (err, res) => defaultCallback(err, res, callback));
+    _.get(event, 'queryStringParameters.limit', null)
+  )
+  .then((app) => {
+    db.end();
+    return request.response(null, app, event, context, callback);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
+  });
+}, event, context, (err, res) => dbCallback(err, res, callback));
 
 
 /**
  * App Versions
  */
 module.exports.versions = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     path: {
       appId: joi.string().required(),
     },
     pagination: true,
-  }));
-  db.connectEnv(env);
+  });
+  db.connect(env);
   db.listPublishedAppVersions(
     event.pathParameters.appId,
     _.get(event, 'queryStringParameters.offset', null),
-    _.get(event, 'queryStringParameters.limit', null),
-    (err, res) => {
-      db.end();
-      if (err) {
-        return request.response(err, null, event, context, callback);
-      }
-      res.map(addIcons);
-      return request.response(null, res, event, context, callback);
-    }
-  );
-}, context, (err, res) => defaultCallback(err, res, callback));
+    _.get(event, 'queryStringParameters.limit', null)
+  )
+  .then((res) => {
+    res.map(addIcons);
+    db.end();
+    return request.response(null, res, event, context, callback);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
+  });
+}, event, context, (err, res) => dbCallback(err, res, callback));
 
 
 /**
  * Vendors List
  */
 module.exports.vendorsList = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     pagination: true,
-  }));
-  db.connectEnv(env);
+  });
+  db.connect(env);
   db.listVendors(
     _.get(event, 'queryStringParameters.offset', null),
     _.get(event, 'queryStringParameters.limit', null),
-    (err, res) => {
-      db.end();
-      return request.response(err, res, event, context, callback);
-    }
-  );
-}, context, (err, res) => defaultCallback(err, res, callback));
+  )
+  .then((res) => {
+    db.end();
+    return request.response(null, res, event, context, callback);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
+  });
+}, event, context, (err, res) => dbCallback(err, res, callback));
 
 
 /**
  * Vendor Detail
  */
 module.exports.vendorDetail = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     path: {
       vendor: joi.string().required(),
     },
-  }));
-  db.connectEnv(env);
-  db.getVendor(event.pathParameters.vendor, (err, res) => {
-    db.end();
-    return request.response(err, res, event, context, callback);
   });
-}, context, (err, res) => defaultCallback(err, res, callback));
+  db.connect(env);
+  db.getVendor(event.pathParameters.vendor)
+  .then((res) => {
+    db.end();
+    return request.response(null, res, event, context, callback);
+  })
+  .catch((err) => {
+    db.end();
+    return request.response(err, null, event, context, callback);
+  });
+}, event, context, (err, res) => dbCallback(err, res, callback));

@@ -1,4 +1,4 @@
-'use strict';
+/* 'use strict';
 
 require('dotenv').config({ path: '.env-test', silent: true });
 const db = require('../../lib/db');
@@ -613,4 +613,4 @@ describe('db', () => {
       });
     });
   });
-});
+});*/

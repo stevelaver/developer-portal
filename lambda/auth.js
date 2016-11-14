@@ -74,7 +74,7 @@ module.exports.confirmPost = (event, context, callback) => request.errorHandler(
  * Confirm Resend
  */
 module.exports.confirmResend = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     body: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
@@ -82,7 +82,7 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
       password: joi.string().required()
         .error(Error('Parameter password is required')),
     },
-  }));
+  });
   const body = JSON.parse(event.body);
   aws.config.setPromisesDependency(Promise);
   const provider = new aws.CognitoIdentityServiceProvider({
@@ -125,13 +125,13 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
  * Forgot
  */
 module.exports.forgot = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     path: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
         'format of email address')),
     },
-  }));
+  });
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
@@ -153,7 +153,7 @@ module.exports.forgot = (event, context, callback) => request.errorHandler(() =>
  * Forgot Confirm
  */
 module.exports.forgotConfirm = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     path: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
@@ -168,7 +168,7 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
       code: joi.string().required()
         .error(Error('Parameter code is required')),
     },
-  }));
+  });
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
@@ -193,7 +193,7 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
  * Login
  */
 module.exports.login = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     body: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
@@ -201,7 +201,7 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
       password: joi.string().required()
         .error(Error('Parameter password is required')),
     },
-  }));
+  });
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
@@ -232,14 +232,12 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
  * Profile
  */
 module.exports.profile = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     auth: true,
-  }));
-  identity.getUser(
-    env.REGION,
-    event.headers.Authorization,
-    (err, res) => request.response(err, res, event, context, callback),
-  );
+  });
+  identity.getUser(env.REGION, event.headers.Authorization)
+  .then(res => request.response(null, res, event, context, callback))
+  .catch(err => request.response(error.authError(err), null, event, context, callback));
 }, event, context, callback);
 
 
@@ -247,7 +245,7 @@ module.exports.profile = (event, context, callback) => request.errorHandler(() =
  * Profile Change
  */
 module.exports.profileChange = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     auth: true,
     body: {
       oldPassword: joi.string().required()
@@ -258,7 +256,7 @@ module.exports.profileChange = (event, context, callback) => request.errorHandle
           'at least 8 characters and contain at least one lowercase ' +
           'letter, one uppercase letter and one number')),
     },
-  }));
+  });
   const provider = new aws.CognitoIdentityServiceProvider({
     region: env.REGION,
   });
@@ -276,7 +274,7 @@ module.exports.profileChange = (event, context, callback) => request.errorHandle
  */
 let db;
 module.exports.signup = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     body: {
       name: joi.string().required()
         .error(Error('Parameter name is required')),
@@ -291,7 +289,7 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
       vendor: joi.string().required()
         .error(Error('Parameter vendor is required')),
     },
-  }));
+  });
   db = mysql.createConnection({
     host: env.RDS_HOST,
     user: env.RDS_USER,
@@ -344,7 +342,11 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
   });
 }, event, context, (err, res) => {
   if (db) {
-    db.end();
+    try {
+      db.end();
+    } catch (err2) {
+      // Ignore
+    }
   }
   callback(err, res);
 });

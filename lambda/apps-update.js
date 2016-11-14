@@ -3,11 +3,23 @@
 require('babel-polyfill');
 const _ = require('lodash');
 const request = require('../lib/request');
-const db = require('../lib/dbp');
+const db = require('../lib/db');
 const env = require('../env.yml');
 const identity = require('../lib/identity');
 const joi = require('joi');
+const Promise = require('bluebird');
 const validation = require('../lib/validation');
+
+const dbCallback = (err, res, callback) => {
+  if (db) {
+    try {
+      db.end();
+    } catch (err2) {
+      // Ignore
+    }
+  }
+  callback(err, res);
+};
 
 const commonValidationBody = {
   name: joi.string().max(128)
@@ -91,30 +103,31 @@ createValidationBody.name.required();
 createValidationBody.type.required();
 
 module.exports.appsCreate = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     auth: true,
     body: createValidationBody,
-  }));
+  });
   const body = JSON.parse(event.body);
 
   db.connect(env);
   identity.getUser(env.REGION, event.headers.Authorization)
-  .then((user) => {
+  .then(user => new Promise((res) => {
     body.createdBy = user.email;
     body.vendor = user.vendor;
     body.id = `${user.vendor}.${body.id}`;
-  })
+    res();
+  }))
   .then(() => db.checkAppNotExists(body.id))
   .then(() => db.insertApp(body))
   .then(() => {
     db.end();
-    return request.response(null, null, event, context, callback, 204);
+    return request.response(null, null, event, context, callback, 201);
   })
-  .catch((err) => {
+  .catch((err) => {console.log('ERRC', err);
     db.end();
     return request.response(err, null, event, context, callback);
   });
-}, event, context, callback);
+}, event, context, (err, res) => dbCallback(err, res, callback));
 
 
 const updateValidationBody = _.clone(commonValidationBody);
@@ -122,13 +135,13 @@ updateValidationBody.id = joi.any().forbidden()
   .error(Error('Setting of parameter id is forbidden'));
 
 module.exports.appsUpdate = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     auth: true,
     path: {
       appId: joi.string().required(),
     },
     body: updateValidationBody,
-  }));
+  });
   db.connect(env);
 
   let user;
@@ -150,4 +163,4 @@ module.exports.appsUpdate = (event, context, callback) => request.errorHandler((
     db.end();
     return request.response(err, null, event, context, callback);
   });
-}, event, context, callback);
+}, event, context, (err, res) => dbCallback(err, res, callback));

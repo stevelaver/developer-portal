@@ -1,8 +1,7 @@
 'use strict';
 
 require('babel-polyfill');
-const async = require('async');
-const db = require('../lib/dbp');
+const db = require('../lib/db');
 const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
@@ -15,17 +14,17 @@ const validation = require('../lib/validation');
  * Approve
  */
 module.exports.handler = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, validation.schema({
+  validation.validate(event, {
     auth: true,
     path: {
       appId: joi.string().required(),
     },
-  }));
+  });
   db.connect(env);
   identity.getUser(env.REGION, event.headers.Authorization)
   .then(user => db.checkAppAccess(event.pathParameters.appId, user.vendor))
   .then(() => db.getApp(event.pathParameters.appId))
-  .then((app) => {console.log(app);
+  .then((app) => {
     if (app.isApproved) {
       throw error.badRequest('Already approved');
     }
@@ -68,4 +67,13 @@ module.exports.handler = (event, context, callback) => request.errorHandler(() =
     db.end();
     return request.response(err, null, event, context, callback);
   });
-}, event, context, callback);
+}, event, context, (err, res) => {
+  if (db) {
+    try {
+      db.end();
+    } catch (err2) {
+      // Ignore
+    }
+  }
+  callback(err, res);
+});
