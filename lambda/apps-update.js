@@ -1,25 +1,16 @@
 'use strict';
 
+import App from '../lib/app';
+
 require('babel-polyfill');
 const _ = require('lodash');
 const request = require('../lib/request');
 const db = require('../lib/db');
 const env = require('../env.yml');
+const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
-const Promise = require('bluebird');
 const validation = require('../lib/validation');
-
-const dbCallback = (err, res, callback) => {
-  if (db) {
-    try {
-      db.end();
-    } catch (err2) {
-      // Ignore
-    }
-  }
-  callback(err, res);
-};
 
 const commonValidationBody = {
   name: joi.string().max(128)
@@ -102,6 +93,8 @@ createValidationBody.id = joi.string().min(3).max(50)
 createValidationBody.name.required();
 createValidationBody.type.required();
 
+const app = new App(db, env, error);
+
 module.exports.appsCreate = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
     auth: true,
@@ -109,25 +102,17 @@ module.exports.appsCreate = (event, context, callback) => request.errorHandler((
   });
   const body = JSON.parse(event.body);
 
-  db.connect(env);
-  identity.getUser(env.REGION, event.headers.Authorization)
-  .then(user => new Promise((res) => {
-    body.createdBy = user.email;
-    body.vendor = user.vendor;
-    body.id = `${user.vendor}.${body.id}`;
-    res();
-  }))
-  .then(() => db.checkAppNotExists(body.id))
-  .then(() => db.insertApp(body))
-  .then(() => {
-    db.end();
-    return request.response(null, null, event, context, callback, 201);
-  })
-  .catch((err) => {console.log('ERRC', err);
-    db.end();
-    return request.response(err, null, event, context, callback);
-  });
-}, event, context, (err, res) => dbCallback(err, res, callback));
+  return request.responseDbPromise(
+    db.connect(env)
+    .then(() => identity.getUser(env.REGION, event.headers.Authorization))
+    .then(user => app.insertApp(body, user)),
+    db,
+    event,
+    context,
+    callback,
+    201
+  );
+}, event, context, (err, res) => db.endCallback(err, res, callback));
 
 
 const updateValidationBody = _.clone(commonValidationBody);
@@ -142,25 +127,19 @@ module.exports.appsUpdate = (event, context, callback) => request.errorHandler((
     },
     body: updateValidationBody,
   });
-  db.connect(env);
 
-  let user;
-  identity.getUser(env.REGION, event.headers.Authorization)
-  .then((u) => {
-    user = u;
-    db.checkAppAccess(event.pathParameters.appId, user.vendor);
-  })
-  .then(() => db.updateApp(
-    JSON.parse(event.body),
-    event.pathParameters.appId,
-    user.email,
-  ))
-  .then(() => {
-    db.end();
-    return request.response(null, null, event, context, callback, 204);
-  })
-  .catch((err) => {
-    db.end();
-    return request.response(err, null, event, context, callback);
-  });
-}, event, context, (err, res) => dbCallback(err, res, callback));
+  return request.responseDbPromise(
+    db.connect(env)
+    .then(() => identity.getUser(env.REGION, event.headers.Authorization))
+    .then(user => app.updateApp(
+      event.pathParameters.appId,
+      JSON.parse(event.body),
+      user
+    )),
+    db,
+    event,
+    context,
+    callback,
+    204
+  );
+}, event, context, (err, res) => db.endCallback(err, res, callback));

@@ -73,7 +73,7 @@ const getData = function (callbackMain) {
     const result = [];
     async.each(JSON.parse(data).apis, (appIn, callback) => {
       const app = appIn;
-      if (_.has(app, 'data.vendor.contact')) {
+      if (_.has(app, 'data.vendor.contact') && app.data.vendor.contact[0] != 'todo' && app.data.vendor.contact[0] != 'TODO') {
         if (_.startsWith(app.data.vendor.contact[0], 'Blue Sky')) {
           app.vendor = 'blueskydigital';
         } else if (_.startsWith(app.data.vendor.contact[0], 'S&G Consulting')) {
@@ -92,16 +92,22 @@ const getData = function (callbackMain) {
           app.vendor = 'ech';
         } else if (_.startsWith(app.data.vendor.contact[0], 'David Esner')) {
           app.vendor = 'esnerda';
+        } else if (_.startsWith(app.data.vendor.contact[0], 'Martin Fiser')) {
+          app.vendor = 'fisa';
         } else if (_.startsWith(app.data.vendor.contact[0], 'Medio')) {
           app.vendor = 'medio';
         } else if (_.startsWith(app.data.vendor.contact[0], 'Keboola Singapore')) {
-          app.vendor = 'keboolasg';
+          app.vendor = 'vokurka';
         } else if (_.startsWith(app.data.vendor.contact[0], 'BizzTreat')) {
           app.vendor = 'bizztreat';
         } else if (_.startsWith(app.data.vendor.contact[0], 'GENEEA')) {
           app.vendor = 'geneea';
+        } else if (_.startsWith(app.data.vendor.contact[0], 'Geneea')) {
+          app.vendor = 'geneea';
         } else if (_.startsWith(app.data.vendor.contact[0], 'HTNS')) {
           app.vendor = 'htns';
+        } else if (_.startsWith(app.data.vendor.contact[0], 'Pond5')) {
+          app.vendor = 'pond5';
         } else if (_.startsWith(app.data.vendor.contact[0], 'Recombee')) {
           app.vendor = 'recombee';
         } else if (_.startsWith(app.data.vendor.contact[0], 'Vojtech Kurka')) {
@@ -112,6 +118,8 @@ const getData = function (callbackMain) {
           app.vendor = 'startupmetrics';
         } else if (_.startsWith(app.data.vendor.contact[0], 'Tomáš Trnka')) {
           app.vendor = 'tomastrnka';
+        } else if (_.startsWith(app.data.vendor.contact[0], 'TrendLucid')) {
+          app.vendor = 'trendlucid';
         } else if (_.startsWith(app.id, 'keboola.')) {
           app.vendor = 'keboola';
         } else {
@@ -124,10 +132,18 @@ const getData = function (callbackMain) {
           || _.startsWith(app.id, 'kbc-') || _.startsWith(app.id, 'lg-') || _.startsWith(app.id, 'rt-')
           || _.includes(['gooddata-writer', 'provisioning', 'queue', 'restbox', 'shiny', 'table-importer', 'tde-exporter'], app.id)) {
           app.vendor = 'keboola';
+        } else if (_.startsWith(app.id, 'bcit.')) {
+          app.vendor = 'bcit';
         } else if (_.startsWith(app.id, 'geneea-')) {
+          app.vendor = 'geneea';
+        } else if (_.startsWith(app.id, 'geneea.')) {
           app.vendor = 'geneea';
         } else if (_.startsWith(app.id, 'vokurka.')) {
           app.vendor = 'vokurka';
+        } else if (_.startsWith(app.id, 'bcit.')) {
+          app.vendor = 'bcit';
+        } else if (_.startsWith(app.id, 'trologic.')) {
+          app.vendor = 'trologic';
         } else {
           app.vendor = '-unknown-';
         }

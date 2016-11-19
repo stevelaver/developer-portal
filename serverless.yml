@@ -62,7 +62,7 @@ functions:
   logger:
       handler: logger.handler
 
-  adminAppApprove:
+  adminAppsApprove:
     handler: admin.appApprove
     events:
       -
@@ -73,7 +73,7 @@ functions:
           path: "admin/apps/{id}/approve"
           default:
             statusCode: 204
-  adminApps:
+  adminAppsList:
     handler: admin.apps
     events:
       -
@@ -82,7 +82,7 @@ functions:
           cors: true
           method: get
           path: "admin/apps"
-  adminUsers:
+  adminUsersList:
     handler: admin.users
     events:
       -
@@ -91,8 +91,8 @@ functions:
           cors: true
           method: get
           path: "admin/users"
-  adminUserAdmin:
-    handler: admin.userAdmin
+  adminUsersMakeAdmin:
+    handler: admin.userMakeAdmin
     events:
       -
         http:
@@ -102,7 +102,7 @@ functions:
           path: "admin/users/{email}/admin"
           default:
             statusCode: 204
-  adminUserEnable:
+  adminUsersEnable:
     handler: admin.userEnable
     events:
       -
@@ -113,7 +113,7 @@ functions:
           path: "admin/users/{email}/enable"
           default:
             statusCode: 204
-  appsApprove:
+  vendorAppsApprove:
     handler: apps-approve.handler
     events:
       -
@@ -123,7 +123,7 @@ functions:
           method: post
           path: "vendor/apps/{appId}/approve"
           integration: lambda-proxy
-  appsCreate:
+  vendorAppsCreate:
     handler: apps-update.appsCreate
     events:
       -
@@ -133,7 +133,7 @@ functions:
           method: post
           path: vendor/apps
           integration: lambda-proxy
-  appsDetail:
+  vendorAppsDetail:
     handler: apps-list.appsDetail
     events:
       -
@@ -150,7 +150,7 @@ functions:
           method: get
           path: "vendor/apps/{appId}/versions/{version}"
           integration: lambda-proxy
-  appsIconsLinks:
+  vendorAppsIconsLinks:
     handler: apps-icons.links
     events:
       -
@@ -160,7 +160,7 @@ functions:
           method: post
           path: "vendor/apps/{appId}/icons"
           integration: lambda-proxy
-  appsIconsUpload:
+  vendorAppsIconsUpload:
     handler: apps-icons.upload
     events:
       -
@@ -168,7 +168,7 @@ functions:
           bucket: "${file(./env.yml):S3_BUCKET}"
           event: "s3:ObjectCreated:Put"
           suffix: .png
-  appsList:
+  vendorAppsList:
     handler: apps-list.appsList
     events:
       -
@@ -178,7 +178,7 @@ functions:
           method: get
           path: vendor/apps
           integration: lambda-proxy
-  appsUpdate:
+  vendorAppsUpdate:
     handler: apps-update.appsUpdate
     events:
       -
@@ -188,7 +188,7 @@ functions:
           method: patch
           path: vendor/apps/{appId}
           integration: lambda-proxy
-  appsVersionsList:
+  vendorAppsVersionsList:
     handler: apps-versions.list
     events:
       -
@@ -198,7 +198,7 @@ functions:
           method: get
           path: "vendor/apps/{appId}/versions"
           integration: lambda-proxy
-  appsVersionsRollback:
+  vendorAppsVersionsRollback:
     handler: apps-versions.rollback
     events:
       -
@@ -296,7 +296,7 @@ functions:
           path: auth/signup
           integration: lambda-proxy
 
-  publicDetail:
+  appsDetail:
     handler: public.detail
     events:
       -
@@ -311,7 +311,7 @@ functions:
           method: get
           path: "apps/{appId}/versions/{version}"
           integration: lambda-proxy
-  publicList:
+  appsList:
     handler: public.list
     events:
       -
@@ -320,7 +320,7 @@ functions:
           method: get
           path: apps
           integration: lambda-proxy
-  publicVersions:
+  appsVersionsList:
     handler: public.versions
     events:
       -
@@ -329,7 +329,7 @@ functions:
           method: get
           path: "apps/{appId}/versions"
           integration: lambda-proxy
-  publicVendors:
+  vendorsList:
     handler: public.vendorsList
     events:
       -
@@ -338,7 +338,7 @@ functions:
           method: get
           path: "vendors"
           integration: lambda-proxy
-  publicVendor:
+  vendorDetail:
     handler: public.vendorDetail
     events:
       -

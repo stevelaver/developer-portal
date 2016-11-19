@@ -31,7 +31,7 @@ module.exports.appApprove = (event, context, callback) => request.errorHandler((
       id: joi.string().required(),
     },
   });
-  db.connect(env);
+  db.connectSync(env);
   let user;
   let app;
   identity.getAdmin(env.REGION, event.headers.Authorization)
@@ -79,7 +79,7 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
       filter: joi.string(),
     },
   });
-  db.connect(env);
+  db.connectSync(env);
   identity.getAdmin(env.REGION, event.headers.Authorization)
   .then(() => db.listApps(
     _.get(event, 'queryStringParameters.filter', null),
@@ -100,7 +100,7 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
 /**
  * Make user admin
  */
-module.exports.userAdmin = (event, context, callback) => request.errorHandler(() => {
+module.exports.userMakeAdmin = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
     auth: true,
     path: {

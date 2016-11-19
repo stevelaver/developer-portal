@@ -39,7 +39,7 @@ module.exports.detail = (event, context, callback) => request.errorHandler(() =>
       version: joi.number().integer(),
     },
   });
-  db.connect(env);
+  db.connectSync(env);
   db.getPublishedApp(
     event.pathParameters.appId,
     _.get(event, 'pathParameters.version', null),
@@ -63,7 +63,7 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
     pagination: true,
   });
-  db.connect(env);
+  db.connectSync(env);
   db.listAllPublishedApps(
     _.get(event, 'queryStringParameters.offset', null),
     _.get(event, 'queryStringParameters.limit', null)
@@ -89,7 +89,7 @@ module.exports.versions = (event, context, callback) => request.errorHandler(() 
     },
     pagination: true,
   });
-  db.connect(env);
+  db.connectSync(env);
   db.listPublishedAppVersions(
     event.pathParameters.appId,
     _.get(event, 'queryStringParameters.offset', null),
@@ -114,7 +114,7 @@ module.exports.vendorsList = (event, context, callback) => request.errorHandler(
   validation.validate(event, {
     pagination: true,
   });
-  db.connect(env);
+  db.connectSync(env);
   db.listVendors(
     _.get(event, 'queryStringParameters.offset', null),
     _.get(event, 'queryStringParameters.limit', null),
@@ -139,7 +139,7 @@ module.exports.vendorDetail = (event, context, callback) => request.errorHandler
       vendor: joi.string().required(),
     },
   });
-  db.connect(env);
+  db.connectSync(env);
   db.getVendor(event.pathParameters.vendor)
   .then((res) => {
     db.end();

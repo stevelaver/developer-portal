@@ -1,5 +1,7 @@
 'use strict';
 
+import App from '../lib/app';
+
 require('babel-polyfill');
 const db = require('../lib/db');
 const env = require('../env.yml');
@@ -20,60 +22,18 @@ module.exports.handler = (event, context, callback) => request.errorHandler(() =
       appId: joi.string().required(),
     },
   });
-  db.connect(env);
-  identity.getUser(env.REGION, event.headers.Authorization)
-  .then(user => db.checkAppAccess(event.pathParameters.appId, user.vendor))
-  .then(() => db.getApp(event.pathParameters.appId))
-  .then((app) => {
-    if (app.isApproved) {
-      throw error.badRequest('Already approved');
-    }
-    if (!app.repository.type) {
-      throw error.badRequest('App property repository.type cannot be empty');
-    }
-    if (!app.repository.uri) {
-      throw error.badRequest('App property repository.uri cannot be empty');
-    }
-    if (!app.repository.tag) {
-      throw error.badRequest('App property repository.tag cannot be empty');
-    }
-    if (!app.shortDescription) {
-      throw error.badRequest('App property shortDescription cannot be empty');
-    }
-    if (!app.longDescription) {
-      throw error.badRequest('App property longDescription cannot be empty');
-    }
-    if (!app.licenseUrl) {
-      throw error.badRequest('App property licenseUrl cannot be empty');
-    }
-    if (!app.documentationUrl) {
-      throw error.badRequest('App property documentationUrl cannot be empty');
-    }
-    if (!app.icon32) {
-      throw error.badRequest('App icon of size 32px is missing, upload it first.');
-    }
-    if (!app.icon64) {
-      throw error.badRequest('App icon of size 64px is missing, upload it first.');
-    }
+  const app = new App(db, env, error);
+  notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
 
-    notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
-    return notification.approveApp(app);
-  })
-  .then(() => {
-    db.end();
-    return request.response(null, null, event, context, callback, 202);
-  })
-  .catch((err) => {
-    db.end();
-    return request.response(err, null, event, context, callback);
-  });
-}, event, context, (err, res) => {
-  if (db) {
-    try {
-      db.end();
-    } catch (err2) {
-      // Ignore
-    }
-  }
-  callback(err, res);
-});
+  return request.responseDbPromise(
+    db.connect(env)
+    .then(() => identity.getUser(env.REGION, event.headers.Authorization))
+    .then(user => app.approve(event.pathParameters.appId, user.vendor))
+    .then(() => notification.approveApp(event.pathParameters.appId)),
+    db,
+    event,
+    context,
+    callback,
+    202
+  );
+}, event, context, (err, res) => db.endCallback(err, res, callback));
