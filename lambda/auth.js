@@ -1,14 +1,15 @@
 'use strict';
 
+import Auth from '../lib/auth';
+
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
-const mysql = require('mysql');
 const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
-const moment = require('moment');
+const mysql = require('mysql');
 const notification = require('../lib/notification');
 const Promise = require('bluebird');
 const request = require('../lib/request');
@@ -17,6 +18,12 @@ const validation = require('../lib/validation');
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
+aws.config.setPromisesDependency(Promise);
+const cognito = new aws.CognitoIdentityServiceProvider({
+  region: env.REGION,
+});
+notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
+const auth = new Auth(cognito, env, error);
 
 /**
  * Confirm
@@ -28,30 +35,17 @@ const confirm = function (event, context, callback) {
     throw error.badRequest('Parameter email is required');
   }
 
-  aws.config.setPromisesDependency(Promise);
-  const provider = new aws.CognitoIdentityServiceProvider({
-    region: env.REGION,
-  });
-  provider.confirmSignUp({
-    ClientId: env.COGNITO_CLIENT_ID,
-    ConfirmationCode: event.pathParameters.code,
-    Username: event.pathParameters.email,
-  }).promise()
-    .then(() => provider.adminDisableUser({
-      UserPoolId: env.COGNITO_POOL_ID,
-      Username: event.pathParameters.email,
-    }).promise())
-    .then(() => provider.adminGetUser({
-      UserPoolId: env.COGNITO_POOL_ID,
-      Username: event.pathParameters.email,
-    }).promise())
+  return request.responseAuthPromise(
+    auth.confirm(event.pathParameters.email, event.pathParameters.code)
     .then((userData) => {
       const user = identity.formatUser(userData);
-      notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
       return notification.approveUser(user);
-    })
-    .then(() => request.response(null, null, event, context, callback, 204))
-    .catch(err => callback(error.authError(err)));
+    }),
+    event,
+    context,
+    callback,
+    204
+  );
 };
 module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandler(() => {
   confirm(event, context, (err) => {
@@ -64,9 +58,7 @@ module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandl
   });
 }, event, context, callback);
 module.exports.confirmPost = (event, context, callback) => request.errorHandler(() => {
-  confirm(event, context, (err) => {
-    request.response(err, null, event, context, callback, 204);
-  });
+  confirm(event, context, callback);
 }, event, context, callback);
 
 
@@ -83,41 +75,15 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
         .error(Error('Parameter password is required')),
     },
   });
+
   const body = JSON.parse(event.body);
-  aws.config.setPromisesDependency(Promise);
-  const provider = new aws.CognitoIdentityServiceProvider({
-    region: env.REGION,
-  });
-  provider.adminInitiateAuth({
-    AuthFlow: 'ADMIN_NO_SRP_AUTH',
-    ClientId: env.COGNITO_CLIENT_ID,
-    UserPoolId: env.COGNITO_POOL_ID,
-    AuthParameters: {
-      USERNAME: body.email,
-      PASSWORD: body.password,
-    },
-  }).promise()
-  .then(() => request.response(null, null, event, context, callback, 204))
-  .catch((err) => {
-    if (err && err.code === 'UserNotConfirmedException') {
-      provider.resendConfirmationCode({
-        ClientId: env.COGNITO_CLIENT_ID,
-        Username: body.email,
-      }).promise()
-      .then(() => request.response(null, null, event, context, callback, 204))
-      .catch(err2 => request.response(err2, null, event, context, callback));
-    } else if (err && err.code === 'NotAuthorizedException') {
-      return request.response(
-        error.badRequest('Already confirmed'),
-        null,
-        event,
-        context,
-        callback
-      );
-    } else {
-      return request.response(error.authError(err), null, event, context, callback);
-    }
-  });
+  return request.responseAuthPromise(
+    auth.confirmResend(body.email, body.password),
+    event,
+    context,
+    callback,
+    204
+  );
 }, event, context, callback);
 
 
@@ -132,20 +98,14 @@ module.exports.forgot = (event, context, callback) => request.errorHandler(() =>
         'format of email address')),
     },
   });
-  const provider = new aws.CognitoIdentityServiceProvider({
-    region: env.REGION,
-  });
-  provider.forgotPassword({
-    ClientId: env.COGNITO_CLIENT_ID,
-    Username: event.pathParameters.email,
-  }, err => request.response(
-    error.authError(err),
-    null,
+
+  return request.responseAuthPromise(
+    auth.forgot(event.pathParameters.email),
     event,
     context,
     callback,
     204
-  ));
+  );
 }, event, context, callback);
 
 
@@ -169,23 +129,19 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
         .error(Error('Parameter code is required')),
     },
   });
-  const provider = new aws.CognitoIdentityServiceProvider({
-    region: env.REGION,
-  });
+
   const body = JSON.parse(event.body);
-  provider.confirmForgotPassword({
-    ClientId: env.COGNITO_CLIENT_ID,
-    ConfirmationCode: body.code,
-    Password: body.password,
-    Username: event.pathParameters.email,
-  }, err => request.response(
-    error.authError(err),
-    null,
+  return request.responseAuthPromise(
+    auth.confirmForgotPassword(
+      event.pathParameters.email,
+      body.password,
+      body.code
+    ),
     event,
     context,
     callback,
     204
-  ));
+  );
 }, event, context, callback);
 
 
@@ -202,29 +158,14 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
         .error(Error('Parameter password is required')),
     },
   });
-  const provider = new aws.CognitoIdentityServiceProvider({
-    region: env.REGION,
-  });
-  const body = JSON.parse(event.body);
-  provider.adminInitiateAuth({
-    AuthFlow: 'ADMIN_NO_SRP_AUTH',
-    ClientId: env.COGNITO_CLIENT_ID,
-    UserPoolId: env.COGNITO_POOL_ID,
-    AuthParameters: {
-      USERNAME: body.email,
-      PASSWORD: body.password,
-    },
-  }, (err, data) => {
-    if (err) {
-      return request.response(error.authError(err), null, event, context, callback);
-    }
 
-    return request.response(null, {
-      token: data.AuthenticationResult.AccessToken, // data.AuthenticationResult.IdToken,
-      expires: moment().add(data.AuthenticationResult.ExpiresIn, 's').utc()
-        .format(),
-    }, event, context, callback);
-  });
+  const body = JSON.parse(event.body);
+  return request.responseAuthPromise(
+    auth.login(body.email, body.password),
+    event,
+    context,
+    callback
+  );
 }, event, context, callback);
 
 
@@ -235,9 +176,13 @@ module.exports.profile = (event, context, callback) => request.errorHandler(() =
   validation.validate(event, {
     auth: true,
   });
-  identity.getUser(env.REGION, event.headers.Authorization)
-  .then(res => request.response(null, res, event, context, callback))
-  .catch(err => request.response(error.authError(err), null, event, context, callback));
+
+  return request.responseAuthPromise(
+    identity.getUser(env.REGION, event.headers.Authorization),
+    event,
+    context,
+    callback
+  );
 }, event, context, callback);
 
 
@@ -257,15 +202,19 @@ module.exports.profileChange = (event, context, callback) => request.errorHandle
           'letter, one uppercase letter and one number')),
     },
   });
-  const provider = new aws.CognitoIdentityServiceProvider({
-    region: env.REGION,
-  });
+
   const body = JSON.parse(event.body);
-  provider.changePassword({
-    PreviousPassword: body.oldPassword,
-    ProposedPassword: body.newPassword,
-    AccessToken: event.headers.Authorization,
-  }, err => request.response(error.authError(err), null, event, context, callback, 204));
+  return request.responseAuthPromise(
+    auth.changePassword(
+      event.headers.Authorization,
+      body.oldPassword,
+      body.newPassword
+    ),
+    event,
+    context,
+    callback,
+    204
+  );
 }, event, context, callback);
 
 
@@ -300,53 +249,17 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
   });
   const body = JSON.parse(event.body);
 
-  aws.config.setPromisesDependency(Promise);
-  const provider = new aws.CognitoIdentityServiceProvider({
-    region: env.REGION,
-  });
-
-  db.queryAsync('SELECT * FROM `vendors` WHERE `id` = ?', [body.vendor])
-  .spread(rows => new Promise((resolve, reject) => {
-    if (!rows) {
-      reject(error.notFound(`Vendor ${body.vendor} does not exist`));
-    } else {
-      resolve();
-    }
-  }))
-  .then(() => provider.signUp({
-    ClientId: env.COGNITO_CLIENT_ID,
-    Username: body.email,
-    Password: body.password,
-    UserAttributes: [
-      {
-        Name: 'email',
-        Value: body.email,
-      },
-      {
-        Name: 'name',
-        Value: body.name,
-      },
-      {
-        Name: 'profile',
-        Value: body.vendor,
-      },
-    ],
-  }).promise())
-  .then(() => {
-    db.end();
-    return request.response(null, null, event, context, callback, 201);
-  })
-  .catch((err) => {
-    db.end();
-    return request.response(error.authError(err), null, event, context, callback);
-  });
-}, event, context, (err, res) => {
-  if (db) {
-    try {
-      db.end();
-    } catch (err2) {
-      // Ignore
-    }
-  }
-  callback(err, res);
-});
+  return request.responseAuthPromise(
+    auth.signUp(
+      db,
+      body.email,
+      body.password,
+      body.name,
+      body.vendor
+    ),
+    event,
+    context,
+    callback,
+    204
+  );
+}, event, context, callback);

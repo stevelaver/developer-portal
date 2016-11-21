@@ -12,6 +12,9 @@ const notification = require('../lib/notification');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
 
+const app = new App(db, env, error);
+notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
+
 /**
  * Approve
  */
@@ -22,13 +25,11 @@ module.exports.handler = (event, context, callback) => request.errorHandler(() =
       appId: joi.string().required(),
     },
   });
-  const app = new App(db, env, error);
-  notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
 
   return request.responseDbPromise(
     db.connect(env)
     .then(() => identity.getUser(env.REGION, event.headers.Authorization))
-    .then(user => app.approve(event.pathParameters.appId, user.vendor))
+    .then(user => app.requestApproval(event.pathParameters.appId, user.vendor))
     .then(() => notification.approveApp(event.pathParameters.appId)),
     db,
     event,
