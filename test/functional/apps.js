@@ -363,6 +363,112 @@ describe('apps', () => {
     ], done);
   });
 
+  it('app for specific project flow', (done) => {
+    const appName3 = `a3_${Date.now()}`;
+    const appId3 = `${vendor}.${appName3}`;
+    async.waterfall([
+      function (callback) {
+        // Create app
+        request.post({
+          url: `${env.API_ENDPOINT}/vendor/apps`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            id: appName3,
+            name: appName3,
+            type: 'extractor',
+            projects: [1, 2],
+            isVisible: false,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null;
+          expect(body, JSON.stringify(body)).to.be.empty;
+          callback();
+        });
+      },
+      function (callback) {
+        // Update app
+        request.patch({
+          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            projects: [1, 2, 3],
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null;
+          expect(body, JSON.stringify(body)).to.be.empty;
+          callback();
+        });
+      },
+      function (callback) {
+        // Get app detail
+        request.get({
+          url: `${env.API_ENDPOINT}/vendor/apps/${appId3}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          const body = JSON.parse(bodyRaw);
+          expect(err).to.be.null;
+          expect(body, bodyRaw).to.have.property('id');
+          expect(body, bodyRaw).to.have.property('projects');
+          expect(body.projects).to.deep.equal([1, 2]);
+          expect(body.id).to.be.equal(appId3);
+          callback();
+        });
+      },
+      function (callback) {
+        // Manual approval
+        rds.query(
+          'UPDATE apps SET isApproved=1 WHERE id=?',
+          appId3,
+          err => callback(err)
+        );
+      },
+      function (callback) {
+        // Public app profile should exist now
+        request.get({
+          url: `${env.API_ENDPOINT}/apps/${appId1}`,
+        }, (err, res, bodyRaw) => {
+          const body = JSON.parse(bodyRaw);
+          expect(err).to.be.null;
+          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
+          expect(body).to.have.property('id');
+          callback();
+        });
+      },
+      function (callback) {
+        // Public apps list should not contain the app
+        request.get({
+          url: `${env.API_ENDPOINT}/apps`,
+        }, (err, res, bodyRaw) => {
+          const body = JSON.parse(bodyRaw);
+          expect(err).to.be.null;
+          expect(body).to.not.have.property('errorMessage');
+          expect(_.map(body, app => app.id)).to.not.include(appId3);
+          callback();
+        });
+      },
+      function (callback) {
+        // Public apps filtered list should contain the app
+        request.get({
+          url: `${env.API_ENDPOINT}/apps?project=1`,
+        }, (err, res, bodyRaw) => {
+          const body = JSON.parse(bodyRaw);
+          expect(err).to.be.null;
+          expect(body).to.not.have.property('errorMessage');
+          expect(_.map(body, app => app.id)).to.include(appId3);
+          callback();
+        });
+      },
+    ], done);
+  });
+
   after((done) => {
     async.waterfall([
       function (callback) {

@@ -475,10 +475,10 @@ describe('db', () => {
     });
   });
 
-  describe('listAllPublishedApps', () => {
-    const appId1 = `a1-listAllPublishedApps-${Date.now()}`;
-    const appId2 = `a2-listAllPublishedApps-${Date.now()}`;
-    const vendor = `v-listAllPublishedApps-${Date.now()}`;
+  describe('listPublishedApps', () => {
+    const appId1 = `a1-listPublishedApps-${Date.now()}`;
+    const appId2 = `a2-listPublishedApps-${Date.now()}`;
+    const vendor = `v-listPublishedApps-${Date.now()}`;
 
     before((done) => {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
@@ -501,7 +501,7 @@ describe('db', () => {
     });
 
     it('list all', (done) => {
-      db.listAllPublishedApps(null, null, (err, res) => {
+      db.listPublishedApps(null, null, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.length.at.least(2);
         done();
@@ -509,7 +509,7 @@ describe('db', () => {
     });
 
     it('list selected', (done) => {
-      db.listAllPublishedApps(1, 1, (err, res) => {
+      db.listPublishedApps(1, 1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.lengthOf(1);
         done();

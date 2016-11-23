@@ -44,6 +44,9 @@ module.exports.detail = (event, context, callback) => request.errorHandler(() =>
 module.exports.list = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
     pagination: true,
+    query: {
+      project: joi.number().integer(),
+    },
   });
 
   return request.responseDbPromise(
@@ -51,6 +54,7 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
     .then(() => app.listPublishedApps(
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null),
+      _.get(event, 'queryStringParameters.project', null),
     )),
     db,
     event,

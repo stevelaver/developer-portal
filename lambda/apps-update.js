@@ -82,13 +82,14 @@ const commonValidationBody = {
     .error(Error('Setting of parameter icon64 is forbidden')),
   legacyUri: joi.any().forbidden()
     .error(Error('Setting of parameter legacyUri is forbidden')),
+  projects: joi.array().error(Error('Parameter projects must be array')),
 };
 
 const createValidationBody = _.clone(commonValidationBody);
-createValidationBody.id = joi.string().min(3).max(50)
+createValidationBody.id = joi.string().min(3).max(20)
   .regex(/^[a-zA-Z0-9-_]+$/)
   .required()
-  .error(Error('Parameter id is required, must have between 3 and 50 ' +
+  .error(Error('Parameter id is required, must have between 3 and 20 ' +
   'characters and contain only letters, numbers, dashes and underscores'));
 createValidationBody.name.required();
 createValidationBody.type.required();
@@ -100,12 +101,11 @@ module.exports.appsCreate = (event, context, callback) => request.errorHandler((
     auth: true,
     body: createValidationBody,
   });
-  const body = JSON.parse(event.body);
 
   return request.responseDbPromise(
     db.connect(env)
     .then(() => identity.getUser(env.REGION, event.headers.Authorization))
-    .then(user => app.insertApp(body, user)),
+    .then(user => app.insertApp(JSON.parse(event.body), user)),
     db,
     event,
     context,
