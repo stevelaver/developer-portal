@@ -6,7 +6,7 @@ HOST: https://m8pbt5jpi8.execute-api.us-east-1.amazonaws.com/dev
 
 ## Auth [/auth]
 
-User auth is handled by jwt tokens. Token is returned on login call and needs 
+User auth is handled by jwt tokens. Token is returned on login call and needs
 to be passed in HTTP header `Authorization: {your token}`. Token has limited
 validity of 1 hour.
 
@@ -148,6 +148,7 @@ Sends email with confirmation code which has to be used in the next API call
 
 + Response 204 (application/json)
 
+
 ## Apps [/vendor/apps]
 
 Manual approval from Keboola is required before an app is allowed to be published.
@@ -213,6 +214,9 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `gelf`
         + Default: `standard`
     + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + isVisible (optional, boolean) - Flag setting whether the app should be included to public apps listing (public profile is accessible anyway)
+      + Default: `true`
+    + projects (optional, array) - List of projects ids if you want to list the app only for them. Use together with `isVisible:false`
 
 + Request (application/json)
 
@@ -283,6 +287,9 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `gelf`
         + Default: `standard`
     + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + isVisible (optional, boolean) - Flag setting whether the app should be included to public apps listing (public profile is accessible anyway)
+      + Default: `true`
+    + projects (optional, array) - List of projects ids if you want to list the app only for them. Use together with `isVisible:false`
 
 + Request (application/json)
 
@@ -324,13 +331,13 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                 "expires": "2016-08-12T16:16:27Z"
             }
 
-### List all vendor apps [GET /vendor/apps?offset=0&limit=100]
+### List all vendor apps [GET /vendor/apps?offset=0&limit=1000]
 
 + Parameters
     + offset (optional) - pagination offset
         + Default: 0
     + limit (optional) - pagination limit
-        + Default: 100
+        + Default: 1000
 
 
 + Response 200 (application/json)
@@ -397,7 +404,9 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                 "loggerConfiguration": null,
                 "isApproved": true,
                 "createdOn": "2016-09-09T09:26:15.000Z",
-                "createdBy": "keboola.dev.portal.test@gmail.com"
+                "createdBy": "keboola.dev.portal.test@gmail.com",
+                "isVisible": false,
+                "projects": [1, 2]
             }
 
 
@@ -424,14 +433,14 @@ Request will be sent only if the app has icons uploaded and all these attributes
 + Response 202
 
 
-### List versions [GET /vendor/apps/{appId}/versions?offset=0&limit=100]
+### List versions [GET /vendor/apps/{appId}/versions?offset=0&limit=1000]
 
 + Parameters
     + appId
     + offset (optional) - pagination offset
         + Default: 0
     + limit (optional) - pagination limit
-        + Default: 100
+        + Default: 1000
 
 + Request
 
@@ -545,7 +554,7 @@ Takes settings from chosen version and creates new version with it.
 
 ## Public API [/apps]
 
-### List published apps [GET /apps?offset=0&limit=100]
+### List published apps [GET /apps?offset=0&limit=1000]
 
 Shows all apps having flags `isApproved` and `isVisible` set to `true`.
 
@@ -553,7 +562,8 @@ Shows all apps having flags `isApproved` and `isVisible` set to `true`.
     + offset (optional) - pagination offset
         + Default: 0
     + limit (optional) - pagination limit
-        + Default: 100
+        + Default: 1000
+    + project (optional) - id of KBC project. If set, it will list all visible apps plus those assigned specifically for this project.
 
 + Response 200 (application/json)
 
@@ -629,13 +639,13 @@ for unlisted app (having `isVisible` set to `false`).
                 "isApproved": true
             }
 
-### List vendors [GET /vendors?offset=0&limit=100]
+### List vendors [GET /vendors?offset=0&limit=1000]
 
 + Parameters
     + offset (optional) - pagination offset
         + Default: 0
     + limit (optional) - pagination limit
-        + Default: 100
+        + Default: 1000
 
 + Response 200 (application/json)
 
