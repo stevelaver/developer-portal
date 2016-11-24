@@ -4,9 +4,14 @@ require('dotenv').config({ path: '.env-test', silent: true });
 const async = require('async');
 const aws = require('aws-sdk');
 const env = require('../../lib/env').load();
-const expect = require('chai').expect;
 const mysql = require('mysql');
 const request = require('request');
+
+const chai = require('chai');
+const dirtyChai = require('dirty-chai');
+
+const expect = chai.expect;
+chai.use(dirtyChai);
 
 const rds = mysql.createConnection({
   host: env.RDS_HOST,
@@ -48,7 +53,7 @@ describe('auth', () => {
             vendor: `T.vendor.${Date.now()}`,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorType');
           expect(body.errorType, JSON.stringify(body)).to.equal('NotFound');
           cb();
@@ -66,8 +71,8 @@ describe('auth', () => {
             vendor,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           cb();
         });
       },
@@ -81,7 +86,7 @@ describe('auth', () => {
             password: userPassword1,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorType');
           expect(body.errorType).to.equal('UserNotConfirmedException');
           cb();
@@ -97,8 +102,8 @@ describe('auth', () => {
             password: userPassword1,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           cb();
         });
       },
@@ -109,7 +114,7 @@ describe('auth', () => {
         request.post({
           url: `${env.API_ENDPOINT}/auth/confirm/${process.env.FUNC_USER_EMAIL}/000`,
         }, (err, res, bodyIn) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyIn);
           expect(body, JSON.stringify(body)).to.have.property('errorType');
           expect(body.errorType).to.be
@@ -133,7 +138,7 @@ describe('auth', () => {
             password: userPassword1,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('token');
           cb(null, body.token);
         });
@@ -146,7 +151,7 @@ describe('auth', () => {
             Authorization: token,
           },
         }, (err, res, bodyIn) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyIn);
           expect(body, JSON.stringify(body)).to.have.property('vendor');
           expect(body.vendor).to.equal(vendor);
@@ -166,8 +171,8 @@ describe('auth', () => {
             newPassword: userPassword2,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           cb();
         });
       },
@@ -181,7 +186,7 @@ describe('auth', () => {
             password: userPassword2,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('token');
           cb();
         });
@@ -195,8 +200,8 @@ describe('auth', () => {
         request.post({
           url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           cb();
         });
       },
@@ -211,7 +216,7 @@ describe('auth', () => {
             code: '000000',
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorType');
           expect(body.errorType).to.be
             .oneOf(['CodeMismatchException', 'ExpiredCodeException']);

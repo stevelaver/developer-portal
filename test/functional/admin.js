@@ -5,9 +5,14 @@ const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
 const env = require('../../lib/env').load();
-const expect = require('chai').expect;
 const mysql = require('mysql');
 const request = require('request');
+
+const chai = require('chai');
+const dirtyChai = require('dirty-chai');
+
+const expect = chai.expect;
+chai.use(dirtyChai);
 
 const rds = mysql.createConnection({
   host: env.RDS_HOST,
@@ -39,7 +44,7 @@ describe('admin', () => {
             password: process.env.FUNC_USER_PASSWORD,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('token');
           token = body.token;
           callback();
@@ -90,7 +95,7 @@ describe('admin', () => {
             Authorization: token,
           },
         }, (err, res, bodyRaw) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
           let appFound = false;
           _.each(body, (item) => {
@@ -98,7 +103,7 @@ describe('admin', () => {
               appFound = true;
             }
           });
-          expect(appFound).to.be.true;
+          expect(appFound).to.be.true();
           cb();
         });
       },
@@ -110,8 +115,8 @@ describe('admin', () => {
             Authorization: token,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           cb();
         });
       },
@@ -123,7 +128,7 @@ describe('admin', () => {
             Authorization: token,
           },
         }, (err, res, bodyRaw) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
           let appFound = false;
           _.each(body, (item) => {
@@ -131,7 +136,7 @@ describe('admin', () => {
               appFound = true;
             }
           });
-          expect(appFound).to.be.false;
+          expect(appFound).to.be.false();
           cb();
         });
       },
@@ -154,7 +159,7 @@ describe('admin', () => {
             Authorization: token,
           },
         }, (err, res, bodyRaw) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
           let userFound = false;
           _.each(body, (item) => {
@@ -162,7 +167,7 @@ describe('admin', () => {
               userFound = true;
             }
           });
-          expect(userFound).to.be.true;
+          expect(userFound).to.be.true();
           cb();
         });
       },
@@ -174,8 +179,8 @@ describe('admin', () => {
             Authorization: token,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           cb();
         });
       },
@@ -187,7 +192,7 @@ describe('admin', () => {
             Authorization: token,
           },
         }, (err, res, bodyRaw) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
           let userFound = false;
           _.each(body, (item) => {
@@ -195,7 +200,7 @@ describe('admin', () => {
               userFound = true;
             }
           });
-          expect(userFound).to.be.true;
+          expect(userFound).to.be.true();
           cb();
         });
       },
@@ -219,7 +224,7 @@ describe('admin', () => {
             }
           }
         });
-        expect(userIsAdmin).to.be.false;
+        expect(userIsAdmin).to.be.false();
         cb();
       },
       function (cb) {
@@ -230,8 +235,8 @@ describe('admin', () => {
             Authorization: token,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           cb();
         });
       },
@@ -250,7 +255,7 @@ describe('admin', () => {
             }
           }
         });
-        expect(userIsAdmin).to.be.true;
+        expect(userIsAdmin).to.be.true();
         cb();
       },
     ], done);
@@ -269,7 +274,7 @@ describe('admin', () => {
         cognito.adminDeleteUser({
           UserPoolId: env.COGNITO_POOL_ID,
           Username: userEmail,
-        }, (err) => cb(err));
+        }, err => cb(err));
       },
     ], done);
   });

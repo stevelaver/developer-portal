@@ -10,9 +10,10 @@
     "consistent-return": 0,
     "react/require-extension" : 0,
     "import/no-extraneous-dependencies" : 0,
-    "chai-expect/terminating-properties": 1
+    "chai-expect/terminating-properties": 0
   },
   "env": {
+    "node": true,
     "mocha": true
   }
 }

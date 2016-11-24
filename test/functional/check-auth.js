@@ -3,11 +3,16 @@
 require('dotenv').config({ path: '.env-test', silent: true });
 const async = require('async');
 const env = require('../../lib/env').load();
-const expect = require('chai').expect;
 const request = require('request');
 
+const chai = require('chai');
+const dirtyChai = require('dirty-chai');
+
+const expect = chai.expect;
+chai.use(dirtyChai);
+
 const checkAuth = function (err, res, bodyIn, callback) {
-  expect(err, JSON.stringify(err)).to.be.null;
+  expect(err, JSON.stringify(err)).to.be.null();
   const body = JSON.parse(bodyIn);
   expect(body).to.have.property('message');
   expect(body.message).to.equal('Unauthorized');

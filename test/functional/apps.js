@@ -5,10 +5,15 @@ const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
 const env = require('../../lib/env').load();
-const expect = require('chai').expect;
 const fs = require('fs');
 const mysql = require('mysql');
 const request = require('request');
+
+const chai = require('chai');
+const dirtyChai = require('dirty-chai');
+
+const expect = chai.expect;
+chai.use(dirtyChai);
 
 const rds = mysql.createConnection({
   host: env.RDS_HOST,
@@ -38,7 +43,7 @@ describe('apps', () => {
             password: process.env.FUNC_USER_PASSWORD,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('token');
           token = body.token;
           callback();
@@ -71,7 +76,7 @@ describe('apps', () => {
             isApproved: true,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorType');
           expect(body.errorType).to.be.equal('UnprocessableEntity');
           callback();
@@ -91,8 +96,8 @@ describe('apps', () => {
             type: 'extractor',
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           callback();
         });
       },
@@ -110,8 +115,8 @@ describe('apps', () => {
             type: 'extractor',
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           callback();
         });
       },
@@ -124,7 +129,7 @@ describe('apps', () => {
           },
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, bodyRaw).to.have.property('id');
           expect(body.id).to.be.equal(appId1);
           callback();
@@ -139,7 +144,7 @@ describe('apps', () => {
           },
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.lengthOf(2);
           expect(body[0]).to.have.property('id');
           expect(body[0].id).to.be.oneOf([`${vendor}.${appName1}`, `${vendor}.${appName2}`]);
@@ -154,7 +159,7 @@ describe('apps', () => {
           url: `${env.API_ENDPOINT}/apps/${appId1}`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body).to.have.property('errorMessage');
           callback();
         });
@@ -168,7 +173,7 @@ describe('apps', () => {
           },
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorMessage');
           callback();
         });
@@ -193,8 +198,8 @@ describe('apps', () => {
             documentationUrl: 'https://github.com/keboola/test-extractor/blob/master/README.md',
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           callback();
         });
       },
@@ -207,7 +212,7 @@ describe('apps', () => {
           },
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorMessage');
           expect(body.errorMessage).to.include('App icon');
           callback();
@@ -222,7 +227,7 @@ describe('apps', () => {
           },
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body, JSON.stringify(body)).to.have.property('32');
           expect(body, JSON.stringify(body)).to.have.property('64');
@@ -238,8 +243,8 @@ describe('apps', () => {
             'Content-Length': stats.size,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body).to.be.empty;
+          expect(err).to.be.null();
+          expect(body).to.be.empty();
           callback(null, icons);
         }));
       },
@@ -252,8 +257,8 @@ describe('apps', () => {
             'Content-Length': stats.size,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body).to.be.empty;
+          expect(err).to.be.null();
+          expect(body).to.be.empty();
           callback();
         }));
       },
@@ -267,8 +272,8 @@ describe('apps', () => {
               Authorization: token,
             },
           }, (err, res, body) => {
-            expect(err).to.be.null;
-            expect(body).to.be.empty;
+            expect(err).to.be.null();
+            expect(body).to.be.empty();
             callback();
           });
         }, 5000);
@@ -287,7 +292,7 @@ describe('apps', () => {
           url: `${env.API_ENDPOINT}/apps/${appId1}`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
           callback();
@@ -302,7 +307,7 @@ describe('apps', () => {
           },
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(1);
           callback();
@@ -316,7 +321,7 @@ describe('apps', () => {
             Authorization: token,
           },
         }, (err, res, bodyRaw) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
@@ -329,7 +334,7 @@ describe('apps', () => {
           url: `${env.API_ENDPOINT}/apps`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(0);
           expect(body[0]).to.have.property('id');
@@ -341,7 +346,7 @@ describe('apps', () => {
         request.get({
           url: `${env.API_ENDPOINT}/apps/${appId1}/versions/1`,
         }, (err, res, bodyRaw) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
@@ -353,7 +358,7 @@ describe('apps', () => {
         request.get({
           url: `${env.API_ENDPOINT}/apps/${appId1}/versions`,
         }, (err, res, bodyRaw) => {
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(0);
@@ -383,8 +388,8 @@ describe('apps', () => {
             isVisible: false,
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           callback();
         });
       },
@@ -400,8 +405,8 @@ describe('apps', () => {
             projects: [1, 2, 3],
           },
         }, (err, res, body) => {
-          expect(err).to.be.null;
-          expect(body, JSON.stringify(body)).to.be.empty;
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
           callback();
         });
       },
@@ -414,7 +419,7 @@ describe('apps', () => {
           },
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, bodyRaw).to.have.property('id');
           expect(body, bodyRaw).to.have.property('projects');
           expect(body.projects).to.deep.equal([1, 2]);
@@ -436,7 +441,7 @@ describe('apps', () => {
           url: `${env.API_ENDPOINT}/apps/${appId1}`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
           callback();
@@ -448,7 +453,7 @@ describe('apps', () => {
           url: `${env.API_ENDPOINT}/apps`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body).to.not.have.property('errorMessage');
           expect(_.map(body, app => app.id)).to.not.include(appId3);
           callback();
@@ -460,7 +465,7 @@ describe('apps', () => {
           url: `${env.API_ENDPOINT}/apps?project=1`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null;
+          expect(err).to.be.null();
           expect(body).to.not.have.property('errorMessage');
           expect(_.map(body, app => app.id)).to.include(appId3);
           callback();
