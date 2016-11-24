@@ -7,7 +7,6 @@ const _ = require('lodash');
 const aws = require('aws-sdk');
 const db = require('../lib/db');
 const email = require('../lib/email');
-const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
@@ -15,9 +14,9 @@ const Promise = require('bluebird');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
 
-const app = new App(db, env, error);
+const app = new App(db, process.env, error);
 aws.config.setPromisesDependency(Promise);
-email.init(env.REGION, env.SES_EMAIL_FROM);
+email.init(process.env.REGION, process.env.SES_EMAIL_FROM);
 
 /**
  * Approve app
@@ -31,8 +30,8 @@ module.exports.appApprove = (event, context, callback) => request.errorHandler((
   });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getAdmin(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
     .then(user => app.approveApp(event.pathParameters.id, user))
     .then(vendor => email.send(
       vendor.email,
@@ -62,8 +61,8 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
   });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getAdmin(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
     .then(() => app.listApps(
       _.get(event, 'queryStringParameters.filter', null),
       _.get(event, 'queryStringParameters.offset', null),
@@ -88,11 +87,11 @@ module.exports.userMakeAdmin = (event, context, callback) => request.errorHandle
         .error(Error('Parameter email must have format of email address')),
     },
   });
-  const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+  const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getAdmin(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
     .then(() => app.makeUserAdmin(cognito, identity, event.pathParameters.email)),
     db,
     event,
@@ -114,11 +113,11 @@ module.exports.userEnable = (event, context, callback) => request.errorHandler((
         .error(Error('Parameter email must have format of email address')),
     },
   });
-  const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+  const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getAdmin(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
     .then(() => app.enableUser(cognito, event.pathParameters.email))
     .then((userIn) => {
       const user = identity.formatUser(userIn);
@@ -149,11 +148,11 @@ module.exports.users = (event, context, callback) => request.errorHandler(() => 
       filter: joi.string(),
     },
   });
-  const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+  const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getAdmin(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
     .then(() => app.listUsers(
       cognito,
       _.has(event, 'queryStringParameters.filter')

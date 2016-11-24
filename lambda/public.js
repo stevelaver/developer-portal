@@ -5,13 +5,12 @@ import App from '../lib/app';
 require('babel-polyfill');
 const _ = require('lodash');
 const db = require('../lib/db');
-const env = require('../env.yml');
 const error = require('../lib/error');
 const joi = require('joi');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
 
-const app = new App(db, env, error);
+const app = new App(db, process.env, error);
 
 /**
  * App Detail
@@ -25,7 +24,7 @@ module.exports.detail = (event, context, callback) => request.errorHandler(() =>
   });
 
   return request.responseDbPromise(
-    db.connect(env)
+    db.connect(process.env)
     .then(() => app.getPublishedApp(
       event.pathParameters.appId,
       _.get(event, 'pathParameters.version', null),
@@ -50,7 +49,7 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
   });
 
   return request.responseDbPromise(
-    db.connect(env)
+    db.connect(process.env)
     .then(() => app.listPublishedApps(
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null),
@@ -76,7 +75,7 @@ module.exports.versions = (event, context, callback) => request.errorHandler(() 
   });
 
   return request.responseDbPromise(
-      db.connect(env)
+      db.connect(process.env)
       .then(() => app.listPublishedAppVersions(
         event.pathParameters.appId,
         _.get(event, 'queryStringParameters.offset', null),
@@ -99,7 +98,7 @@ module.exports.vendorsList = (event, context, callback) => request.errorHandler(
   });
 
   return request.responseDbPromise(
-    db.connect(env)
+    db.connect(process.env)
     .then(() => app.listVendors(
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null),
@@ -123,7 +122,7 @@ module.exports.vendorDetail = (event, context, callback) => request.errorHandler
   });
 
   return request.responseDbPromise(
-    db.connect(env)
+    db.connect(process.env)
     .then(() => app.getVendor(event.pathParameters.vendor)),
     db,
     event,

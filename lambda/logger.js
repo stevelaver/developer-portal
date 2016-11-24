@@ -2,7 +2,6 @@
 
 require('babel-polyfill');
 const _ = require('lodash');
-const env = require('../env.yml');
 const log = require('../lib/log');
 const zlib = require('zlib');
 
@@ -14,7 +13,7 @@ exports.handler = function (event, context, callback) {
       return callback(err);
     }
 
-    const logger = log.init(env.LOG_HOST, env.LOG_PORT, env.SERVICE_NAME);
+    const logger = log.init(process.env.LOG_HOST, process.env.LOG_PORT, process.env.SERVICE_NAME);
     const data = JSON.parse(result.toString('utf8'));
 
     data.logEvents.forEach((line) => {

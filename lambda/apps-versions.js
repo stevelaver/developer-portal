@@ -5,14 +5,13 @@ import App from '../lib/app';
 require('babel-polyfill');
 const _ = require('lodash');
 const db = require('../lib/db');
-const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
 
-const app = new App(db, env, error);
+const app = new App(db, process.env, error);
 
 module.exports.list = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
@@ -24,8 +23,8 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
   });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getUser(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
     .then(user => app.listAppVersions(
       event.pathParameters.appId,
       user.vendor,
@@ -50,8 +49,8 @@ module.exports.rollback = (event, context, callback) => request.errorHandler(() 
   });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getUser(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
     .then(user => app.rollbackAppVersion(event.pathParameters.appId, user)),
     db,
     event,

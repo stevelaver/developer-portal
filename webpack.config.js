@@ -31,10 +31,6 @@ module.exports = {
         exclude: /node_modules/,
       },
       {
-        test: /env\.yml$/,
-        loader: 'yml',
-      },
-      {
         test: /\.html$/,
         loader: 'mustache',
       },

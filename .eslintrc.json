@@ -1,6 +1,6 @@
 {
   "extends": "airbnb",
-  "plugins": ["chai-expect"],
+  "plugins": [],
   "rules": {
     "func-names": 0,
     "no-console": 0,
@@ -10,7 +10,13 @@
     "consistent-return": 0,
     "react/require-extension" : 0,
     "import/no-extraneous-dependencies" : 0,
-    "chai-expect/terminating-properties": 0
+    "comma-dangle": ["error", {
+        "arrays": "always-multiline",
+        "objects": "always-multiline",
+        "imports": "always-multiline",
+        "exports": "always-multiline",
+        "functions": "ignore"
+    }]
   },
   "env": {
     "node": true,

@@ -1074,10 +1074,6 @@ circular-json@^0.3.0:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/circular-json/-/circular-json-0.3.1.tgz#be8b36aefccde8b3ca7aa2d6afc07a37242c0d2d"
 
-class.extend@0.9.2:
-  version "0.9.2"
-  resolved "https://registry.yarnpkg.com/class.extend/-/class.extend-0.9.2.tgz#e1cbda3697cb31d3cdab1c001d269075c9031f78"
-
 clean-css@3.4.x:
   version "3.4.21"
   resolved "https://registry.yarnpkg.com/clean-css/-/clean-css-3.4.21.tgz#2101d5dbd19d63dbc16a75ebd570e7c33948f65b"
@@ -2309,7 +2305,7 @@ js-tokens@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-2.0.0.tgz#79903f5563ee778cc1162e6dcf1a0027c97f9cb5"
 
-js-yaml@^3.5.1, js-yaml@^3.6.1:
+js-yaml@^3.5.1:
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.7.0.tgz#5c967ddd837a9bfdca5f2de84253abe8a1c03b80"
   dependencies:
@@ -2440,7 +2436,7 @@ levn@^0.3.0, levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-loader-utils@^0.2.11, loader-utils@^0.2.15, loader-utils@^0.2.4:
+loader-utils@^0.2.11, loader-utils@^0.2.4:
   version "0.2.16"
   resolved "https://registry.yarnpkg.com/loader-utils/-/loader-utils-0.2.16.tgz#f08632066ed8282835dff88dfb52704765adee6d"
   dependencies:
@@ -2976,10 +2972,6 @@ punycode@^1.2.4, punycode@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.4.1.tgz#c0d5a63b2718800ad8e1eb0fa5269c84dd41845e"
 
-q@1.4.1:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/q/-/q-1.4.1.tgz#55705bcd93c5f3673530c2c2cbc0c2b3addc286e"
-
 qs@6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.2.0.tgz#3b7848c03c2dece69a9522b0fae8c4126d745f3b"
@@ -3270,14 +3262,6 @@ serverless-offline@^3.1.0:
     jsonpath-plus "^0.15.0"
     lodash "^4.16.4"
     velocityjs "^0.9.0"
-
-serverless-plugin-write-env-vars@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/serverless-plugin-write-env-vars/-/serverless-plugin-write-env-vars-1.0.1.tgz#0806ace52b87e6dc4a38304f459f852efb060d60"
-  dependencies:
-    class.extend "0.9.2"
-    q "1.4.1"
-    underscore "1.8.3"
 
 serverless-run-function-plugin@^0.0.6:
   version "0.0.6"
@@ -3603,10 +3587,6 @@ uid-number@~0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/uid-number/-/uid-number-0.0.6.tgz#0ea10e8035e8eb5b8e4449f06da1c730663baa81"
 
-underscore@1.8.3:
-  version "1.8.3"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.8.3.tgz#4f3fb53b106e6097fcf9cb4109f2a5e9bdfa5022"
-
 unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/unpipe/-/unpipe-1.0.0.tgz#b2bf4ee8514aae6165b4817829d21b2ef49904ec"
@@ -3803,10 +3783,3 @@ yargs@~3.10.0:
     cliui "^2.1.0"
     decamelize "^1.0.0"
     window-size "0.1.0"
-
-yml-loader@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/yml-loader/-/yml-loader-1.1.0.tgz#aef3d37dc9808565f292c6fe74929f69a5881a4c"
-  dependencies:
-    js-yaml "^3.6.1"
-    loader-utils "^0.2.15"

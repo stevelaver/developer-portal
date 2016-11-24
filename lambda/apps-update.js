@@ -6,7 +6,6 @@ require('babel-polyfill');
 const _ = require('lodash');
 const request = require('../lib/request');
 const db = require('../lib/db');
-const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
@@ -94,7 +93,7 @@ createValidationBody.id = joi.string().min(3).max(20)
 createValidationBody.name.required();
 createValidationBody.type.required();
 
-const app = new App(db, env, error);
+const app = new App(db, process.env, error);
 
 module.exports.appsCreate = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
@@ -103,8 +102,8 @@ module.exports.appsCreate = (event, context, callback) => request.errorHandler((
   });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getUser(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
     .then(user => app.insertApp(JSON.parse(event.body), user)),
     db,
     event,
@@ -129,8 +128,8 @@ module.exports.appsUpdate = (event, context, callback) => request.errorHandler((
   });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getUser(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
     .then(user => app.updateApp(
       event.pathParameters.appId,
       JSON.parse(event.body),

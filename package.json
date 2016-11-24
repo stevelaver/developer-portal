@@ -42,13 +42,11 @@
     "mocha": "*",
     "mustache-loader": "^0.4.0",
     "serverless-offline": "^3.1.0",
-    "serverless-plugin-write-env-vars": "^1.0.1",
     "serverless-run-function-plugin": "^0.0.6",
     "serverless-webpack": "^1.0.0-rc.2",
     "webpack": "^1.13.2",
     "webpack-node-externals": "^1.5.4",
-    "yamljs": "^0.2.8",
-    "yml-loader": "^1.1.0"
+    "yamljs": "^0.2.8"
   },
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --timeout 0 test/*",

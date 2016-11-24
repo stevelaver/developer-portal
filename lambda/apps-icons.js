@@ -6,7 +6,6 @@ require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
 const db = require('../lib/db');
-const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
@@ -15,7 +14,7 @@ const Promise = require('bluebird');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
 
-const app = new App(db, env, error);
+const app = new App(db, process.env, error);
 aws.config.setPromisesDependency(Promise);
 const s3 = new aws.S3();
 
@@ -28,8 +27,8 @@ module.exports.links = (event, context, callback) => request.errorHandler(() => 
   });
 
   return request.responseDbPromise(
-    db.connect(env)
-    .then(() => identity.getUser(env.REGION, event.headers.Authorization))
+    db.connect(process.env)
+    .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
     .then(user => app.getIcons(s3, moment, event.pathParameters.appId, user.vendor)),
     db,
     event,
@@ -57,7 +56,7 @@ module.exports.upload = (event, context, callback) => request.errorHandler(() =>
   const appId = key.split('/').shift();
   const size = key.split('/')[1];
 
-  return db.connect(env)
+  return db.connect(process.env)
   .then(() => app.uploadIcon(s3, appId, size, `${bucket}/${key}`))
   .then(() => db.endCallback(null, null, callback))
   .catch(err => db.endCallback(err, null, callback));

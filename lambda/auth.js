@@ -5,7 +5,6 @@ import Auth from '../lib/auth';
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
-const env = require('../env.yml');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
@@ -20,10 +19,10 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 aws.config.setPromisesDependency(Promise);
 const cognito = new aws.CognitoIdentityServiceProvider({
-  region: env.REGION,
+  region: process.env.REGION,
 });
-notification.setHook(env.SLACK_HOOK_URL, env.SERVICE_NAME);
-const auth = new Auth(cognito, env, error);
+notification.setHook(process.env.SLACK_HOOK_URL, process.env.SERVICE_NAME);
+const auth = new Auth(cognito, process.env, error);
 
 /**
  * Confirm
@@ -178,7 +177,7 @@ module.exports.profile = (event, context, callback) => request.errorHandler(() =
   });
 
   return request.responseAuthPromise(
-    identity.getUser(env.REGION, event.headers.Authorization),
+    identity.getUser(process.env.REGION, event.headers.Authorization),
     event,
     context,
     callback
@@ -240,12 +239,12 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     },
   });
   db = mysql.createConnection({
-    host: env.RDS_HOST,
-    user: env.RDS_USER,
-    password: env.RDS_PASSWORD,
-    database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
-    port: env.RDS_PORT,
+    host: process.env.RDS_HOST,
+    user: process.env.RDS_USER,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DATABASE,
+    ssl: process.env.RDS_SSL,
+    port: process.env.RDS_PORT,
   });
   const body = JSON.parse(event.body);
 

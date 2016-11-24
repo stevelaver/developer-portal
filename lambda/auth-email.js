@@ -1,7 +1,6 @@
 'use strict';
 
 require('babel-polyfill');
-const env = require('../env.yml');
 // const template = require('../views/email.html');
 
 module.exports.emailTrigger = (event, context, callback) => {
@@ -12,10 +11,10 @@ module.exports.emailTrigger = (event, context, callback) => {
       /* newEvent.response.emailMessage = template({
         header: 'Welcome to Keboola Developer Portal',
         content: `Thank you for signing up. Confirm your email using code <strong>${event.request.codeParameter}</strong> or directly by clicking on the button:`,
-        buttonUrl: `${env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`,
+        buttonUrl: `${process.env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`,
         buttonText: 'Confirm your email',
       });*/
-      newEvent.response.emailMessage = `Thank you for signing up. Confirm your email using this link: ${env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
+      newEvent.response.emailMessage = `Thank you for signing up. Confirm your email using this link: ${process.env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
       break;
     case 'CustomMessage_ForgotPassword':
       newEvent.response.emailSubject = 'Forgot Password to Keboola Developer Portal';
@@ -23,7 +22,7 @@ module.exports.emailTrigger = (event, context, callback) => {
       break;
     case 'CustomMessage_ResendCode':
       newEvent.response.emailSubject = 'Confirmation code for Keboola Developer Portal';
-      newEvent.response.emailMessage = `Confirm your email using this link: ${env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
+      newEvent.response.emailMessage = `Confirm your email using this link: ${process.env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
       break;
     default:
   }

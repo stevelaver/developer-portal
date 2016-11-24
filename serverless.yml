@@ -1,12 +1,10 @@
 ---
 custom:
-  writeEnvVars: ${file(./env.yml)}
   webpackIncludeModules: true
 
 service: "${file(./env.yml):SERVICE_NAME}"
 
 plugins:
-   - serverless-plugin-write-env-vars
    - serverless-offline
    - serverless-run-function-plugin
    - serverless-webpack
@@ -27,6 +25,7 @@ provider:
   memory: 256
   timeout: 30
   #cfLogs: true
+  environment: ${file(./env.yml)}
   stackTags:
     DeveloperPortalStack: "${file(./env.yml):SERVICE_NAME}_${file(./env.yml):STAGE}"
   iamRoleStatements:
