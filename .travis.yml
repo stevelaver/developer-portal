@@ -3,6 +3,8 @@ language: node_js
 node_js:
   - "6.1"
 
+cache: yarn
+
 services:
   - mysql
 
@@ -19,6 +21,6 @@ before_script:
   - bash .travis.install-mysql-5.7.sh
   - mysql -e 'create database dev_portal_test;'
   - mysql -e "create user 'dev_portal_test'@'localhost' identified by 'dev_portal_pass'; grant all privileges on dev_portal_test. * to 'dev_portal_test'@'localhost';" -uroot
-  - npm install serverless@1.2.0 -g
+  - yarn global install serverless@1.2.0
   - node ./scripts/create-env.js ./env.yml
   - travis_wait 30 sls deploy
