@@ -16,7 +16,7 @@ CREATE TABLE `apps` (
   `id` varchar(50) NOT NULL,
   `vendor` varchar(50) NOT NULL,
   `isApproved` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  `isVisible` int(1) unsigned NOT NULL DEFAULT '1',
+  `isPublic` int(1) unsigned NOT NULL DEFAULT '1',
   `createdOn` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` varchar(128) DEFAULT NULL,
   `version` int(10) unsigned NOT NULL DEFAULT '1',
@@ -89,7 +89,7 @@ CREATE TABLE `appVersions` (
   `legacyUri` varchar(255) DEFAULT NULL,
   `createdOn` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` varchar(128) DEFAULT NULL,
-  `isVisible` int(1) unsigned NOT NULL DEFAULT '1',
+  `isPublic` int(1) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`,`version`),
   CONSTRAINT `appVersions_ibfk_1` FOREIGN KEY (`id`) REFERENCES `apps` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

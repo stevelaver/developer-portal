@@ -46,7 +46,7 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
-    .then(user => app.getApp(
+    .then(user => app.getAppForVendor(
       event.pathParameters.appId,
       user.vendor,
       event.pathParameters.version

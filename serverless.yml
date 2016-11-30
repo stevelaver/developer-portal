@@ -72,6 +72,15 @@ functions:
           path: "admin/apps/{id}/approve"
           default:
             statusCode: 204
+  adminAppsDetail:
+    handler: admin.appsDetail
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: get
+          path: "admin/apps/{id}"
   adminAppsList:
     handler: admin.apps
     events:

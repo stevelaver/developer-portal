@@ -385,7 +385,7 @@ describe('apps', () => {
             name: appName3,
             type: 'extractor',
             projects: [1, 2],
-            isVisible: false,
+            isPublic: false,
           },
         }, (err, res, body) => {
           expect(err).to.be.null();
@@ -436,14 +436,14 @@ describe('apps', () => {
         );
       },
       function (callback) {
-        // Public app profile should exist now
+        // Public app profile should not exist
         request.get({
-          url: `${env.API_ENDPOINT}/apps/${appId1}`,
+          url: `${env.API_ENDPOINT}/apps/${appId3}`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
+          expect(body, JSON.stringify(body)).to.have.property('errorType');
+          expect(body.errorType).to.be.equal('NotFound');
           callback();
         });
       },
@@ -458,19 +458,7 @@ describe('apps', () => {
           expect(_.map(body, app => app.id)).to.not.include(appId3);
           callback();
         });
-      },
-      function (callback) {
-        // Public apps filtered list should contain the app
-        request.get({
-          url: `${env.API_ENDPOINT}/apps?project=1`,
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body).to.not.have.property('errorMessage');
-          expect(_.map(body, app => app.id)).to.include(appId3);
-          callback();
-        });
-      },
+      }
     ], done);
   });
 

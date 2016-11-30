@@ -26,6 +26,7 @@
     "winston-papertrail": "^1.0.0"
   },
   "devDependencies": {
+    "aws-sdk-mock": "^1.6.1",
     "babel-core": "^6.17.0",
     "babel-loader": "^6.2.5",
     "babel-plugin-transform-runtime": "^6.15.0",
@@ -40,6 +41,7 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.6.0",
     "mocha": "*",
+    "mocha-webpack": "^0.7.0",
     "mustache-loader": "^0.4.0",
     "serverless-offline": "^3.1.0",
     "serverless-run-function-plugin": "^0.0.6",
@@ -49,7 +51,7 @@
     "yamljs": "^0.2.8"
   },
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --timeout 0 test/*",
+    "test": "./node_modules/mocha-webpack/bin/mocha-webpack --timeout 0 --webpack-config webpack.config.js",
     "func": "./node_modules/mocha/bin/mocha --timeout 0 test/functional"
   }
 }

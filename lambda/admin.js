@@ -1,12 +1,12 @@
 'use strict';
 
 import App from '../lib/app';
+import Email from '../lib/email';
 
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
 const db = require('../lib/db');
-const email = require('../lib/email');
 const error = require('../lib/error');
 const identity = require('../lib/identity');
 const joi = require('joi');
@@ -14,9 +14,12 @@ const Promise = require('bluebird');
 const request = require('../lib/request');
 const validation = require('../lib/validation');
 
-const app = new App(db, process.env, error);
 aws.config.setPromisesDependency(Promise);
-email.init(process.env.REGION, process.env.SES_EMAIL_FROM);
+const app = new App(db, process.env, error);
+const email = new Email(
+  new aws.SES({ apiVersion: '2010-12-01', region: process.env.REGION }),
+  process.env.SES_EMAIL_FROM
+);
 
 /**
  * Approve app
@@ -67,6 +70,33 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
       _.get(event, 'queryStringParameters.filter', null),
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null)
+    )),
+    db,
+    event,
+    context,
+    callback
+  );
+}, event, context, (err, res) => db.endCallback(err, res, callback));
+
+
+/**
+ * App detail
+ */
+module.exports.appsDetail = (event, context, callback) => request.errorHandler(() => {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      id: joi.string().required(),
+      version: joi.number().integer(),
+    },
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+    .then(() => app.getApp(
+      event.pathParameters.id,
+      event.pathParameters.version
     )),
     db,
     event,

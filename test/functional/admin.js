@@ -88,6 +88,22 @@ describe('admin', () => {
         );
       },
       function (cb) {
+        // Get app detail
+        request.get({
+          url: `${env.API_ENDPOINT}/admin/apps/${appId}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.property('id');
+          expect(body.id).to.be.equal(appId);
+          cb();
+        });
+      },
+      function (cb) {
         // List unapproved apps
         request.get({
           url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,

@@ -58,7 +58,7 @@ const commonValidationBody = {
   logger: joi.string().valid('standard', 'gelf')
     .error(Error('Parameter logger must be one of: standard, gelf')),
   loggerConfiguration: joi.object(),
-  isVisible: joi.boolean().error(Error('Parameter isVisible must be boolean')),
+  isPublic: joi.boolean().error(Error('Parameter isPublic must be boolean')),
   vendor: joi.any().forbidden()
     .error(Error('Setting of parameter vendor is forbidden')),
   isApproved: joi.any().forbidden()

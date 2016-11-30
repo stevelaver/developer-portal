@@ -185,7 +185,7 @@ const getData = function (callbackMain) {
         id: app.id,
         vendor: app.vendor,
         isApproved: 1,
-        isVisible: !_.includes(app.flags, 'excludeFromNewList'),
+        isPublic: !_.includes(app.flags, 'excludeFromNewList'),
         createdBy: 'support@keboola.com',
         version: 1,
         name: app.name,

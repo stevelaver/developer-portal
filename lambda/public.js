@@ -53,7 +53,6 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
     .then(() => app.listPublishedApps(
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null),
-      _.get(event, 'queryStringParameters.project', null),
     )),
     db,
     event,

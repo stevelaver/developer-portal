@@ -214,9 +214,9 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `gelf`
         + Default: `standard`
     + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
-    + isVisible (optional, boolean) - Flag setting whether the app should be included to public apps listing (public profile is accessible anyway)
+    + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
       + Default: `true`
-    + projects (optional, array) - List of projects ids if you want to list the app only for them. Use together with `isVisible:false`
+    + projects (optional, array) - List of projects ids if you want to list the app only for them. Use together with `isPublic:false`
 
 + Request (application/json)
 
@@ -287,9 +287,9 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `gelf`
         + Default: `standard`
     + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
-    + isVisible (optional, boolean) - Flag setting whether the app should be included to public apps listing (public profile is accessible anyway)
+    + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
       + Default: `true`
-    + projects (optional, array) - List of projects ids if you want to list the app only for them. Use together with `isVisible:false`
+    + projects (optional, array) - List of projects ids if you want to list the app only for them. Use together with `isPublic:false`
 
 + Request (application/json)
 
@@ -405,7 +405,7 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                 "isApproved": true,
                 "createdOn": "2016-09-09T09:26:15.000Z",
                 "createdBy": "keboola.dev.portal.test@gmail.com",
-                "isVisible": false,
+                "isPublic": false,
                 "projects": [1, 2]
             }
 
@@ -556,7 +556,7 @@ Takes settings from chosen version and creates new version with it.
 
 ### List published apps [GET /apps?offset=0&limit=1000]
 
-Shows all apps having flags `isApproved` and `isVisible` set to `true`.
+Shows all apps having flags `isApproved` and `isPublic` set to `true`.
 
 + Parameters
     + offset (optional) - pagination offset
@@ -586,8 +586,7 @@ Shows all apps having flags `isApproved` and `isVisible` set to `true`.
 
 ### Get app detail [GET /apps/{appId}]
 
-Shows the app if it's flags `isApproved` is set to `true`. I.e. also shows detail
-for unlisted app (having `isVisible` set to `false`).
+Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
 
 + Response 200 (application/json)
 
@@ -765,6 +764,59 @@ Management of users and apps designated for Developer Portal staff only
                     "isApproved": false
                 }
             ]
+
+### Get app detail [GET /admin/apps/{appId}]
+
++ Parameters
+    + appId
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "keboola.ex-adwords",
+                "name": "Google Adwords Reports",
+                "version": 2,
+                "type": "extractor",
+                "repository": {
+                    "type": "quay",
+                    "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                    "tag": "latest",
+                },
+                "shortDescription": "Advertise with Google Ads",
+                "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
+                "icon": {
+                    "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                    "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png"
+                },
+                "licenseUrl": "https://github.com/keboola/adwords-extractor/LICENSE",
+                "documentationUrl": "https://github.com/keboola/adwords-extractor/README",
+                "requiredMemory": null,
+                "processTimeout": null,
+                "encryption": true,
+                "defaultBucket": false,
+                "defaultBucketStage": "in",
+                "forwardToken": false,
+                "uiOptions": [
+                    "genericUI",
+                    "genericDockerUI-authorization"
+                ],
+                "testConfiguration": null,
+                "configurationSchema": null,
+                "configurationDescription": null,
+                "emptyConfiguration": null,
+                "actions": [],
+                "fees": false,
+                "limits": null,
+                "logger": "standard",
+                "loggerConfiguration": null,
+                "isApproved": true,
+                "createdOn": "2016-09-09T09:26:15.000Z",
+                "createdBy": "keboola.dev.portal.test@gmail.com",
+                "isPublic": false,
+                "projects": [1, 2]
+            }
 
 ### Approve app [POST /admin/apps/{id}/approve]
 
