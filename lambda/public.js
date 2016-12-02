@@ -25,9 +25,10 @@ module.exports.detail = (event, context, callback) => request.errorHandler(() =>
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => app.getPublishedApp(
+    .then(() => app.getAppWithVendor(
       event.pathParameters.appId,
       _.get(event, 'pathParameters.version', null),
+      true
     )),
     db,
     event,

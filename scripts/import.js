@@ -73,7 +73,7 @@ const getData = function (callbackMain) {
     const result = [];
     async.each(JSON.parse(data).apis, (appIn, callback) => {
       const app = appIn;
-      if (_.has(app, 'data.vendor.contact') && app.data.vendor.contact[0] != 'todo' && app.data.vendor.contact[0] != 'TODO') {
+      if (_.has(app, 'data.vendor.contact') && app.data.vendor.contact[0] !== 'todo' && app.data.vendor.contact[0] !== 'TODO') {
         if (_.startsWith(app.data.vendor.contact[0], 'Blue Sky')) {
           app.vendor = 'blueskydigital';
         } else if (_.startsWith(app.data.vendor.contact[0], 'S&G Consulting')) {
@@ -180,6 +180,22 @@ const getData = function (callbackMain) {
         types.push(app.type);
       }
 
+      let legacyUri = null;
+      if (app.uri !== `https://syrup.keboola.com/docker/${app.id}`) {
+        legacyUri = app.uri;
+        if (_.startsWith(app.uri, 'https://syrup.keboola.com/')) {
+          legacyUri = app.uri.substr(26);
+        }
+      }
+      
+      const loggerConfiguration = {};
+      if (_.has(app, 'data.logging.gelf_server_type')) {
+      	 loggerConfiguration.transport = app.data.logging.gelf_server_type;
+      }
+      if (_.has(app, 'data.logging.verbosity')) {
+      	 loggerConfiguration.verbosity = app.data.logging.verbosity;
+      }
+
       flags = _.union(flags, app.flags);
       result.push({
         id: app.id,
@@ -215,10 +231,10 @@ const getData = function (callbackMain) {
         fees: _.includes(app.flags, 'appInfo.fee'),
         limits: null,
         logger: _.get(app, 'data.logging.type', 'standard'),
-        loggerConfiguration: _.has(app, 'data.logging.gelf_server_type') ? { transport: app.data.logging.gelf_server_type } : {},
+        loggerConfiguration,
         icon32: app.ico32 ? `${app.id}/32/1.png` : null,
         icon64: app.ico64 ? `${app.id}/64/1.png` : null,
-        legacyUri: (app.uri !== `https://syrup.keboola.com/docker/${app.id}`) ? app.uri : null,
+        legacyUri,
       });
       callback();
     }, err2 => callbackMain(err2, result));
