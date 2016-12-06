@@ -48,6 +48,7 @@ const commonValidationBody = {
   defaultBucketStage: joi.string().valid('in', 'out')
     .error(Error('Parameter defaultBucketStage must be one of: in, out')),
   uiOptions: joi.array().error(Error('Parameter uiOptions must be array')),
+  imageParameters: joi.object(),
   testConfiguration: joi.object(),
   configurationSchema: joi.object(),
   configurationDescription: joi.string(),
@@ -58,6 +59,8 @@ const commonValidationBody = {
   logger: joi.string().valid('standard', 'gelf')
     .error(Error('Parameter logger must be one of: standard, gelf')),
   loggerConfiguration: joi.object(),
+  stagingStorageInput: joi.string().valid('local', 's3')
+    .error(Error('Parameter stagingStorageInput must be one of: local, s3')),
   isPublic: joi.boolean().error(Error('Parameter isPublic must be boolean')),
   vendor: joi.any().forbidden()
     .error(Error('Setting of parameter vendor is forbidden')),
@@ -71,6 +74,10 @@ const commonValidationBody = {
     .error(Error('Setting of parameter version is forbidden')),
   forwardToken: joi.any().forbidden()
     .error(Error('Setting of parameter forwardToken is forbidden')),
+  forwardTokenDetails: joi.any().forbidden()
+    .error(Error('Setting of parameter forwardTokenDetails is forbidden')),
+  cpuShares: joi.any().forbidden()
+    .error(Error('Setting of parameter cpuShares is forbidden')),
   requiredMemory: joi.any().forbidden()
     .error(Error('Setting of parameter requiredMemory is forbidden')),
   processTimeout: joi.any().forbidden()

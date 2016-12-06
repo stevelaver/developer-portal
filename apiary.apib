@@ -199,6 +199,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `fileInput`
             + `fileOutput`
             + `excludeFromNewList`
+    + imageParameters (optional) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
     + testConfiguration (optional) - JSON configuration to test the application
     + configurationSchema (optional) - JSON schema describing the configuration
     + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
@@ -214,6 +215,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `gelf`
         + Default: `standard`
     + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + stagingStorageInput (optional, enum[string])
+       + Members
+           + `local`
+           + `s3`
+        + Default: `local`
     + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
       + Default: `true`
     + projects (optional, array) - List of projects ids if you want to list the app only for them. Use together with `isPublic:false`
@@ -272,6 +278,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `fileInput`
             + `fileOutput`
             + `excludeFromNewList`
+    + imageParameters (optional) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
     + testConfiguration (optional) - JSON configuration to test the application
     + configurationSchema (optional) - JSON schema describing the configuration
     + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
@@ -287,6 +294,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `gelf`
         + Default: `standard`
     + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + stagingStorageInput (optional, enum[string])
+       + Members
+           + `local`
+           + `s3`
+        + Default: `local`
     + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
       + Default: `true`
     + projects (optional, array) - List of projects ids if you want to list the app only for them. Use together with `isPublic:false`
@@ -389,6 +401,9 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                 "defaultBucket": false,
                 "defaultBucketStage": "in",
                 "forwardToken": false,
+                "forwardTokenDetails": false,
+                "cpuShares": 1024,
+                "imageParameters": {},
                 "uiOptions": [
                     "genericUI",
                     "genericDockerUI-authorization"
@@ -402,6 +417,7 @@ API call generates pre-signed urls to S3 where you can upload app icons.
                 "limits": null,
                 "logger": "standard",
                 "loggerConfiguration": null,
+                "stagingStorageInput": "local",
                 "isApproved": true,
                 "createdOn": "2016-09-09T09:26:15.000Z",
                 "createdBy": "keboola.dev.portal.test@gmail.com",
@@ -473,7 +489,10 @@ Request will be sent only if the app has icons uploaded and all these attributes
                     "defaultBucket": false,
                     "defaultBucketStage": "in",
                     "forwardToken": false,
+                    "forwardTokenDetails": false,
+                    "cpuShares": 1024,
                     "uiOptions": [],
+                    "imageParameters": {},
                     "testConfiguration": null,
                     "configurationSchema": null,
                     "configurationDescription": null,
@@ -482,7 +501,8 @@ Request will be sent only if the app has icons uploaded and all these attributes
                     "fees": false,
                     "limits": null,
                     "logger": "standard",
-                    "loggerConfiguration": null
+                    "loggerConfiguration": null,
+                    "stagingStorageInput": "local"
                 }
             ]
 
@@ -522,7 +542,10 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 "defaultBucket": false,
                 "defaultBucketStage": "in",
                 "forwardToken": false,
+                "forwardTokenDetails": false,
+                "cpuShares": 1024,
                 "uiOptions": [],
+                "imageParameters": {},
                 "testConfiguration": null,
                 "configurationSchema": null,
                 "configurationDescription": null,
@@ -531,7 +554,8 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 "fees": false,
                 "limits": null,
                 "logger": "standard",
-                "loggerConfiguration": null
+                "loggerConfiguration": null,
+                "stagingStorageInput": "local"
             }
 
 ### Rollback version [POST /vendor/apps/{appId}/versions/{version}/rollback]
@@ -622,10 +646,13 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 "defaultBucket": false,
                 "defaultBucketStage": "in",
                 "forwardToken": false,
+                "forwardTokenDetails": false,
+                "cpuShares": 1024,
                 "uiOptions": [
                     "genericUI",
                     "genericDockerUI-authorization"
                 ],
+                "imageParameters": {},
                 "testConfiguration": null,
                 "configurationSchema": null,
                 "configurationDescription": null,
@@ -635,6 +662,7 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 "limits": null,
                 "logger": "standard",
                 "loggerConfiguration": null,
+                "stagingStorageInput": "local",
                 "isApproved": true
             }
 
@@ -798,10 +826,13 @@ Management of users and apps designated for Developer Portal staff only
                 "defaultBucket": false,
                 "defaultBucketStage": "in",
                 "forwardToken": false,
+                "forwardTokenDetails": false,
+                "cpuShares": 1024,
                 "uiOptions": [
                     "genericUI",
                     "genericDockerUI-authorization"
                 ],
+                "imageParameters": {},
                 "testConfiguration": null,
                 "configurationSchema": null,
                 "configurationDescription": null,
@@ -811,6 +842,7 @@ Management of users and apps designated for Developer Portal staff only
                 "limits": null,
                 "logger": "standard",
                 "loggerConfiguration": null,
+                "stagingStorageInput": "local",
                 "isApproved": true,
                 "createdOn": "2016-09-09T09:26:15.000Z",
                 "createdBy": "keboola.dev.portal.test@gmail.com",

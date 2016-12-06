@@ -152,6 +152,9 @@ const getData = function (callbackMain) {
       if (_.get(app, 'hasUI')) {
         app.flags.push('legacyAngularUI');
       }
+      if (_.get(app, 'hasRun')) {
+        app.flags.push('legacyHasRun');
+      }
 
       if (_.has(app, 'data.definition.type')) {
         if (_.startsWith(app.data.definition.type, 'quay')) {
@@ -187,13 +190,37 @@ const getData = function (callbackMain) {
           legacyUri = app.uri.substr(26);
         }
       }
-      
+
       const loggerConfiguration = {};
       if (_.has(app, 'data.logging.gelf_server_type')) {
-      	 loggerConfiguration.transport = app.data.logging.gelf_server_type;
+        loggerConfiguration.transport = app.data.logging.gelf_server_type;
       }
       if (_.has(app, 'data.logging.verbosity')) {
-      	 loggerConfiguration.verbosity = app.data.logging.verbosity;
+        loggerConfiguration.verbosity = app.data.logging.verbosity;
+      }
+
+
+
+      _.forEach(app.data, (value, key) => {
+        if (!_.includes(['logging', 'definition', 'vendor', 'memory', 'forward_token', 'default_bucket_stage', 'default_bucket', 'process_timeout', 'synchronous_actions', 'configuration_format', 'cpu_shares', 'forward_token_details', 'network', 'image_parameters', 'postProcess', 'modules', 'staging_storage'], key)) {
+          console.log(`Left in data for app ${app.id}: ${key}`, value);
+        }
+      });
+      _.forEach(app.data.definition, (value, key) => {
+        if (!_.includes(['uri', 'tag', 'build_options', 'repository', 'type'], key)) {
+          console.log(`Left in data.definition for app ${app.id}: ${key}`, value);
+        }
+      });
+
+      let imageParameters = {};
+      if (_.has(app, 'data.image_parameters')) {
+        imageParameters = _.get(app, 'data.image_parameters', {});
+      }
+      if (_.has(app, 'data.modules')) {
+        imageParameters.modules = app.data.modules;
+      }
+      if (_.has(app, 'data.postProcess')) {
+        imageParameters.postProcess = app.data.postProcess;
       }
 
       flags = _.union(flags, app.flags);
@@ -219,10 +246,13 @@ const getData = function (callbackMain) {
         requiredMemory: _.get(app, 'data.memory', null),
         processTimeout: _.get(app, 'data.process_timeout', null),
         encryption: _.includes(app.flags, 'encrypt'),
-        defaultBucket: _.get(app, 'data.default_bucket', false),
+        defaultBucket: _.get(app, 'data.image_parameters.default_bucket', false),
         defaultBucketStage: _.get(app, 'data.default_bucket_stage', null),
         forwardToken: _.get(app, 'data.forward_token', false),
+        forwardTokenDetails: _.get(app, 'data.forward_token_details', false),
+        cpuShares: _.get(app, 'data.cpu_shares', null),
         uiOptions: _.pull(app.flags, '3rdParty', 'encrypt', 'appInfo.fee', 'excludeFromNewList'),
+        imageParameters,
         testConfiguration: {},
         configurationSchema: app.configurationSchema,
         configurationDescription: app.configurationDescription,
@@ -232,6 +262,7 @@ const getData = function (callbackMain) {
         limits: null,
         logger: _.get(app, 'data.logging.type', 'standard'),
         loggerConfiguration,
+        stagingStorageInput: _.get(app, 'data.stagingStorageInput', 'local'),
         icon32: app.ico32 ? `${app.id}/32/1.png` : null,
         icon64: app.ico64 ? `${app.id}/64/1.png` : null,
         legacyUri,
