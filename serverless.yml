@@ -364,7 +364,7 @@ resources:
       Properties:
         RoleName: DeveloperPortalLambdaRole
         AssumeRolePolicyDocument:
-          Version: '2017'
+          Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal:
@@ -374,7 +374,7 @@ resources:
         Policies:
           - PolicyName: DeveloperPortalLambdaPolicy
             PolicyDocument:
-              Version: '2017'
+              Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action:
@@ -417,7 +417,7 @@ resources:
         MasterUsername: "${file(./env.yml):RDS_USER}"
         MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}"
         MultiAZ: "true"
-        PubliclyAccessible: "false"
+        PubliclyAccessible: "true"
         DBSubnetGroupName: "${file(./env.yml):RDS_SUBNET_GROUP}"
         VPCSecurityGroups:
           - ${file(./env.yml):VPC_SECURITY_GROUP}

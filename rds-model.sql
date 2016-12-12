@@ -102,6 +102,7 @@ CREATE TABLE `appVersions` (
   CONSTRAINT `appVersions_ibfk_1` FOREIGN KEY (`id`) REFERENCES `apps` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS appsProjects;
 CREATE TABLE `appsProjects` (
   `app` varchar(50) NOT NULL DEFAULT '0',
   `project` int(10) unsigned NOT NULL DEFAULT '0',

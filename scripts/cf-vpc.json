@@ -6,6 +6,8 @@
       "Type": "AWS::EC2::VPC",
       "Properties": {
         "CidrBlock": "10.0.0.0/16",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
     },
@@ -38,7 +40,7 @@
         "CidrBlock": "10.0.2.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
-            "1",
+            "2",
             {
               "Fn::GetAZs": {
                 "Ref": "AWS::Region"
@@ -58,8 +60,10 @@
         },
         "SecurityGroupIngress": [
           {
-            "IpProtocol": "-1",
-            "CidrIp": "0.0.0.0/0"
+            "IpProtocol" : "tcp",
+            "FromPort" : "3306",
+            "ToPort" : "3306",
+            "CidrIp" : "0.0.0.0/0"
           }
         ],
         "SecurityGroupEgress": [
@@ -69,6 +73,19 @@
           }
         ],
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalVPCGateway": {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalAttachGateway" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "Properties" : {
+        "VpcId" : { "Ref" : "DevPortalVPC" },
+        "InternetGatewayId" : { "Ref" : "DevPortalVPCGateway" }
       }
     },
     "DevPortalDbSubnetGroup": {
