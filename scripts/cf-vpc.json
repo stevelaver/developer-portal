@@ -97,6 +97,19 @@
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
     },
+    "DevPortalPublicRouteViaIgw": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "DevPortalAttachGateway",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "DevPortalRouteViaIgw"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "DevPortalVPCGateway"
+        }
+      }
+    },
     "DevPortalSubnet1RouteTableAssociation": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
