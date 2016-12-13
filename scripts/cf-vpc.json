@@ -88,6 +88,37 @@
         "InternetGatewayId" : { "Ref" : "DevPortalVPCGateway" }
       }
     },
+    "DevPortalRouteViaIgw": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalSubnet1RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalVPCSubnet1"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteViaIgw"
+        }
+      }
+    },
+    "DevPortalSubnet2RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalVPCSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteViaIgw"
+        }
+      }
+    },
     "DevPortalDbSubnetGroup": {
       "Type" : "AWS::RDS::DBSubnetGroup",
       "Properties" : {
