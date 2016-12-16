@@ -1,7 +1,7 @@
 'use strict';
 
 require('babel-polyfill');
-// const template = require('../views/email.html');
+// const template = require('../../views/email.html');
 
 module.exports.emailTrigger = (event, context, callback) => {
   const newEvent = event;

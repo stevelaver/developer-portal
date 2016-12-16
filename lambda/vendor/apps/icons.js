@@ -1,18 +1,18 @@
 'use strict';
 
-import App from '../lib/app';
+import App from '../../../lib/app';
 
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
-const db = require('../lib/db');
-const error = require('../lib/error');
-const identity = require('../lib/identity');
+const db = require('../../../lib/db');
+const error = require('../../../lib/error');
+const identity = require('../../../lib/identity');
 const joi = require('joi');
 const moment = require('moment');
 const Promise = require('bluebird');
-const request = require('../lib/request');
-const validation = require('../lib/validation');
+const request = require('../../../lib/request');
+const validation = require('../../../lib/validation');
 
 const app = new App(db, process.env, error);
 aws.config.setPromisesDependency(Promise);

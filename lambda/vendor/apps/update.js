@@ -1,15 +1,15 @@
 'use strict';
 
-import App from '../lib/app';
+import App from '../../../lib/app';
 
 require('babel-polyfill');
 const _ = require('lodash');
-const request = require('../lib/request');
-const db = require('../lib/db');
-const error = require('../lib/error');
-const identity = require('../lib/identity');
+const request = require('../../../lib/request');
+const db = require('../../../lib/db');
+const error = require('../../../lib/error');
+const identity = require('../../../lib/identity');
 const joi = require('joi');
-const validation = require('../lib/validation');
+const validation = require('../../../lib/validation');
 
 const commonValidationBody = {
   name: joi.string().max(128)

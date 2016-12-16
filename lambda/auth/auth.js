@@ -1,18 +1,18 @@
 'use strict';
 
-import Auth from '../lib/auth';
+import Auth from '../../lib/auth';
 
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
-const error = require('../lib/error');
-const identity = require('../lib/identity');
+const error = require('../../lib/error');
+const identity = require('../../lib/identity');
 const joi = require('joi');
 const mysql = require('mysql');
-const notification = require('../lib/notification');
+const notification = require('../../lib/notification');
 const Promise = require('bluebird');
-const request = require('../lib/request');
-const validation = require('../lib/validation');
+const request = require('../../lib/request');
+const validation = require('../../lib/validation');
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);

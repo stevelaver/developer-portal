@@ -122,7 +122,7 @@ functions:
           default:
             statusCode: 204
   vendorAppsApprove:
-    handler: apps-approve.handler
+    handler: vendor-apps-approve.handler
     events:
       -
         http:
@@ -132,7 +132,7 @@ functions:
           path: "vendor/apps/{appId}/approve"
           integration: lambda-proxy
   vendorAppsCreate:
-    handler: apps-update.appsCreate
+    handler: vendor-apps-update.appsCreate
     events:
       -
         http:
@@ -142,7 +142,7 @@ functions:
           path: vendor/apps
           integration: lambda-proxy
   vendorAppsDetail:
-    handler: apps-list.appsDetail
+    handler: vendor-apps-list.appsDetail
     events:
       -
         http:
@@ -159,7 +159,7 @@ functions:
           path: "vendor/apps/{appId}/versions/{version}"
           integration: lambda-proxy
   vendorAppsIconsLinks:
-    handler: apps-icons.links
+    handler: vendor-apps-icons.links
     events:
       -
         http:
@@ -169,7 +169,7 @@ functions:
           path: "vendor/apps/{appId}/icons"
           integration: lambda-proxy
   vendorAppsIconsUpload:
-    handler: apps-icons.upload
+    handler: vendor-apps-icons.upload
     events:
       -
         s3:
@@ -177,7 +177,7 @@ functions:
           event: "s3:ObjectCreated:Put"
           suffix: .png
   vendorAppsList:
-    handler: apps-list.appsList
+    handler: vendor-apps-list.appsList
     events:
       -
         http:
@@ -186,8 +186,28 @@ functions:
           method: get
           path: vendor/apps
           integration: lambda-proxy
+  vendorAppsRepositoryCreate:
+    handler: vendor-apps-repository.create
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: post
+          path: "vendor/apps/{appId}/repository"
+          integration: lambda-proxy
+  vendorAppsRepositoryGet:
+    handler: vendor-apps-repository.get
+    events:
+      -
+        http:
+          authorizer: authorizer
+          cors: true
+          method: get
+          path: "vendor/apps/{appId}/repository"
+          integration: lambda-proxy
   vendorAppsUpdate:
-    handler: apps-update.appsUpdate
+    handler: vendor-apps-update.appsUpdate
     events:
       -
         http:
@@ -197,7 +217,7 @@ functions:
           path: vendor/apps/{appId}
           integration: lambda-proxy
   vendorAppsVersionsList:
-    handler: apps-versions.list
+    handler: vendor-apps-versions.list
     events:
       -
         http:
@@ -207,7 +227,7 @@ functions:
           path: "vendor/apps/{appId}/versions"
           integration: lambda-proxy
   vendorAppsVersionsRollback:
-    handler: apps-versions.rollback
+    handler: vendor-apps-versions.rollback
     events:
       -
         http:
