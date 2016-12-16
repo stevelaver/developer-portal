@@ -41,7 +41,7 @@ const getIcons = function (cb) {
   }
   fs.readFile(args[1], 'utf8', (err, data) => {
     if (err) throw err;
-    JSON.parse(data).apis.forEach((app) => {
+    JSON.parse(data).components.forEach((app) => {
       if (app.ico32) {
         downloadIcon(app.ico32, app.id, 32, () => {
           //
@@ -71,7 +71,7 @@ const getData = function (callbackMain) {
     }
 
     const result = [];
-    async.each(JSON.parse(data).apis, (appIn, callback) => {
+    async.each(JSON.parse(data).components, (appIn, callback) => {
       const app = appIn;
       if (_.has(app, 'data.vendor.contact') && app.data.vendor.contact[0] !== 'todo' && app.data.vendor.contact[0] !== 'TODO') {
         if (_.startsWith(app.data.vendor.contact[0], 'Blue Sky')) {
