@@ -3,6 +3,7 @@
 const jwt = require('jsonwebtoken');
 const request = require('request');
 const jwkToPem = require('jwk-to-pem');
+const error = require('../lib/error');
 
 const userPoolId = process.env.COGNITO_POOL_ID;
 const region = process.env.REGION;
@@ -48,17 +49,17 @@ function ValidateToken(pems, event, callback) {
   //Fail if the token is not jwt
   const decodedJwt = jwt.decode(token, {complete: true});
   if (!decodedJwt) {
-    return callback(Error("Unauthorized"));
+    return callback(error.unauthorized());
   }
 
   //Fail if token is not from your UserPool
   if (decodedJwt.payload.iss != iss) {
-    return callback(Error("Unauthorized"));
+    return callback(error.unauthorized());
   }
 
   //Reject the jwt if it's not an 'Access Token'
   if (decodedJwt.payload.token_use != 'access') {
-    return callback(Error("Unauthorized"));
+    return callback(error.unauthorized());
   }
 
   //Get the kid from the token and retrieve corresponding PEM
@@ -66,14 +67,14 @@ function ValidateToken(pems, event, callback) {
   const pem = pems[kid];
   if (!pem) {
     //Invalid access token
-    return callback(Error("Unauthorized"));
+    return callback(error.unauthorized());
   }
 
   //Verify the signature of the JWT token to ensure it's really coming from your User Pool
   jwt.verify(token, pem, { issuer: iss }, function(err, payload) {
     if(err) {
       console.log(err);
-      return callback(Error("Unauthorized"));
+      return callback(error.unauthorized());
     } else {
       //Valid token. Generate the API Gateway policy for the user
       //Always generate the policy on value of 'sub' claim and not for 'username' because username is reassignable
@@ -217,11 +218,11 @@ AuthPolicy.prototype = (function() {
    */
   const addMethod = function(effect, verb, resource, conditions) {
     if (verb != "*" && !AuthPolicy.HttpVerb.hasOwnProperty(verb)) {
-      throw new Error("[400] Invalid HTTP verb " + verb + ". Allowed verbs in AuthPolicy.HttpVerb");
+      throw new Error("Invalid HTTP verb " + verb + ". Allowed verbs in AuthPolicy.HttpVerb");
     }
 
     if (!this.pathRegex.test(resource)) {
-      throw new Error("[400] Invalid resource path: " + resource + ". Path should match " + this.pathRegex);
+      throw new Error("Invalid resource path: " + resource + ". Path should match " + this.pathRegex);
     }
 
     var cleanedResource = resource;
