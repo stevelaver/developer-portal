@@ -11,6 +11,26 @@
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
     },
+    "DevPortalPublicSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "CidrBlock": "10.0.3.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
     "DevPortalVPCSubnet1": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
@@ -49,6 +69,21 @@
           ]
         },
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "NatGateway": {
+      "Type" : "AWS::EC2::NatGateway",
+      "Properties" : {
+        "AllocationId" :{ "Fn::GetAtt" : ["NatGatewayEIP", "AllocationId"]},
+        "SubnetId" : {
+          "Ref": "DevPortalPublicSubnet"
+        }
+      }
+    },
+    "NatGatewayEIP" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
       }
     },
     "DevPortalSecurityGroup": {
@@ -110,6 +145,26 @@
         }
       }
     },
+    "DevPortalRouteTableViaNAT": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalRouteViaNAT": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "DevPortalAttachGateway",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "DevPortalRouteTableViaNAT"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NatGateway" }
+      }
+    },
     "DevPortalSubnet1RouteTableAssociation": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
@@ -117,7 +172,7 @@
           "Ref": "DevPortalVPCSubnet1"
         },
         "RouteTableId": {
-          "Ref": "DevPortalRouteViaIgw"
+          "Ref": "DevPortalRouteTableViaNAT"
         }
       }
     },
@@ -126,6 +181,17 @@
       "Properties": {
         "SubnetId": {
           "Ref": "DevPortalVPCSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteTableViaNAT"
+        }
+      }
+    },
+    "DevPortalPublicSubnetRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalPublicSubnet"
         },
         "RouteTableId": {
           "Ref": "DevPortalRouteViaIgw"
