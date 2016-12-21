@@ -37,12 +37,6 @@ provider:
         - "arn:aws:s3:::${file(./env.yml):S3_BUCKET}/*"
     -
       Action:
-        - "ses:SendEmail"
-      Effect: Allow
-      Resource:
-        - "*"
-    -
-      Action:
         - "cognito-identity:*"
         - "cognito-idp:*"
       Effect: Allow
@@ -50,7 +44,17 @@ provider:
         - "arn:aws:cognito-idp:${file(./env.yml):REGION}:${file(./env.yml):ACCOUNT_ID}:userpool/${file(./env.yml):COGNITO_POOL_ID}"
     -
       Action:
+        - "ses:SendEmail"
         - "cloudwatchlogs:*"
+        - "iam:CreateRole"
+        - "iam:PutRolePolicy"
+        - "ecr:*"
+      Effect: Allow
+      Resource:
+        - "*"
+    -
+      Action:
+        - "sts:AssumeRole"
       Effect: Allow
       Resource:
         - "*"
