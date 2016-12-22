@@ -31,7 +31,7 @@
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
     },
-    "DevPortalVPCSubnet1": {
+    "DevPortalLambdaSubnet1": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "VpcId": {
@@ -51,13 +51,53 @@
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
     },
-    "DevPortalVPCSubnet2": {
+    "DevPortalLambdaSubnet2": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "VpcId": {
           "Ref": "DevPortalVPC"
         },
         "CidrBlock": "10.0.2.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "2",
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalRdsSubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "CidrBlock": "10.0.4.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      }
+    },
+    "DevPortalRdsSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "CidrBlock": "10.0.5.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
             "2",
@@ -169,7 +209,7 @@
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "SubnetId": {
-          "Ref": "DevPortalVPCSubnet1"
+          "Ref": "DevPortalLambdaSubnet1"
         },
         "RouteTableId": {
           "Ref": "DevPortalRouteTableViaNAT"
@@ -180,7 +220,7 @@
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "SubnetId": {
-          "Ref": "DevPortalVPCSubnet2"
+          "Ref": "DevPortalLambdaSubnet2"
         },
         "RouteTableId": {
           "Ref": "DevPortalRouteTableViaNAT"
@@ -198,13 +238,35 @@
         }
       }
     },
+    "DevPortalRdsSubnet1RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalRdsSubnet1"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteViaIgw"
+        }
+      }
+    },
+    "DevPortalRdsSubnet2RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalRdsSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteViaIgw"
+        }
+      }
+    },
     "DevPortalDbSubnetGroup": {
       "Type" : "AWS::RDS::DBSubnetGroup",
       "Properties" : {
         "DBSubnetGroupDescription" : "Subnet for Developer Portal rds",
         "SubnetIds" : [
-          { "Ref": "DevPortalVPCSubnet1" },
-          { "Ref": "DevPortalVPCSubnet2" }
+          { "Ref": "DevPortalRdsSubnet1" },
+          { "Ref": "DevPortalRdsSubnet2" }
         ],
         "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
       }
@@ -213,11 +275,11 @@
   "Outputs": {
     "vpcSubnet1": {
       "Description": "Id of the Subnet",
-      "Value" : { "Ref" : "DevPortalVPCSubnet1" }
+      "Value" : { "Ref" : "DevPortalLambdaSubnet1" }
     },
     "vpcSubnet2": {
       "Description": "Id of the Subnet",
-      "Value" : { "Ref" : "DevPortalVPCSubnet2" }
+      "Value" : { "Ref" : "DevPortalLambdaSubnet2" }
     },
     "vpcSecurityGroup": {
       "Description": "Id of the SecurityGroup",

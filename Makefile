@@ -1,4 +1,4 @@
-install: pre-deploy deploy-sls save-output init-database update-cognito subscribe-logs finish-deploy-sls
+install: pre-deploy deploy-sls deploy-after-sls finish-deploy-sls
 
 pre-deploy:
 	node scripts/setup.js save-env
@@ -9,6 +9,12 @@ pre-deploy:
 
 deploy-sls:
 	sls deploy
+
+deploy-after-sls:
+    node scripts/setup.js save-cloudformation-output
+    node scripts/setup.js init-database
+    node scripts/setup.js update-cognito
+    node scripts/setup.js subscribe-logs
 
 save-output:
 	node scripts/setup.js save-cloudformation-output
