@@ -38,7 +38,8 @@ module.exports.create = (event, context, callback) => request.errorHandler(() =>
     db,
     event,
     context,
-    callback
+    callback,
+    204
   );
 }, event, context, (err, res) => db.endCallback(err, res, callback));
 

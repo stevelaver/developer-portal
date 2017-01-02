@@ -1,6 +1,6 @@
-install: pre-deploy deploy-sls deploy-after-sls finish-deploy-sls
+install: deploy-before-sls deploy-sls deploy-after-sls finish-deploy-sls
 
-pre-deploy:
+deploy-before-sls:
 	node scripts/setup.js save-env
 	node scripts/setup.js save-account-id
 	node scripts/setup.js create-vpc

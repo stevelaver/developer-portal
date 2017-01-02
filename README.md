@@ -14,28 +14,29 @@ Cloudfront distribution, Lambda functions and API Gateway. All resources are
 prefixed with `SERVICE_NAME` variable. Please ensure that the prefix is unique,
 if resources with same identifiers already exist, the installation will fail.
 
-1. Install Serverless 1.0: `npm install -g serverless`
+1. Install Serverless 1.2: `npm install -g serverless@1.2`
 2. Install AWS CLI (e.g. `pip install awscli` on Mac)
-3. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
-4. Cd into directory: `cd developer-portal`
-5. Install npm dependencies: `npm install` and dev dependencies `npm install --only=dev`
-6. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
-7. Verify email sender. Run `node scripts/setup.js register-email <region> <email>` and confirm link from the email you get
-8. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
+3. Install Yarn (see https://yarnpkg.com/en/docs/install)
+4. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
+5. Cd into directory: `cd developer-portal`
+6. Install dependencies: `yarn install`
+7. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
+8. Verify email sender. Run `node scripts/setup.js register-email <region> <email>` and confirm link from the email you get
+9. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
   - The script will put created identifiers to file `env.yml`
   - Required env variables:
-    - `SERVICE_NAME` - Name of the Serverless service. Will be used as prefix for created AWS services, should be only alphanumeric with optional dashes
+    - `SERVICE_NAME` - Name of the Serverless service. It will be used as a prefix for created AWS services, it should be only alphanumeric with optional dashes
     - `REGION` - AWS region where the services should be created
     - `RDS_PASSWORD` - Desired password for created database
-    - `RDS_INSTANCE_CLASS` - Desired instance class of created RDS, see http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
-    - `SES_EMAIL_FROM` - Email address used as sender for emails
+    - `RDS_INSTANCE_CLASS` - Desired instance class of created RDS, see http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html but `db.t2.micro` should work fine
+    - `SES_EMAIL_FROM` - Email address used as a sender for emails
     - `STAGE` - Stage of the service (`dev`, `test`, `prod`)
     - `LOG_HOST` - Papertrail endpoint hostname
     - `LOG_PORT` - Papertrail endpoint port
     - `SLACK_HOOK_URL` - Slack webhook url for notifications
-9. Save generated `env.yml` to a safe place
+10. Save generated `env.yml` to a safe place
 
-Please note that your SES service must be out of a sandbox or you have to verify
+Please note that your SES service must be out of sandbox or you have to verify
 each email or domain before you use it for account signup.
 
 ### Import from KBC Components API

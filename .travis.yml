@@ -12,6 +12,7 @@ sudo: true
 
 before_install:
   - pip install --user awscli
+  - npm install -g yarn
 
 install:
   - yarn install

@@ -458,7 +458,67 @@ describe('apps', () => {
           expect(_.map(body, app => app.id)).to.not.include(appId3);
           callback();
         });
-      }
+      },
+    ], done);
+  });
+
+  it('ECR', (done) => {
+    const appName = `a3_${Date.now()}`;
+    const appId = `${vendor}.${appName}`;
+    async.waterfall([
+      function (callback) {
+        // Create app
+        request.post({
+          url: `${env.API_ENDPOINT}/vendor/apps`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            id: appName,
+            name: appName,
+            type: 'extractor',
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          callback();
+        });
+      },
+      function (callback) {
+        // Create repository
+        request.post({
+          url: `${env.API_ENDPOINT}/vendor/apps/${appId}/repository`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err) => {
+          expect(err).to.be.null();
+          callback();
+        });
+      },
+      function (callback) {
+        // Get repository credentials
+        request.get({
+          url: `${env.API_ENDPOINT}/vendor/apps/${appId}/repository`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          const body = JSON.parse(bodyRaw);
+          expect(err).to.be.null();
+          expect(body).to.not.have.property('errorMessage');
+          callback();
+        });
+      },
+      function (callback) {
+        // Delete repository
+        const ecr = new aws.ECR({ region: env.REGION });
+        ecr.deleteRepository({
+          force: true,
+          repositoryName: `${env.SERVICE_NAME}/${appId}`,
+        }, callback);
+      },
     ], done);
   });
 

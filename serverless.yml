@@ -405,6 +405,27 @@ resources:
                     - ecr:*
                     - sts:AssumeRole
                   Resource: "*"
+    developerPortalEcrRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: "${file(./env.yml):SERVICE_NAME}-ecr-role"
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: "${file(./env.yml):SERVICE_NAME}-ecr-policy"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - ecr:*
+                  Resource: "*"
     Rds:
       Type: AWS::RDS::DBInstance
       Properties:
