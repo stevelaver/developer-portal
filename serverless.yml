@@ -48,7 +48,6 @@ functions:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: post
           path: "admin/apps/{id}/approve"
           default:
@@ -59,7 +58,6 @@ functions:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: "admin/apps/{id}"
   adminAppsList:
@@ -68,7 +66,6 @@ functions:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: "admin/apps"
   adminUsersList:
@@ -77,7 +74,6 @@ functions:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: "admin/users"
   adminUsersMakeAdmin:
@@ -86,7 +82,6 @@ functions:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: post
           path: "admin/users/{email}/admin"
           default:
@@ -97,7 +92,6 @@ functions:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: post
           path: "admin/users/{email}/enable"
           default:
@@ -108,47 +102,37 @@ functions:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: post
           path: "vendor/apps/{appId}/approve"
-          integration: lambda-proxy
   vendorAppsCreate:
     handler: vendor-apps-update.appsCreate
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: post
           path: vendor/apps
-          integration: lambda-proxy
   vendorAppsDetail:
     handler: vendor-apps-list.appsDetail
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: "vendor/apps/{appId}"
-          integration: lambda-proxy
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: "vendor/apps/{appId}/versions/{version}"
-          integration: lambda-proxy
   vendorAppsIconsLinks:
     handler: vendor-apps-icons.links
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: post
           path: "vendor/apps/{appId}/icons"
-          integration: lambda-proxy
   vendorAppsIconsUpload:
     handler: vendor-apps-icons.upload
     events:
@@ -163,60 +147,48 @@ functions:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: vendor/apps
-          integration: lambda-proxy
   vendorAppsRepositoryCreate:
     handler: vendor-apps-repository.create
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: post
           path: "vendor/apps/{appId}/repository"
-          integration: lambda-proxy
   vendorAppsRepositoryGet:
     handler: vendor-apps-repository.get
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: "vendor/apps/{appId}/repository"
-          integration: lambda-proxy
   vendorAppsUpdate:
     handler: vendor-apps-update.appsUpdate
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: patch
           path: vendor/apps/{appId}
-          integration: lambda-proxy
   vendorAppsVersionsList:
     handler: vendor-apps-versions.list
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: "vendor/apps/{appId}/versions"
-          integration: lambda-proxy
   vendorAppsVersionsRollback:
     handler: vendor-apps-versions.rollback
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: post
           path: "vendor/apps/{appId}/versions/{version}/rollback"
-          integration: lambda-proxy
 
 
   authEmailTrigger:
@@ -226,136 +198,106 @@ functions:
     events:
       -
         http:
-          cors: true
           method: post
           path: "auth/confirm/{email}/{code}"
-          integration: lambda-proxy
   authConfirmGet:
     handler: auth.confirmGet
     events:
       -
         http:
-          cors: true
           method: get
           path: "auth/confirm/{email}/{code}"
-          integration: lambda-proxy
   authConfirmResend:
     handler: auth.confirmResend
     events:
       -
         http:
-          cors: true
           method: post
           path: auth/confirm
-          integration: lambda-proxy
   authForgot:
     handler: auth.forgot
     events:
       -
         http:
-          cors: true
           method: post
           path: "auth/forgot/{email}"
-          integration: lambda-proxy
   authForgotConfirm:
     handler: auth.forgotConfirm
     events:
       -
         http:
-          cors: true
           method: post
           path: "auth/forgot/{email}/confirm"
-          integration: lambda-proxy
   authLogin:
     handler: auth.login
     events:
       -
         http:
-          cors: true
           method: post
           path: auth/login
-          integration: lambda-proxy
   authProfile:
     handler: auth.profile
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: get
           path: auth/profile
-          integration: lambda-proxy
   authProfileChange:
     handler: auth.profileChange
     events:
       -
         http:
           authorizer: authorizer
-          cors: true
           method: put
           path: auth/profile
-          integration: lambda-proxy
   authSignup:
     handler: auth.signup
     events:
       -
         http:
-          cors: true
           method: post
           path: auth/signup
-          integration: lambda-proxy
 
   appsDetail:
     handler: public.detail
     events:
       -
         http:
-          cors: true
           method: get
           path: "apps/{appId}"
-          integration: lambda-proxy
       -
         http:
-          cors: true
           method: get
           path: "apps/{appId}/versions/{version}"
-          integration: lambda-proxy
   appsList:
     handler: public.list
     events:
       -
         http:
-          cors: true
           method: get
           path: apps
-          integration: lambda-proxy
   appsVersionsList:
     handler: public.versions
     events:
       -
         http:
-          cors: true
           method: get
           path: "apps/{appId}/versions"
-          integration: lambda-proxy
   vendorsList:
     handler: public.vendorsList
     events:
       -
         http:
-          cors: true
           method: get
           path: "vendors"
-          integration: lambda-proxy
   vendorDetail:
     handler: public.vendorDetail
     events:
       -
         http:
-          cors: true
           method: get
           path: "vendors/{vendor}"
-          integration: lambda-proxy
 
 resources:
   Resources:

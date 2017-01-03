@@ -13,8 +13,7 @@ const validation = require('../../../lib/validation');
 
 aws.config.setPromisesDependency(Promise);
 const ecr = new aws.ECR({ region: process.env.REGION });
-const iam = new aws.IAM({ region: process.env.REGION });
-const repository = new Repository(db, ecr, iam, aws, process.env, error);
+const repository = new Repository(db, ecr, aws, process.env, error);
 
 /**
  * Create repository
