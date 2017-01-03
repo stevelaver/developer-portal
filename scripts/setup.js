@@ -37,7 +37,7 @@ switch (args[0]) {
       RDS_USER: dbName,
       RDS_PASSWORD: process.env.RDS_PASSWORD,
       RDS_SSL: 'Amazon RDS',
-      S3_BUCKET: `${process.env.SERVICE_NAME}-icons`,
+      S3_BUCKET: `${process.env.SERVICE_NAME}`,
       LOG_HOST: process.env.LOG_HOST,
       LOG_PORT: process.env.LOG_PORT,
       SLACK_HOOK_URL: process.env.SLACK_HOOK_URL,

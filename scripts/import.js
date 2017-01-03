@@ -23,21 +23,24 @@ const rds = mysql.createConnection({
 const args = process.argv.slice(2);
 
 const downloadIcon = function (uri, id, size, callback) {
-  if (!fs.existsSync(`icons/${id}`)) {
-    fs.mkdirSync(`icons/${id}`);
+  if (!fs.existsSync(`s3_bucket/icons/${id}`)) {
+    fs.mkdirSync(`s3_bucket/icons/${id}`);
   }
-  if (!fs.existsSync(`icons/${id}/${size}`)) {
-    fs.mkdirSync(`icons/${id}/${size}`);
+  if (!fs.existsSync(`s3_bucket/icons/${id}/${size}`)) {
+    fs.mkdirSync(`s3_bucket/icons/${id}/${size}`);
   }
   request({ uri })
-    .pipe(fs.createWriteStream(`icons/${id}/${size}/1.png`))
+    .pipe(fs.createWriteStream(`s3_bucket/icons/${id}/${size}/1.png`))
     .on('close', () => callback())
     .on('error', err => console.log(`Error downloading icon ${uri}' for app ${id}: ${err}`));
 };
 
 const getIcons = function (cb) {
-  if (!fs.existsSync('icons')) {
-    fs.mkdirSync('icons');
+  if (!fs.existsSync('s3_bucket')) {
+    fs.mkdirSync('s3_bucket');
+  }
+  if (!fs.existsSync('s3_bucket/icons')) {
+    fs.mkdirSync('s3_bucket/icons');
   }
   fs.readFile(args[1], 'utf8', (err, data) => {
     if (err) throw err;
@@ -312,11 +315,16 @@ if (args[0] === 'data') {
     if (err) {
       throw err;
     }
-    exec(`aws s3 sync icons s3://${env.S3_BUCKET} --acl public-read`, (err2) => {
+    exec(`aws s3 sync s3_bucket s3://${env.S3_BUCKET} --acl public-read`, (err2) => {
       if (err2) {
         throw err2;
       }
-      process.exit();
+      exec('rm -rf s3_bucket', (err3) => {
+        if (err3) {
+          throw err3;
+        }
+        process.exit();
+      });
     });
   });
 } else if (args[0] === 'vendors') {
