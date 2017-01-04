@@ -39,7 +39,7 @@ if resources with same identifiers already exist, the installation will fail.
 Please note that your SES service must be out of sandbox or you have to verify
 each email or domain before you use it for account signup.
 
-### Import from KBC Components API
+### Initialization
 
 Optionally you can import data from KBC:
 
