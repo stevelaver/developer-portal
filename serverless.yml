@@ -358,6 +358,8 @@ resources:
               Principal:
                 Service:
                   - lambda.amazonaws.com
+                AWS:
+                  - "arn:aws:iam::${file(./env.yml):ACCOUNT_ID}:role/${file(./env.yml):SERVICE_NAME}-lambda-role"
               Action: sts:AssumeRole
         Policies:
           - PolicyName: "${file(./env.yml):SERVICE_NAME}-ecr-policy"
