@@ -263,6 +263,11 @@ describe('apps', () => {
         }));
       },
       function (callback) {
+        setTimeout(() => {
+          callback();
+        }, 10000);
+      },
+      function (callback) {
         // Approve should succeed
         // Wait few seconds if icon handling lambda has delay
         setTimeout(() => {
@@ -368,10 +373,76 @@ describe('apps', () => {
     ], done);
   });
 
-  it('app for specific project flow', (done) => {
-    const appName3 = `a3_${Date.now()}`;
+  it('app with permissions flow', (done) => {
+    const appName3 = `a4_${Date.now()}`;
     const appId3 = `${vendor}.${appName3}`;
     async.waterfall([
+      function (callback) {
+        // Create app should fail on wrong permissions schema
+        request.post({
+          url: `${env.API_ENDPOINT}/vendor/apps`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            id: appName3,
+            name: appName3,
+            type: 'extractor',
+            permissions: [
+              {
+                stack: 'stack',
+                projects: 2,
+              },
+            ],
+            isPublic: false,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.have.property('errorMessage');
+          callback();
+        });
+      },
+      function (callback) {
+        rds.query(
+          'DELETE FROM stacks WHERE name=?',
+          'stack',
+          err => callback(err)
+        );
+      },
+      function (callback) {
+        // Create app should fail on non-existing stack
+        request.post({
+          url: `${env.API_ENDPOINT}/vendor/apps`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            id: appName3,
+            name: appName3,
+            type: 'extractor',
+            permissions: [
+              {
+                stack: 'stack',
+                projects: [2],
+              },
+            ],
+            isPublic: false,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.have.property('errorMessage');
+          callback();
+        });
+      },
+      function (callback) {
+        rds.query(
+          'INSERT INTO stacks SET name=?',
+          'stack',
+          err => callback(err)
+        );
+      },
       function (callback) {
         // Create app
         request.post({
@@ -384,7 +455,12 @@ describe('apps', () => {
             id: appName3,
             name: appName3,
             type: 'extractor',
-            projects: [1, 2],
+            permissions: [
+              {
+                stack: 'stack',
+                projects: [2],
+              },
+            ],
             isPublic: false,
           },
         }, (err, res, body) => {
@@ -396,13 +472,18 @@ describe('apps', () => {
       function (callback) {
         // Update app
         request.patch({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}`,
+          url: `${env.API_ENDPOINT}/vendor/apps/${appId3}`,
           headers: {
             Authorization: token,
           },
           json: true,
           body: {
-            projects: [1, 2, 3],
+            permissions: [
+              {
+                stack: 'stack',
+                projects: [2, 3],
+              },
+            ],
           },
         }, (err, res, body) => {
           expect(err).to.be.null();
@@ -421,8 +502,11 @@ describe('apps', () => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
           expect(body, bodyRaw).to.have.property('id');
-          expect(body, bodyRaw).to.have.property('projects');
-          expect(body.projects).to.deep.equal([1, 2]);
+          expect(body, bodyRaw).to.have.property('permissions');
+          expect(body.permissions, bodyRaw).to.have.length(1);
+          expect(body.permissions[0], bodyRaw).to.have.property('stack');
+          expect(body.permissions[0].stack).to.equal('stack');
+          expect(body.permissions[0].projects).to.deep.equal([2, 3]);
           expect(body.id).to.be.equal(appId3);
           callback();
         });
@@ -462,7 +546,7 @@ describe('apps', () => {
     ], done);
   });
 
-  it('ECR', (done) => {
+  /* it('ECR', (done) => {
     const appName = `a3_${Date.now()}`;
     const appId = `${vendor}.${appName}`;
     async.waterfall([
@@ -520,7 +604,7 @@ describe('apps', () => {
         }, callback);
       },
     ], done);
-  });
+  }); */
 
   after((done) => {
     async.waterfall([

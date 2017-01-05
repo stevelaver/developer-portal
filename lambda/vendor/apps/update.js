@@ -88,7 +88,10 @@ const commonValidationBody = {
     .error(Error('Setting of parameter icon64 is forbidden')),
   legacyUri: joi.any().forbidden()
     .error(Error('Setting of parameter legacyUri is forbidden')),
-  projects: joi.array().error(Error('Parameter projects must be array')),
+  permissions: joi.array().items(joi.object().keys({
+    stack: joi.string().required(),
+    projects: joi.array(),
+  })).error(Error('Parameter permissions must be array')),
 };
 
 const createValidationBody = _.clone(commonValidationBody);

@@ -11,6 +11,11 @@ CREATE TABLE `vendors` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `stacks` (
+  `name` varchar(128) NOT NULL DEFAULT '',
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 DROP TABLE IF EXISTS apps;
 CREATE TABLE `apps` (
   `id` varchar(50) NOT NULL,
@@ -53,6 +58,7 @@ CREATE TABLE `apps` (
   `icon32` varchar(255) DEFAULT NULL,
   `icon64` varchar(255) DEFAULT NULL,
   `legacyUri` varchar(255) DEFAULT NULL,
+  `permissions` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `vendor` (`vendor`),
   CONSTRAINT `apps_ibfk_1` FOREIGN KEY (`vendor`) REFERENCES `vendors` (`id`)
@@ -95,19 +101,12 @@ CREATE TABLE `appVersions` (
   `icon32` varchar(255) DEFAULT NULL,
   `icon64` varchar(255) DEFAULT NULL,
   `legacyUri` varchar(255) DEFAULT NULL,
+  `permissions` json DEFAULT NULL,
   `createdOn` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` varchar(128) DEFAULT NULL,
   `isPublic` int(1) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`,`version`),
   CONSTRAINT `appVersions_ibfk_1` FOREIGN KEY (`id`) REFERENCES `apps` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-DROP TABLE IF EXISTS appsProjects;
-CREATE TABLE `appsProjects` (
-  `app` varchar(50) NOT NULL DEFAULT '0',
-  `project` int(10) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`app`,`project`),
-  CONSTRAINT `appsProjects_ibfk_1` FOREIGN KEY (`app`) REFERENCES `apps` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SET foreign_key_checks = 1;

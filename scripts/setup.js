@@ -21,11 +21,9 @@ const done = function (err) {
   process.exit();
 };
 
-const args = process.argv.slice(2);
+class Setup {
 
-switch (args[0]) {
-
-  case 'save-env': {
+  static saveEnv() {
     const dbName = process.env.SERVICE_NAME.replace(/\W/g, '').substr(0, 16);
     const newEnv = {
       SERVICE_NAME: process.env.SERVICE_NAME,
@@ -50,13 +48,13 @@ switch (args[0]) {
         return done(err2);
       }
     );
-    break;
   }
-  case 'save-account-id': {
+
+  static saveAccountId() {
     exec('aws sts get-caller-identity --output text --query Account', (err, out) => {
       if (err) {
         console.error(`AWS get identity error: ${err}`);
-        done();
+        return done();
       }
       env.ACCOUNT_ID = _.trim(out);
       fs.writeFile(
@@ -68,9 +66,9 @@ switch (args[0]) {
         }
       );
     });
-    break;
   }
-  case 'register-email': {
+
+  static registerEmail(args) {
     const region = args[1];
     const email = args[2];
     exec(`aws ses verify-email-identity --region ${region} --email-address ${email}`, (err) => {
@@ -81,9 +79,9 @@ switch (args[0]) {
       }
       return done();
     });
-    break;
   }
-  case 'add-email-policy': {
+
+  static addEmailPolicy() {
     exec(`aws ses put-identity-policy --region ${env.REGION} --identity ${env.SES_EMAIL_FROM} \
       --policy-name Cognito-SES-Policy --policy '{ "Statement":[{"Effect": "Allow","Principal": {"Service": "cognito-idp.amazonaws.com"}, "Action": ["ses:SendEmail", "ses:SendRawEmail"],"Resource": "arn:aws:ses:${env.REGION}:${env.ACCOUNT_ID}:identity/${env.SES_EMAIL_FROM}" }] }'`, (err) => {
       if (err) {
@@ -93,10 +91,10 @@ switch (args[0]) {
       }
       return done();
     });
-    break;
   }
-  case 'create-vpc': {
-    const cf = new aws.CloudFormation({ region: env.REGION });
+
+  static createVpc() {
+    const cf = new aws.CloudFormation();
     async.waterfall([
       (cb) => {
         cf.createStack({
@@ -131,10 +129,10 @@ switch (args[0]) {
         );
       },
     ], done);
-    break;
   }
-  case 'delete-vpc': {
-    const cf = new aws.CloudFormation({ region: env.REGION });
+
+  static deleteVpc() {
+    const cf = new aws.CloudFormation();
     async.waterfall([
       (cb) => {
         cf.deleteStack({ StackName: env.VPC_CF_STACK_ID }, err => cb(err));
@@ -143,9 +141,9 @@ switch (args[0]) {
         cf.waitFor('stackDeleteComplete', { StackName: env.VPC_CF_STACK_ID }, err => cb(err));
       },
     ], done);
-    break;
   }
-  case 'create-cognito': {
+
+  static createCognito() {
     async.waterfall([
       (cb2) => {
         const emailArn = `arn:aws:ses:${env.REGION}:${env.ACCOUNT_ID}:identity/${env.SES_EMAIL_FROM}`;
@@ -196,9 +194,9 @@ switch (args[0]) {
         err2 => done(err2)
       );
     });
-    break;
   }
-  case 'update-cognito':
+
+  static updateCognito() {
     async.waterfall([
       (cb2) => {
         exec(`aws cognito-idp update-user-pool --region ${env.REGION} \
@@ -222,11 +220,22 @@ switch (args[0]) {
       } else {
         console.info(`- Cognito user pool ${env.COGNITO_POOL_ID} updated`);
       }
-      done();
+      return done();
     });
-    break;
+  }
 
-  case 'save-cloudformation-output':
+  static deleteCognito() {
+    exec(`aws cognito-idp delete-user-pool --region ${env.REGION} --user-pool-id ${env.COGNITO_POOL_ID}`, (err) => {
+      if (err) {
+        console.error(`Cognito pool ${env.COGNITO_POOL_ID} removal error: ${err}`);
+      } else {
+        console.info(`- Cognito pool ${env.COGNITO_POOL_ID} removed`);
+      }
+      return done();
+    });
+  }
+
+  static saveCloudformationOutput() {
     exec(`aws cloudformation describe-stacks --region ${env.REGION} --stack-name ${env.SERVICE_NAME}-${env.STAGE}`, (err, out) => {
       if (err) {
         console.error(`Describe CloudFormation stack error: ${err}`);
@@ -259,9 +268,9 @@ switch (args[0]) {
         }
       );
     });
-    break;
+  }
 
-  case 'init-database':
+  static initDatabase() {
     execsql.execFile(mysql.createConnection({
       host: env.RDS_HOST,
       port: env.RDS_PORT,
@@ -271,9 +280,9 @@ switch (args[0]) {
       ssl: env.RDS_SSL,
       multipleStatements: true,
     }), `${__dirname}/../rds-model.sql`, err => done(err));
-    break;
+  }
 
-  case 'subscribe-logs':
+  static subscribeLogs() {
     async.each(_.keys(yaml.load(`${__dirname}/../serverless.yml`).functions), (item, cb2) => {
       if (item !== 'logger') {
         async.waterfall([
@@ -320,22 +329,11 @@ switch (args[0]) {
         console.error(`Subscribe logs error: ${err}`);
       }
       console.info('- Logs subscribed');
-      done();
+      return done();
     });
-    break;
+  }
 
-  case 'delete-cognito':
-    exec(`aws cognito-idp delete-user-pool --region ${env.REGION} --user-pool-id ${env.COGNITO_POOL_ID}`, (err) => {
-      if (err) {
-        console.error(`Cognito pool ${env.COGNITO_POOL_ID} removal error: ${err}`);
-      } else {
-        console.info(`- Cognito pool ${env.COGNITO_POOL_ID} removed`);
-      }
-      done();
-    });
-    break;
-
-  case 'delete-logs':
+  static deleteLogs() {
     async.each(_.keys(yaml.load(`${__dirname}/../serverless.yml`).functions), (item, cb) => {
       exec(
         `aws logs delete-log-group --region ${env.REGION} \
@@ -344,19 +342,113 @@ switch (args[0]) {
       );
     }, () => {
       console.info('- Logs deleted');
-      done();
+      return done();
     });
-    break;
+  }
 
-  case 'empty-bucket':
+  static truncateBucket() {
     exec(`aws s3 rm s3://${env.S3_BUCKET}/* --recursive`, (err) => {
       if (err) {
         console.error(`Emptying bucket ${env.S3_BUCKET} error: ${err}`);
       } else {
         console.info(`Bucket ${env.S3_BUCKET} empty`);
       }
-      done();
+      return done();
     });
+  }
+
+  static createIndexPage() {
+    const cf = new aws.CloudFormation();
+    async.waterfall([
+      (cb) => {
+        exec(`aws s3 cp static/* s3://${env.S3_BUCKET} --recursive --acl public-read`, err => cb(err));
+      },
+      (cb) => {
+        cf.updateStack({
+          StackName: `${env.SERVICE_NAME}-${env.STAGE}`,
+          TemplateBody: '', // TODO
+        }, (err, res) => {
+          if (err) {
+            cb(err);
+          } else {
+            cb(null, res.StackId);
+          }
+        });
+      },
+      (stackId, cb) => {
+        cf.waitFor('stackUpdateComplete', { StackName: `${env.SERVICE_NAME}-${env.STAGE}` }, (err, res) => {
+          if (err) {
+            cb(err);
+          }
+          cb(null, _.keyBy(res.Stacks[0].Outputs, 'OutputKey'));
+        });
+      },
+    ], err => done(err));
+  }
+
+}
+
+const args = process.argv.slice(2);
+
+switch (args[0]) {
+  case 'save-env': {
+    Setup.saveEnv();
+    break;
+  }
+  case 'save-account-id': {
+    Setup.saveAccountId();
+    break;
+  }
+  case 'register-email': {
+    Setup.registerEmail(args);
+    break;
+  }
+  case 'add-email-policy': {
+    Setup.addEmailPolicy();
+    break;
+  }
+  case 'create-vpc': {
+    Setup.createVpc();
+    break;
+  }
+  case 'delete-vpc': {
+    Setup.deleteVpc();
+    break;
+  }
+  case 'create-cognito': {
+    Setup.createCognito();
+    break;
+  }
+  case 'update-cognito':
+    Setup.updateCognito();
+    break;
+
+  case 'delete-cognito':
+    Setup.deleteCognito();
+    break;
+
+  case 'save-cloudformation-output':
+    Setup.saveCloudformationOutput();
+    break;
+
+  case 'init-database':
+    Setup.initDatabase();
+    break;
+
+  case 'create-index-page':
+    Setup.createIndexPage();
+    break;
+
+  case 'subscribe-logs':
+    Setup.subscribeLogs();
+    break;
+
+  case 'delete-logs':
+    Setup.deleteLogs();
+    break;
+
+  case 'empty-bucket':
+    Setup.truncateBucket();
     break;
 
   default:

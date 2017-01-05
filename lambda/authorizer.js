@@ -73,7 +73,7 @@ function ValidateToken(pems, event, callback) {
   //Verify the signature of the JWT token to ensure it's really coming from your User Pool
   jwt.verify(token, pem, { issuer: iss }, function(err, payload) {
     if(err) {
-      console.log(err);
+      //console.log(err);
       return callback(error.unauthorized());
     } else {
       //Valid token. Generate the API Gateway policy for the user

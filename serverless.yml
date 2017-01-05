@@ -298,6 +298,13 @@ functions:
         http:
           method: get
           path: "vendors/{vendor}"
+  stacksList:
+    handler: public.stacksList
+    events:
+      -
+        http:
+          method: get
+          path: "stacks"
 
 resources:
   Resources:

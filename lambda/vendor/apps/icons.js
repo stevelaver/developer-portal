@@ -47,14 +47,19 @@ module.exports.upload = (event, context, callback) => request.errorHandler(() =>
     throw Error(`Event is missing. See: ${JSON.stringify(event)}`);
   }
 
-  if (event.Records[0].eventName !== 'ObjectCreated:Put') {
+  const bucket = event.Records[0].s3.bucket.name;
+  const key = event.Records[0].s3.object.key;
+  const path = key.split('/');
+  const appId = path[1];
+  const size = path[2];
+
+  if (event.Records[0].eventName !== 'ObjectCreated:Put' || path[0] !== 'icons') {
     return callback();
   }
 
-  const bucket = event.Records[0].s3.bucket.name;
-  const key = event.Records[0].s3.object.key;
-  const appId = key.split('/').shift();
-  const size = key.split('/')[1];
+  if (Number(size) !== 32 && Number(size) !== 64) {
+    throw Error(`Icon size is invalid. File: ${key}`);
+  }
 
   return db.connect(process.env)
   .then(() => app.uploadIcon(s3, appId, size, `${bucket}/${key}`))
