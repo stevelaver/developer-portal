@@ -76,6 +76,8 @@ const commonValidationBody = {
     .error(Error('Setting of parameter forwardToken is forbidden')),
   forwardTokenDetails: joi.any().forbidden()
     .error(Error('Setting of parameter forwardTokenDetails is forbidden')),
+  injectEnvironment: joi.any().forbidden()
+    .error(Error('Setting of parameter injectEnvironment is forbidden')),
   cpuShares: joi.any().forbidden()
     .error(Error('Setting of parameter cpuShares is forbidden')),
   requiredMemory: joi.any().forbidden()

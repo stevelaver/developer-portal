@@ -19,6 +19,7 @@ const rds = mysql.createConnection({
   ssl: env.RDS_SSL,
   multipleStatements: true,
 });
+db.connect(env);
 
 const args = process.argv.slice(2);
 
@@ -205,7 +206,7 @@ const getData = function (callbackMain) {
 
 
       _.forEach(app.data, (value, key) => {
-        if (!_.includes(['logging', 'definition', 'vendor', 'memory', 'forward_token', 'default_bucket_stage', 'default_bucket', 'process_timeout', 'synchronous_actions', 'configuration_format', 'cpu_shares', 'forward_token_details', 'network', 'image_parameters', 'postProcess', 'modules', 'staging_storage'], key)) {
+        if (!_.includes(['logging', 'definition', 'vendor', 'memory', 'forward_token', 'default_bucket_stage', 'default_bucket', 'process_timeout', 'synchronous_actions', 'configuration_format', 'cpu_shares', 'forward_token_details', 'network', 'image_parameters', 'postProcess', 'modules', 'staging_storage', 'inject_environment'], key)) {
           console.log(`Left in data for app ${app.id}: ${key}`, value);
         }
       });
@@ -253,6 +254,7 @@ const getData = function (callbackMain) {
         defaultBucketStage: _.get(app, 'data.default_bucket_stage', null),
         forwardToken: _.get(app, 'data.forward_token', false),
         forwardTokenDetails: _.get(app, 'data.forward_token_details', false),
+        injectEnvironment: _.get(app, 'data.inject_environment', false),
         cpuShares: _.get(app, 'data.cpu_shares', null),
         uiOptions: _.pull(app.flags, '3rdParty', 'encrypt', 'appInfo.fee', 'excludeFromNewList'),
         imageParameters,
@@ -282,22 +284,25 @@ const saveData = function (data, callbackMain) {
     },
     function (cb) {
       async.each(data, (resApp, callback) => {
-        const dbApp = db.formatAppInput(resApp);
-        rds.query('INSERT IGNORE INTO apps SET ?', dbApp, (err) => {
-          if (err) {
-            console.log(resApp);
-            throw err;
-          }
-          delete dbApp.vendor;
-          delete dbApp.isApproved;
-          rds.query('INSERT IGNORE INTO appVersions SET ?', dbApp, (err2) => {
-            if (err2) {
-              console.log(resApp);
-              throw err2;
-            }
-            callback();
+        db.formatAppInput(resApp)
+          .then((dbApp) => {
+            rds.query('INSERT IGNORE INTO apps SET ?', dbApp, (err) => {
+              const dbAppVersion = _.cloneDeep(dbApp);
+              if (err) {
+                console.log(dbApp);
+                throw err;
+              }
+              delete dbAppVersion.vendor;
+              delete dbAppVersion.isApproved;
+              rds.query('INSERT IGNORE INTO appVersions SET ?', dbAppVersion, (err2) => {
+                if (err2) {
+                  console.log(resApp);
+                  throw err2;
+                }
+                callback();
+              });
+            });
           });
-        });
       }, cb);
     },
   ], callbackMain);
