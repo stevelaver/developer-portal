@@ -94,7 +94,7 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
-    .then(() => app.getAppWithVendor(
+    .then(() => app.getAppWithVendorForAdmin(
       event.pathParameters.id,
       _.get(event, 'pathParameters.version', null),
       false
