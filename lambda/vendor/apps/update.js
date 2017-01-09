@@ -52,6 +52,8 @@ const commonValidationBody = {
   testConfiguration: joi.object(),
   configurationSchema: joi.object(),
   configurationDescription: joi.string(),
+  configurationFormat: joi.string().valid('json')
+    .error(Error('Parameter configurationFormat can have only value "json"')),
   emptyConfiguration: joi.object(),
   actions: joi.array().error(Error('Parameter actions must be array')),
   fees: joi.boolean().error(Error('Parameter fees must be boolean')),

@@ -261,6 +261,7 @@ const getData = function (callbackMain) {
         testConfiguration: {},
         configurationSchema: app.configurationSchema,
         configurationDescription: app.configurationDescription,
+        configurationFormat: _.get(app, 'data.definition.configuration_format', 'json'),
         emptyConfiguration: app.emptyConfiguration,
         actions: _.has(app, 'data.synchronous_actions') ? app.data.synchronous_actions : [],
         fees: _.includes(app.flags, 'appInfo.fee'),
