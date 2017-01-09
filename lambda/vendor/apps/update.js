@@ -12,7 +12,7 @@ const identity = require('../../../lib/identity');
 const joi = require('joi');
 
 const app = new App(db, process.env, error);
-const validation = new Validation();
+const validation = new Validation(joi, error);
 
 module.exports.appsCreate = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
