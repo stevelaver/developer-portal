@@ -1,6 +1,7 @@
 'use strict';
 
 import Auth from '../../lib/auth';
+import Validation from '../../lib/validation';
 
 require('babel-polyfill');
 const _ = require('lodash');
@@ -12,7 +13,6 @@ const mysql = require('mysql');
 const notification = require('../../lib/notification');
 const Promise = require('bluebird');
 const request = require('../../lib/request');
-const validation = require('../../lib/validation');
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
@@ -22,7 +22,9 @@ const cognito = new aws.CognitoIdentityServiceProvider({
   region: process.env.REGION,
 });
 notification.setHook(process.env.SLACK_HOOK_URL, process.env.SERVICE_NAME);
+
 const auth = new Auth(cognito, process.env, error);
+const validation = new Validation(joi, error);
 
 /**
  * Confirm

@@ -1,6 +1,7 @@
 'use strict';
 
 import Repository from '../../../lib/repository';
+import Validation from '../../../lib/validation';
 
 require('babel-polyfill');
 const aws = require('aws-sdk');
@@ -9,11 +10,11 @@ const error = require('../../../lib/error');
 const identity = require('../../../lib/identity');
 const joi = require('joi');
 const request = require('../../../lib/request');
-const validation = require('../../../lib/validation');
 
 aws.config.setPromisesDependency(Promise);
 const ecr = new aws.ECR({ region: process.env.REGION });
 const repository = new Repository(db, ecr, aws, process.env, error);
+const validation = new Validation(joi, error);
 
 /**
  * Create repository

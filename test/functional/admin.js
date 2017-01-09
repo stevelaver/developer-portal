@@ -28,6 +28,7 @@ const cognito = new aws.CognitoIdentityServiceProvider({
   region: env.REGION,
 });
 const vendor = process.env.FUNC_VENDOR;
+const otherVendor = `${vendor}-other`;
 const appId = `app_admin_${Date.now()}`;
 const userEmail = `u${Date.now()}.test@keboola.com`;
 let token;
@@ -74,6 +75,75 @@ describe('admin', () => {
           UserPoolId: env.COGNITO_POOL_ID,
           Username: userEmail,
         }, err => cb(err));
+      },
+    ], done);
+  });
+
+  it('Edit App', (done) => {
+    const appId2 = `${appId}-2`;
+    async.waterfall([
+      function (cb) {
+        rds.query(
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?',
+          [otherVendor, 'test', 'test', 'test'],
+          err => cb(err)
+        );
+      },
+      function (cb) {
+        rds.query(
+          'INSERT INTO `apps` SET id=?, vendor=?, name=?',
+          [appId2, otherVendor, 'test'],
+          err => cb(err)
+        );
+      },
+      function (cb) {
+        // Get app detail
+        request.get({
+          url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.property('forwardToken');
+          expect(body.forwardToken).to.be.equal(false);
+          cb();
+        });
+      },
+      function (cb) {
+        // Update app
+        request.patch({
+          url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            forwardToken: true,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          cb();
+        });
+      },
+      function (cb) {
+        // Get app detail
+        request.get({
+          url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.property('forwardToken');
+          expect(body.forwardToken).to.be.equal(true);
+          cb();
+        });
       },
     ], done);
   });
@@ -283,6 +353,13 @@ describe('admin', () => {
         rds.query(
           'DELETE FROM apps WHERE vendor=?',
           vendor,
+          err => cb(err)
+        );
+      },
+      function (cb) {
+        rds.query(
+          'DELETE FROM apps WHERE vendor=?',
+          otherVendor,
           err => cb(err)
         );
       },

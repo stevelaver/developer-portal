@@ -68,6 +68,14 @@ functions:
           authorizer: authorizer
           method: get
           path: "admin/apps"
+  adminAppsUpdate:
+    handler: admin.appsUpdate
+    events:
+      -
+        http:
+          authorizer: authorizer
+          method: patch
+          path: "admin/apps/{id}"
   adminUsersList:
     handler: admin.users
     events:

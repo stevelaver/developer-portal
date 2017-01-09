@@ -1,6 +1,7 @@
 'use strict';
 
 import App from '../../../lib/app';
+import Validation from '../../../lib/validation';
 
 require('babel-polyfill');
 const _ = require('lodash');
@@ -9,9 +10,9 @@ const error = require('../../../lib/error');
 const identity = require('../../../lib/identity');
 const joi = require('joi');
 const request = require('../../../lib/request');
-const validation = require('../../../lib/validation');
 
 const app = new App(db, process.env, error);
+const validation = new Validation(joi, error);
 
 module.exports.list = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {

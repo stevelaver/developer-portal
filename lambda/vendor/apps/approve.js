@@ -1,6 +1,7 @@
 'use strict';
 
 import App from '../../../lib/app';
+import Validation from '../../../lib/validation';
 
 require('babel-polyfill');
 const db = require('../../../lib/db');
@@ -9,9 +10,9 @@ const identity = require('../../../lib/identity');
 const joi = require('joi');
 const notification = require('../../../lib/notification');
 const request = require('../../../lib/request');
-const validation = require('../../../lib/validation');
 
 const app = new App(db, process.env, error);
+const validation = new Validation(joi, error);
 notification.setHook(process.env.SLACK_HOOK_URL, process.env.SERVICE_NAME);
 
 /**

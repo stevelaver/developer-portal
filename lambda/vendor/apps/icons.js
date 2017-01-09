@@ -1,6 +1,7 @@
 'use strict';
 
 import App from '../../../lib/app';
+import Validation from '../../../lib/validation';
 
 require('babel-polyfill');
 const _ = require('lodash');
@@ -12,9 +13,10 @@ const joi = require('joi');
 const moment = require('moment');
 const Promise = require('bluebird');
 const request = require('../../../lib/request');
-const validation = require('../../../lib/validation');
 
 const app = new App(db, process.env, error);
+const validation = new Validation(joi, error);
+
 aws.config.setPromisesDependency(Promise);
 const s3 = new aws.S3();
 

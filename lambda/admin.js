@@ -2,6 +2,7 @@
 
 import App from '../lib/app';
 import Email from '../lib/email';
+import Validation from '../lib/validation';
 
 require('babel-polyfill');
 const _ = require('lodash');
@@ -12,7 +13,6 @@ const identity = require('../lib/identity');
 const joi = require('joi');
 const Promise = require('bluebird');
 const request = require('../lib/request');
-const validation = require('../lib/validation');
 
 aws.config.setPromisesDependency(Promise);
 const app = new App(db, process.env, error);
@@ -20,6 +20,7 @@ const email = new Email(
   new aws.SES({ apiVersion: '2010-12-01', region: process.env.REGION }),
   process.env.SES_EMAIL_FROM
 );
+const validation = new Validation(joi, error);
 
 /**
  * Approve app
@@ -99,6 +100,34 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
       _.get(event, 'pathParameters.version', null),
       false
     )),
+    db,
+    event,
+    context,
+    callback
+  );
+}, event, context, (err, res) => db.endCallback(err, res, callback));
+
+
+/**
+ * Update app
+ */
+module.exports.appsUpdate = (event, context, callback) => request.errorHandler(() => {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      id: joi.string().required(),
+    },
+    body: validation.adminAppSchema(),
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+      .then(user => app.updateAppByAdmin(
+        event.pathParameters.id,
+        JSON.parse(event.body),
+        user
+      )),
     db,
     event,
     context,
