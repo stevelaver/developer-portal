@@ -70,9 +70,10 @@ class Setup {
   }
 
   static registerEmail(args) {
-    const region = args[1];
-    const email = args[2];
-    exec(`aws ses verify-email-identity --region ${region} --email-address ${email} --profile ${env.PROFILE}`, (err) => {
+    const profile = args[1];
+    const region = args[2];
+    const email = args[3];
+    exec(`aws ses verify-email-identity --profile ${profile} --region ${region} --email-address ${email}`, (err) => {
       if (err) {
         console.error(`SES registration error: ${err}`);
       } else {
