@@ -1,0 +1,13 @@
+{
+  "defaultEnv": "current",
+  "current": {
+    "driver": "mysql",
+    "user": { "ENV": "RDS_USER" },
+    "password": { "ENV": "RDS_PASSWORD" },
+    "host": { "ENV": "RDS_HOST" },
+    "database": { "ENV": "RDS_DATABASE" },
+    "port": { "ENV": "RDS_PORT" },
+    "ssl": { "ENV": "RDS_SSL" },
+    "multipleStatements": true
+  }
+}

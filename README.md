@@ -9,7 +9,7 @@ Application based on Serverless framework utilizing AWS Lamda, API Gateway and C
 
 ### Installation
 
-The installation process creates S3 bucket, Cognito User Pool, RDS instance,
+The installation process creates VPC, S3 bucket, Cognito User Pool, RDS instance,
 Cloudfront distribution, Lambda functions and API Gateway. All resources are
 prefixed with `SERVICE_NAME` variable. Please ensure that the prefix is unique,
 if resources with same identifiers already exist, the installation will fail.
@@ -96,7 +96,7 @@ VPC_SUBNET2: subnet-b84360dc
 RDS_SUBNET_GROUP: dev-portal-vpc-devportaldbsubnetgroup
 COGNITO_POOL_ID: eu-west-1_xxx
 COGNITO_CLIENT_ID: 24q0k67ocvs9t56961gahjgd64
-RDS_HOST: jakub-dev-portal-rds.cptjrpubo0om.eu-west-1.rds.amazonaws.com
+RDS_HOST: dev-portal-rds.cptjrpubo0om.eu-west-1.rds.amazonaws.com
 RDS_PORT: 3306
 CLOUDFRONT_URI: dttajxboh9b9k.cloudfront.net
 API_ENDPOINT: 'https://1puon0n5y2.execute-api.eu-west-1.amazonaws.com/dev'
