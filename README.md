@@ -23,11 +23,11 @@ if resources with same identifiers already exist, the installation will fail.
 7. Install dependencies: `yarn install`
 8. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
 9. Verify email sender. Run `node scripts/setup.js register-email <aws-profile> <region> <email>` and confirm link from the email you get
-10. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
+10. Run setup script: `env SERVICE_NAME= PROFILE= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
   - The script will put created identifiers to file `env.yml`
   - Required env variables:
-    - `PROFILE` - name of AWS profile
     - `SERVICE_NAME` - Name of the Serverless service. It will be used as a prefix for created AWS services, it should be only alphanumeric with optional dashes
+    - `PROFILE` - name of AWS profile
     - `REGION` - AWS region where the services should be created
     - `RDS_PASSWORD` - Desired password for created database
     - `RDS_INSTANCE_CLASS` - Desired instance class of created RDS, see http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html but `db.t2.micro` should work fine

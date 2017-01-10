@@ -96,8 +96,8 @@ class Setup {
   }
 
   static createVpc() {
-    process.env.AWS_PROFILE = env.PROFILE;
-    const cf = new aws.CloudFormation();
+    aws.config.credentials = new aws.SharedIniFileCredentials({ profile: env.PROFILE });
+    const cf = new aws.CloudFormation({ region: env.REGION });
     async.waterfall([
       (cb) => {
         cf.createStack({
@@ -135,8 +135,8 @@ class Setup {
   }
 
   static deleteVpc() {
-    process.env.AWS_PROFILE = env.PROFILE;
-    const cf = new aws.CloudFormation();
+    aws.config.credentials = new aws.SharedIniFileCredentials({ profile: env.PROFILE });
+    const cf = new aws.CloudFormation({ region: env.REGION });
     async.waterfall([
       (cb) => {
         cf.deleteStack({ StackName: env.VPC_CF_STACK_ID }, err => cb(err));
