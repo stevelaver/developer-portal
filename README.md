@@ -70,3 +70,35 @@ You can set created user as admin using command: `node scripts/setup-admin.js <e
 1. Install according to steps 1-5 in the Installation section
 2. Get the `env.yml` file saved from installation and put it to the directory
 3. Run `make remove` to remove all resources from AWS
+
+### Configuration File
+
+Whole configuration is held in `env.yml` which contains these parameters:
+```
+SERVICE_NAME: dev-portal
+REGION: eu-west-1
+STAGE: dev
+SES_EMAIL_FROM: dev-portal@test.com
+RDS_INSTANCE_CLASS: db.t2.micro
+RDS_DATABASE: devportal
+RDS_USER: devportal
+RDS_PASSWORD: dbpass
+RDS_SSL: 'Amazon RDS'
+S3_BUCKET: dev-portal-resources
+LOG_HOST: logs.papertrailapp.com
+LOG_PORT: 33333
+SLACK_HOOK_URL: 'https://hooks.slack.com/services/...'
+ACCOUNT_ID: '061240556736'
+VPC_CF_STACK_ID: 'arn:aws:cloudformation:eu-west-1:061240556736:stack/dev-portal-vpc/...'
+VPC_SECURITY_GROUP: sg-d8b9d5be
+VPC_SUBNET1: subnet-b05f7ac6
+VPC_SUBNET2: subnet-b84360dc
+RDS_SUBNET_GROUP: dev-portal-vpc-devportaldbsubnetgroup
+COGNITO_POOL_ID: eu-west-1_xxx
+COGNITO_CLIENT_ID: 24q0k67ocvs9t56961gahjgd64
+RDS_HOST: jakub-dev-portal-rds.cptjrpubo0om.eu-west-1.rds.amazonaws.com
+RDS_PORT: 3306
+CLOUDFRONT_URI: dttajxboh9b9k.cloudfront.net
+API_ENDPOINT: 'https://1puon0n5y2.execute-api.eu-west-1.amazonaws.com/dev'
+PROFILE: dev
+```
