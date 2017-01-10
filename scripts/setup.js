@@ -39,6 +39,7 @@ class Setup {
       LOG_HOST: process.env.LOG_HOST,
       LOG_PORT: process.env.LOG_PORT,
       SLACK_HOOK_URL: process.env.SLACK_HOOK_URL,
+      PROFILE: process.env.PROFILE,
     };
     fs.writeFile(
       `${__dirname}/../env.yml`,
@@ -51,7 +52,7 @@ class Setup {
   }
 
   static saveAccountId() {
-    exec('aws sts get-caller-identity --output text --query Account', (err, out) => {
+    exec(`aws sts get-caller-identity --output text --query Account --profile ${env.PROFILE}`, (err, out) => {
       if (err) {
         console.error(`AWS get identity error: ${err}`);
         return done();
@@ -71,7 +72,7 @@ class Setup {
   static registerEmail(args) {
     const region = args[1];
     const email = args[2];
-    exec(`aws ses verify-email-identity --region ${region} --email-address ${email}`, (err) => {
+    exec(`aws ses verify-email-identity --region ${region} --email-address ${email} --profile ${env.PROFILE}`, (err) => {
       if (err) {
         console.error(`SES registration error: ${err}`);
       } else {
@@ -82,7 +83,7 @@ class Setup {
   }
 
   static addEmailPolicy() {
-    exec(`aws ses put-identity-policy --region ${env.REGION} --identity ${env.SES_EMAIL_FROM} \
+    exec(`aws ses put-identity-policy --profile ${env.PROFILE} --region ${env.REGION} --identity ${env.SES_EMAIL_FROM} \
       --policy-name Cognito-SES-Policy --policy '{ "Statement":[{"Effect": "Allow","Principal": {"Service": "cognito-idp.amazonaws.com"}, "Action": ["ses:SendEmail", "ses:SendRawEmail"],"Resource": "arn:aws:ses:${env.REGION}:${env.ACCOUNT_ID}:identity/${env.SES_EMAIL_FROM}" }] }'`, (err) => {
       if (err) {
         console.error(`SES put policy error: ${err}`);
@@ -94,6 +95,7 @@ class Setup {
   }
 
   static createVpc() {
+    process.env.AWS_PROFILE = env.PROFILE;
     const cf = new aws.CloudFormation();
     async.waterfall([
       (cb) => {
@@ -132,6 +134,7 @@ class Setup {
   }
 
   static deleteVpc() {
+    process.env.AWS_PROFILE = env.PROFILE;
     const cf = new aws.CloudFormation();
     async.waterfall([
       (cb) => {
@@ -147,7 +150,7 @@ class Setup {
     async.waterfall([
       (cb2) => {
         const emailArn = `arn:aws:ses:${env.REGION}:${env.ACCOUNT_ID}:identity/${env.SES_EMAIL_FROM}`;
-        exec(`aws cognito-idp create-user-pool --region ${env.REGION} --pool-name ${env.SERVICE_NAME} \
+        exec(`aws cognito-idp create-user-pool --profile ${env.PROFILE} --region ${env.REGION} --pool-name ${env.SERVICE_NAME} \
           --policies '{"PasswordPolicy":{"MinimumLength":8,"RequireUppercase":true,"RequireLowercase":true,"RequireNumbers":true,"RequireSymbols":false}}' \
           --email-configuration SourceArn=${emailArn} --auto-verified-attributes email`, (err, out) => {
           if (err) {
@@ -159,7 +162,7 @@ class Setup {
         });
       },
       (poolId, cb2) => {
-        exec(`aws cognito-idp add-custom-attributes --region ${env.REGION} --user-pool-id ${poolId} \
+        exec(`aws cognito-idp add-custom-attributes --profile ${env.PROFILE} --region ${env.REGION} --user-pool-id ${poolId} \
           --custom-attributes '[{"Name":"isAdmin","AttributeDataType":"Number","DeveloperOnlyAttribute":false,"Mutable":true,"Required": false,"NumberAttributeConstraints":{"MinValue":"0","MaxValue":"1"}}]'`, (err) => {
           if (err) {
             cb2(`Cognito Create Pool error: ${err}`);
@@ -169,7 +172,7 @@ class Setup {
         });
       },
       (poolId, cb2) => {
-        exec(`aws cognito-idp create-user-pool-client --region ${env.REGION} --user-pool-id ${poolId} --client-name ${env.SERVICE_NAME} \
+        exec(`aws cognito-idp create-user-pool-client --profile ${env.PROFILE} --region ${env.REGION} --user-pool-id ${poolId} --client-name ${env.SERVICE_NAME} \
           --no-generate-secret --read-attributes profile email name "custom:isAdmin" --write-attributes profile email name "custom:isAdmin" \
           --explicit-auth-flows ADMIN_NO_SRP_AUTH`, (err, out) => {
           if (err) {
@@ -199,7 +202,7 @@ class Setup {
   static updateCognito() {
     async.waterfall([
       (cb2) => {
-        exec(`aws cognito-idp update-user-pool --region ${env.REGION} \
+        exec(`aws cognito-idp update-user-pool --profile ${env.PROFILE} --region ${env.REGION} \
           --user-pool-id ${env.COGNITO_POOL_ID} \
           --policies '{"PasswordPolicy":{"MinimumLength":8,"RequireUppercase":true,"RequireLowercase":true,"RequireNumbers":true,"RequireSymbols":false}}' \
           --email-configuration SourceArn=arn:aws:ses:${env.REGION}:${env.ACCOUNT_ID}:identity/${env.SES_EMAIL_FROM} \
@@ -207,7 +210,7 @@ class Setup {
           --lambda-config '{"CustomMessage": "arn:aws:lambda:${env.REGION}:${env.ACCOUNT_ID}:function:${env.SERVICE_NAME}-${env.STAGE}-authEmailTrigger"}'`, cb2);
       },
       (cb2) => {
-        exec(`aws lambda add-permission --region ${env.REGION} \
+        exec(`aws lambda add-permission --profile ${env.PROFILE} --region ${env.REGION} \
           --statement-id CSI_customMessage \
           --function-name ${env.SERVICE_NAME}-${env.STAGE}-authEmailTrigger \
           --principal 'cognito-idp.amazonaws.com' \
@@ -225,7 +228,7 @@ class Setup {
   }
 
   static deleteCognito() {
-    exec(`aws cognito-idp delete-user-pool --region ${env.REGION} --user-pool-id ${env.COGNITO_POOL_ID}`, (err) => {
+    exec(`aws cognito-idp delete-user-pool --profile ${env.PROFILE} --region ${env.REGION} --user-pool-id ${env.COGNITO_POOL_ID}`, (err) => {
       if (err) {
         console.error(`Cognito pool ${env.COGNITO_POOL_ID} removal error: ${err}`);
       } else {
@@ -236,7 +239,7 @@ class Setup {
   }
 
   static saveCloudformationOutput() {
-    exec(`aws cloudformation describe-stacks --region ${env.REGION} --stack-name ${env.SERVICE_NAME}-${env.STAGE}`, (err, out) => {
+    exec(`aws cloudformation describe-stacks --profile ${env.PROFILE} --region ${env.REGION} --stack-name ${env.SERVICE_NAME}-${env.STAGE}`, (err, out) => {
       if (err) {
         console.error(`Describe CloudFormation stack error: ${err}`);
         return done();
@@ -295,7 +298,7 @@ class Setup {
             });
           },
           (cb3) => {
-            exec(`aws lambda add-permission --region ${env.REGION} \
+            exec(`aws lambda add-permission --profile ${env.PROFILE} --region ${env.REGION} \
               --function-name ${env.SERVICE_NAME}-${env.STAGE}-logger \
               --statement-id ${env.SERVICE_NAME}-${env.STAGE}-${item} \
               --action lambda:InvokeFunction \
@@ -308,7 +311,7 @@ class Setup {
           },
           (cb3) => {
             setTimeout(() => {
-              exec(`aws logs put-subscription-filter --region ${env.REGION} \
+              exec(`aws logs put-subscription-filter --profile ${env.PROFILE} --region ${env.REGION} \
                 --filter-pattern '' \
                 --filter-name LambdaToPapertrail-${env.SERVICE_NAME}-${env.STAGE} \
                 --log-group-name /aws/lambda/${env.SERVICE_NAME}-${env.STAGE}-${item} \
@@ -336,7 +339,7 @@ class Setup {
   static deleteLogs() {
     async.each(_.keys(yaml.load(`${__dirname}/../serverless.yml`).functions), (item, cb) => {
       exec(
-        `aws logs delete-log-group --region ${env.REGION} \
+        `aws logs delete-log-group --profile ${env.PROFILE} --region ${env.REGION} \
         --log-group-name /aws/lambda/${env.SERVICE_NAME}-${env.STAGE}-${item}`,
         () => cb()
       );
@@ -347,7 +350,7 @@ class Setup {
   }
 
   static truncateBucket() {
-    exec(`aws s3 rm s3://${env.S3_BUCKET}/* --recursive`, (err) => {
+    exec(`aws s3 rm s3://${env.S3_BUCKET}/* --recursive --profile ${env.PROFILE}`, (err) => {
       if (err) {
         console.error(`Emptying bucket ${env.S3_BUCKET} error: ${err}`);
       } else {
@@ -361,7 +364,7 @@ class Setup {
     const cf = new aws.CloudFormation();
     async.waterfall([
       (cb) => {
-        exec(`aws s3 cp static/* s3://${env.S3_BUCKET} --recursive --acl public-read`, err => cb(err));
+        exec(`aws s3 cp static/* s3://${env.S3_BUCKET} --recursive --acl public-read --profile ${env.PROFILE}`, err => cb(err));
       },
       (cb) => {
         cf.updateStack({

@@ -16,15 +16,17 @@ if resources with same identifiers already exist, the installation will fail.
 
 1. Install Serverless 1.2: `npm install -g serverless@1.2`
 2. Install AWS CLI (e.g. `pip install awscli` on Mac)
-3. Install Yarn (see https://yarnpkg.com/en/docs/install)
-4. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
-5. Cd into directory: `cd developer-portal`
-6. Install dependencies: `yarn install`
-7. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
-8. Verify email sender. Run `node scripts/setup.js register-email <region> <email>` and confirm link from the email you get
-9. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
+3. Save AWS credentials to `~/.aws/credentials` (see http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles for more details)
+4. Install Yarn (see https://yarnpkg.com/en/docs/install)
+5. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
+6. Cd into directory: `cd developer-portal`
+7. Install dependencies: `yarn install`
+8. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
+9. Verify email sender. Run `node scripts/setup.js register-email <region> <email>` and confirm link from the email you get
+10. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
   - The script will put created identifiers to file `env.yml`
   - Required env variables:
+    - `PROFILE` - name of AWS profile
     - `SERVICE_NAME` - Name of the Serverless service. It will be used as a prefix for created AWS services, it should be only alphanumeric with optional dashes
     - `REGION` - AWS region where the services should be created
     - `RDS_PASSWORD` - Desired password for created database
@@ -34,7 +36,7 @@ if resources with same identifiers already exist, the installation will fail.
     - `LOG_HOST` - Papertrail endpoint hostname
     - `LOG_PORT` - Papertrail endpoint port
     - `SLACK_HOOK_URL` - Slack webhook url for notifications
-10. Save generated `env.yml` to a safe place
+11. Save generated `env.yml` to a safe place
 
 Please note that your SES service must be out of sandbox or you have to verify
 each email or domain before you use it for account signup.
