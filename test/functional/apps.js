@@ -56,6 +56,13 @@ describe('apps', () => {
           err => callback(err)
         );
       },
+      function (cb) {
+        rds.query(
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+          [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+          err => cb(err)
+        );
+      },
     ], done);
   });
 

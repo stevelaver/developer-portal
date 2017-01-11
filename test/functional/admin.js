@@ -51,6 +51,13 @@ describe('admin', () => {
           callback();
         });
       },
+      function (cb) {
+        rds.query(
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+          [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+          err => cb(err)
+        );
+      },
       function (callback) {
         rds.query(
           'DELETE FROM apps WHERE vendor=?',
@@ -84,8 +91,8 @@ describe('admin', () => {
     async.waterfall([
       function (cb) {
         rds.query(
-          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?',
-          [otherVendor, 'test', 'test', 'test'],
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+          [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
           err => cb(err)
         );
       },
