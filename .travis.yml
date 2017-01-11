@@ -1,5 +1,7 @@
 sudo: true
-language: bash
+language: node_js
+node_js:
+  - "6.1"
 services:
   - mysql
   - docker
