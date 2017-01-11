@@ -17,7 +17,7 @@ before_script:
   - docker run --rm -i -e AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY keboola/developer-portal
 
 script:
-  - mocha --timeout 0 test
+  - mocha --timeout 0 test/functional
 
 deploy:
   provider: script

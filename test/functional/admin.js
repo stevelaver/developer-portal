@@ -351,15 +351,8 @@ describe('admin', () => {
     async.waterfall([
       function (cb) {
         rds.query(
-          'DELETE FROM apps WHERE vendor=?',
-          vendor,
-          err => cb(err)
-        );
-      },
-      function (cb) {
-        rds.query(
-          'DELETE FROM apps WHERE vendor=?',
-          otherVendor,
+          'DELETE FROM apps WHERE vendor=? OR vendor=?',
+          [vendor, otherVendor],
           err => cb(err)
         );
       },
