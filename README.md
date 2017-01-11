@@ -16,18 +16,17 @@ if resources with same identifiers already exist, the installation will fail.
 
 1. Install Serverless 1.2: `npm install -g serverless@1.2`
 2. Install AWS CLI (e.g. `pip install awscli` on Mac)
-3. Save AWS credentials to `~/.aws/credentials` (see http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles for more details)
-4. Install Yarn (see https://yarnpkg.com/en/docs/install)
-5. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
-6. Cd into directory: `cd developer-portal`
-7. Install dependencies: `yarn install`
-8. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
-9. Verify email sender. Run `node scripts/setup.js register-email <aws-profile> <region> <email>` and confirm link from the email you get
-10. Run setup script: `env SERVICE_NAME= PROFILE= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
+3. Install Yarn (see https://yarnpkg.com/en/docs/install)
+4. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
+5. Cd into directory: `cd developer-portal`
+6. Install dependencies: `yarn install`
+7. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
+8. Either save AWS credentials to `~/.aws/credentials` (see http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles) or set env variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` prior to running following commands
+9. Verify email sender. Run `node scripts/setup.js register-email <region> <email>` and confirm link from the email you get
+10. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
   - The script will put created identifiers to file `env.yml`
   - Required env variables:
     - `SERVICE_NAME` - Name of the Serverless service. It will be used as a prefix for created AWS services, it should be only alphanumeric with optional dashes
-    - `PROFILE` - name of AWS profile
     - `REGION` - AWS region where the services should be created
     - `RDS_PASSWORD` - Desired password for created database
     - `RDS_INSTANCE_CLASS` - Desired instance class of created RDS, see http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html but `db.t2.micro` should work fine
