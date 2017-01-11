@@ -31,11 +31,11 @@ const userPassword2 = 'uiOU.-jfdksfj89';
 const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
 
 describe('auth', () => {
-  before((done) => {
+  before((cb) => {
     rds.query(
-      'INSERT INTO vendors SET ?',
-      { id: vendor, name: 'test', address: 'test', email: 'test' },
-      err => done(err)
+      'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+      [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+      err => cb(err)
     );
   });
 
