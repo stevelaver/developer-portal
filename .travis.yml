@@ -18,6 +18,6 @@ script:
 
 deploy:
   provider: script
-  script: node ./scripts/create-env.js ./env.yml DEPLOY && docker -v &&  docker build -t keboola/developer-portal . && docker run --rm -i -e AWS_ACCESS_KEY_ID=$DEPLOY_AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$DEPLOY_AWS_SECRET_ACCESS_KEY keboola/developer-portal
+  script: npm install && node ./scripts/create-env.js ./env.yml DEPLOY && docker -v &&  docker build -t keboola/developer-portal . && docker run --rm -i -e AWS_ACCESS_KEY_ID=$DEPLOY_AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$DEPLOY_AWS_SECRET_ACCESS_KEY keboola/developer-portal
   on:
     tags: true
