@@ -152,7 +152,8 @@ module.exports.userMakeAdmin = (event, context, callback) => request.errorHandle
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
-    .then(() => app.makeUserAdmin(cognito, identity, event.pathParameters.email)),
+    .then(() => app.makeUserAdmin(cognito, identity, event.pathParameters.email))
+    .then(() => null),
     db,
     event,
     context,
@@ -187,7 +188,8 @@ module.exports.userEnable = (event, context, callback) => request.errorHandler((
         'Welcome to Keboola Developer Portal',
         `Your account in Keboola Developer Portal for vendor ${user.vendor} has been approved.`
       );
-    }),
+    })
+    .then(() => null),
     db,
     event,
     context,
