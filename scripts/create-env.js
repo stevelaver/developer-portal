@@ -6,40 +6,43 @@ const yaml = require('yamljs');
 
 const args = process.argv.slice(2);
 
-const getEnvVar = (name) => {
-  if (!_.has(process.env, name)) {console.log(name);
-    throw new Error(`Env variable ${name} does not exist`);
+const getEnvVar = (name, prefix = null) => {
+  const varName = prefix ? `${prefix}_${name}` : name;
+  if (!_.has(process.env, varName)) {
+    throw new Error(`Env variable ${varName} does not exist`);
   }
-  return process.env[name];
+  return process.env[varName];
 };
+
+const envPrefix = _.get(args, 1, null);
 
 fs.writeFile(
   args[0],
   yaml.stringify({
-    SERVICE_NAME: getEnvVar('SERVICE_NAME'),
-    REGION: getEnvVar('REGION'),
-    STAGE: getEnvVar('STAGE'),
-    SES_EMAIL_FROM: getEnvVar('SES_EMAIL_FROM'),
-    RDS_INSTANCE_CLASS: getEnvVar('RDS_INSTANCE_CLASS'),
-    RDS_DATABASE: getEnvVar('RDS_DATABASE'),
-    RDS_USER: getEnvVar('RDS_USER'),
-    RDS_PASSWORD: getEnvVar('RDS_PASSWORD'),
-    S3_BUCKET: getEnvVar('S3_BUCKET'),
-    LOG_HOST: getEnvVar('LOG_HOST'),
-    LOG_PORT: getEnvVar('LOG_PORT'),
-    SLACK_HOOK_URL: getEnvVar('SLACK_HOOK_URL'),
-    ACCOUNT_ID: getEnvVar('ACCOUNT_ID'),
-    VPC_CF_STACK_ID: getEnvVar('VPC_CF_STACK_ID'),
-    VPC_SECURITY_GROUP: getEnvVar('VPC_SECURITY_GROUP'),
-    VPC_SUBNET1: getEnvVar('VPC_SUBNET1'),
-    VPC_SUBNET2: getEnvVar('VPC_SUBNET2'),
-    RDS_SUBNET_GROUP: getEnvVar('RDS_SUBNET_GROUP'),
-    COGNITO_POOL_ID: getEnvVar('COGNITO_POOL_ID'),
-    COGNITO_CLIENT_ID: getEnvVar('COGNITO_CLIENT_ID'),
-    RDS_HOST: getEnvVar('RDS_HOST'),
-    RDS_PORT: getEnvVar('RDS_PORT'),
-    CLOUDFRONT_URI: getEnvVar('CLOUDFRONT_URI'),
-    API_ENDPOINT: getEnvVar('API_ENDPOINT'),
+    SERVICE_NAME: getEnvVar('SERVICE_NAME', envPrefix),
+    REGION: getEnvVar('REGION', envPrefix),
+    STAGE: getEnvVar('STAGE', envPrefix),
+    SES_EMAIL_FROM: getEnvVar('SES_EMAIL_FROM', envPrefix),
+    RDS_INSTANCE_CLASS: getEnvVar('RDS_INSTANCE_CLASS', envPrefix),
+    RDS_DATABASE: getEnvVar('RDS_DATABASE', envPrefix),
+    RDS_USER: getEnvVar('RDS_USER', envPrefix),
+    RDS_PASSWORD: getEnvVar('RDS_PASSWORD', envPrefix),
+    S3_BUCKET: getEnvVar('S3_BUCKET', envPrefix),
+    LOG_HOST: getEnvVar('LOG_HOST', envPrefix),
+    LOG_PORT: getEnvVar('LOG_PORT', envPrefix),
+    SLACK_HOOK_URL: getEnvVar('SLACK_HOOK_URL', envPrefix),
+    ACCOUNT_ID: getEnvVar('ACCOUNT_ID', envPrefix),
+    VPC_CF_STACK_ID: getEnvVar('VPC_CF_STACK_ID', envPrefix),
+    VPC_SECURITY_GROUP: getEnvVar('VPC_SECURITY_GROUP', envPrefix),
+    VPC_SUBNET1: getEnvVar('VPC_SUBNET1', envPrefix),
+    VPC_SUBNET2: getEnvVar('VPC_SUBNET2', envPrefix),
+    RDS_SUBNET_GROUP: getEnvVar('RDS_SUBNET_GROUP', envPrefix),
+    COGNITO_POOL_ID: getEnvVar('COGNITO_POOL_ID', envPrefix),
+    COGNITO_CLIENT_ID: getEnvVar('COGNITO_CLIENT_ID', envPrefix),
+    RDS_HOST: getEnvVar('RDS_HOST', envPrefix),
+    RDS_PORT: getEnvVar('RDS_PORT', envPrefix),
+    CLOUDFRONT_URI: getEnvVar('CLOUDFRONT_URI', envPrefix),
+    API_ENDPOINT: getEnvVar('API_ENDPOINT', envPrefix),
   }),
   (err) => {
     if (err) {
