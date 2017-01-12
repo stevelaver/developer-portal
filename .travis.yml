@@ -5,9 +5,6 @@ node_js:
 services:
   - mysql
   - docker
-branches:
-  only:
-  - master
 
 # $ENV_SETTING is either TEST or DEPLOY
 before_script:
