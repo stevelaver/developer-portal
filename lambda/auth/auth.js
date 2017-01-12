@@ -245,7 +245,7 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     user: process.env.RDS_USER,
     password: process.env.RDS_PASSWORD,
     database: process.env.RDS_DATABASE,
-    ssl: process.env.RDS_SSL,
+    ssl: 'Amazon RDS',
     port: process.env.RDS_PORT,
   });
   const body = JSON.parse(event.body);

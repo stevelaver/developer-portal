@@ -19,7 +19,7 @@ const rds = mysql.createConnection({
   user: env.RDS_USER,
   password: env.RDS_PASSWORD,
   database: env.RDS_DATABASE,
-  ssl: env.RDS_SSL,
+  ssl: 'Amazon RDS',
   multipleStatements: true,
 });
 

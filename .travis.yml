@@ -8,16 +8,73 @@ services:
 
 # $ENV_SETTING is either TEST or DEPLOY
 before_script:
-  - node ./scripts/create-env.js ./env.yml TEST
   - docker -v
   - docker build -t keboola/developer-portal .
-  - docker run --rm -i -e AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY keboola/developer-portal
+  - docker run --rm -i \
+    -e AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID \
+    -e AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY \
+    -e SERVICE_NAME=$TEST_SERVICE_NAME \
+    -e REGION=$TEST_REGION \
+    -e STAGE=$TEST_STAGE \
+    -e SES_EMAIL_FROM=$TEST_SES_EMAIL_FROM \
+    -e RDS_INSTANCE_CLASS=$TEST_RDS_INSTANCE_CLASS \
+    -e RDS_DATABASE=$TEST_RDS_DATABASE \
+    -e RDS_USER=$TEST_RDS_USER \
+    -e RDS_PASSWORD=$TEST_RDS_PASSWORD \
+    -e RDS_HOST=$TEST_RDS_HOST \
+    -e RDS_PORT=$TEST_RDS_PORT \
+    -e S3_BUCKET=$TEST_S3_BUCKET \
+    -e LOG_HOST=$TEST_LOG_HOST \
+    -e LOG_PORT=$TEST_LOG_PORT \
+    -e SLACK_HOOK_URL=$TEST_SLACK_HOOK_URL \
+    -e ACCOUNT_ID=$TEST_ACCOUNT_ID \
+    -e VPC_CF_STACK_ID=$TEST_VPC_CF_STACK_ID \
+    -e VPC_SECURITY_GROUP=$TEST_VPC_SECURITY_GROUP \
+    -e VPC_SUBNET1=$TEST_VPC_SUBNET1 \
+    -e VPC_SUBNET2=$TEST_VPC_SUBNET2 \
+    -e RDS_SUBNET_GROUP=$TEST_RDS_SUBNET_GROUP \
+    -e COGNITO_POOL_ID=$TEST_COGNITO_POOL_ID \
+    -e COGNITO_CLIENT_ID=$TEST_COGNITO_CLIENT_ID \
+    -e CLOUDFRONT_URI=$TEST_CLOUDFRONT_URI \
+    -e API_ENDPOINT=$TEST_API_ENDPOINT \
+    keboola/developer-portal
 
 script:
-  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY mocha --timeout 0 test/functional
+  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID \
+    AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY \
+    mocha --timeout 0 test/functional
 
 deploy:
   provider: script
-  script: npm install && node ./scripts/create-env.js ./env.yml DEPLOY && docker -v &&  docker build -t keboola/developer-portal . && docker run --rm -i -e AWS_ACCESS_KEY_ID=$DEPLOY_AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$DEPLOY_AWS_SECRET_ACCESS_KEY keboola/developer-portal
+  script: docker -v && \
+    docker build -t keboola/developer-portal . && \
+    docker run --rm -i \
+      -e AWS_ACCESS_KEY_ID=$DEPLOY_AWS_ACCESS_KEY_ID \
+      -e AWS_SECRET_ACCESS_KEY=$DEPLOY_AWS_SECRET_ACCESS_KEY \
+      -e SERVICE_NAME=$DEPLOY_SERVICE_NAME \
+      -e REGION=$DEPLOY_REGION \
+      -e STAGE=$DEPLOY_STAGE \
+      -e SES_EMAIL_FROM=$DEPLOY_SES_EMAIL_FROM \
+      -e RDS_INSTANCE_CLASS=$DEPLOY_RDS_INSTANCE_CLASS \
+      -e RDS_DATABASE=$DEPLOY_RDS_DATABASE \
+      -e RDS_USER=$DEPLOY_RDS_USER \
+      -e RDS_PASSWORD=$DEPLOY_RDS_PASSWORD \
+      -e RDS_HOST=$DEPLOY_RDS_HOST \
+      -e RDS_PORT=$DEPLOY_RDS_PORT \
+      -e S3_BUCKET=$DEPLOY_S3_BUCKET \
+      -e LOG_HOST=$DEPLOY_LOG_HOST \
+      -e LOG_PORT=$DEPLOY_LOG_PORT \
+      -e SLACK_HOOK_URL=$DEPLOY_SLACK_HOOK_URL \
+      -e ACCOUNT_ID=$DEPLOY_ACCOUNT_ID \
+      -e VPC_CF_STACK_ID=$DEPLOY_VPC_CF_STACK_ID \
+      -e VPC_SECURITY_GROUP=$DEPLOY_VPC_SECURITY_GROUP \
+      -e VPC_SUBNET1=$DEPLOY_VPC_SUBNET1 \
+      -e VPC_SUBNET2=$DEPLOY_VPC_SUBNET2 \
+      -e RDS_SUBNET_GROUP=$DEPLOY_RDS_SUBNET_GROUP \
+      -e COGNITO_POOL_ID=$DEPLOY_COGNITO_POOL_ID \
+      -e COGNITO_CLIENT_ID=$DEPLOY_COGNITO_CLIENT_ID \
+      -e CLOUDFRONT_URI=$DEPLOY_CLOUDFRONT_URI \
+      -e API_ENDPOINT=$DEPLOY_API_ENDPOINT \
+      keboola/developer-portal
   on:
     tags: true

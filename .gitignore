@@ -36,7 +36,6 @@ node_modules
 .tmp
 
 #SERVERLESS
-admin.env
 .env
 **/env.yml
 **/event.json
@@ -47,5 +46,5 @@ admin.env
 #Ignore _meta folder
 _meta
 
-
 .env-test
+run-test.sh

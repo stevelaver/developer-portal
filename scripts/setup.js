@@ -277,7 +277,7 @@ class Setup {
       user: env.RDS_USER,
       password: env.RDS_PASSWORD,
       database: env.RDS_DATABASE,
-      ssl: env.RDS_SSL,
+      ssl: 'Amazon RDS',
       multipleStatements: true,
     }), `${__dirname}/../rds-model.sql`, err => done(err));
   }

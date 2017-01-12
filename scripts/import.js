@@ -16,7 +16,7 @@ const rds = mysql.createConnection({
   user: env.RDS_USER,
   password: env.RDS_PASSWORD,
   database: env.RDS_DATABASE,
-  ssl: env.RDS_SSL,
+  ssl: 'Amazon RDS',
   multipleStatements: true,
 });
 db.connect(env);
@@ -340,7 +340,7 @@ if (args[0] === 'data') {
     user: env.RDS_USER,
     password: env.RDS_PASSWORD,
     database: env.RDS_DATABASE,
-    ssl: env.RDS_SSL,
+    ssl: 'Amazon RDS',
     multipleStatements: true,
   }), args[1], (err) => {
     if (err) {

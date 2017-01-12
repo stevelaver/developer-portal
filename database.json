@@ -7,7 +7,7 @@
     "host": { "ENV": "RDS_HOST" },
     "database": { "ENV": "RDS_DATABASE" },
     "port": { "ENV": "RDS_PORT" },
-    "ssl": { "ENV": "RDS_SSL" },
+    "ssl": "Amazon RDS",
     "multipleStatements": true
   }
 }

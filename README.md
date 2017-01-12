@@ -82,7 +82,6 @@ RDS_INSTANCE_CLASS: db.t2.micro
 RDS_DATABASE: devportal
 RDS_USER: devportal
 RDS_PASSWORD: dbpass
-RDS_SSL: 'Amazon RDS'
 S3_BUCKET: dev-portal-resources
 LOG_HOST: logs.papertrailapp.com
 LOG_PORT: 33333
