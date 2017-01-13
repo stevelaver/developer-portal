@@ -203,8 +203,6 @@ const getData = function (callbackMain) {
         loggerConfiguration.verbosity = app.data.logging.verbosity;
       }
 
-
-
       _.forEach(app.data, (value, key) => {
         if (!_.includes(['logging', 'definition', 'vendor', 'memory', 'forward_token', 'default_bucket_stage', 'default_bucket', 'process_timeout', 'synchronous_actions', 'configuration_format', 'cpu_shares', 'forward_token_details', 'network', 'image_parameters', 'postProcess', 'modules', 'staging_storage', 'inject_environment'], key)) {
           console.log(`Left in data for app ${app.id}: ${key}`, value);

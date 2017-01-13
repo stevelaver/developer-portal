@@ -7,11 +7,32 @@ require('babel-polyfill');
 const _ = require('lodash');
 const db = require('../lib/db');
 const error = require('../lib/error');
+const html = require('../views/landing.html');
 const joi = require('joi');
 const request = require('../lib/request');
 
 const app = new App(db, process.env, error);
 const validation = new Validation(joi, error);
+
+/**
+ * Landing Page
+ */
+module.exports.landing = (event, context, callback) => request.htmlErrorHandler(() =>
+  callback(null, {
+    headers: {'Content-Type': 'text/html'},
+    body: html({apiEndpoint: process.env.API_ENDPOINT}),
+    statusCode: 200,
+  })
+  , event, context, callback);
+
+
+/**
+ * Not Found Page
+ */
+module.exports.notFound = (event, context, callback) => request.errorHandler(() =>
+  request.response(error.notFound(), null, event, context, callback)
+  , event, context, callback);
+
 
 /**
  * App Detail

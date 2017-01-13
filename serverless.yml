@@ -43,6 +43,32 @@ functions:
   logger:
       handler: logger.handler
 
+  landingPage:
+    handler: public.landing
+    events:
+      -
+        http:
+          method: get
+          path: "/"
+  notFoundPage:
+    handler: public.notFound
+    events:
+      -
+        http:
+          method: get
+          path: "{anything}"
+      -
+        http:
+          method: post
+          path: "{anything}"
+      -
+        http:
+          method: put
+          path: "{anything}"
+      -
+        http:
+          method: patch
+          path: "{anything}"
   adminAppsApprove:
     handler: admin.appApprove
     events:

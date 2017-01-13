@@ -52,7 +52,7 @@ module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandl
   confirm(event, context, (err) => {
     request.htmlResponse(err, {
       header: 'Account confirmation',
-      content: 'Your account has been successfuly confirmed. Now you have ' +
+      content: 'Your account has been successfully confirmed. Now you have ' +
         'to wait for approval from our staff. Your account is disabled ' +
         'until then.',
     }, event, context, callback);

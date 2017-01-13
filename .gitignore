@@ -47,4 +47,4 @@ node_modules
 _meta
 
 .env-test
-run-test.sh
+deploy.sh
