@@ -5,9 +5,10 @@ custom:
 service: "${file(./env.yml):SERVICE_NAME}"
 
 plugins:
-   - serverless-offline
-   - serverless-run-function-plugin
-   - serverless-webpack
+  - db-migration
+  - serverless-offline
+  - serverless-run-function-plugin
+  - serverless-webpack
 
 package:
   exclude:
