@@ -2,7 +2,7 @@ SET foreign_key_checks = 0;
 
 DROP TABLE IF EXISTS vendors;
 CREATE TABLE `vendors` (
-  `id` varchar(50) NOT NULL,
+  `id` varchar(20) NOT NULL,
   `name` varchar(255) NOT NULL,
   `address` varchar(255) NOT NULL,
   `email` varchar(128) NOT NULL,

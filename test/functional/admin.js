@@ -86,8 +86,8 @@ describe('admin', () => {
     ], done);
   });
 
-  it('Edit App', (done) => {
-    const appId2 = `${appId}-2`;
+  it('Create and Edit App', (done) => {
+    const appId2 = `${otherVendor}.${appId}-2`;
     async.waterfall([
       function (cb) {
         rds.query(
@@ -97,11 +97,23 @@ describe('admin', () => {
         );
       },
       function (cb) {
-        rds.query(
-          'INSERT INTO `apps` SET id=?, vendor=?, name=?',
-          [appId2, otherVendor, 'test'],
-          err => cb(err)
-        );
+        request.post({
+          url: `${env.API_ENDPOINT}/admin/apps`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            id: `${appId}-2`,
+            vendor: otherVendor,
+            name: 'test',
+            type: 'extractor',
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          cb();
+        });
       },
       function (cb) {
         // Get app detail

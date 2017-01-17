@@ -109,6 +109,29 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
 
 
 /**
+ * Create app
+ */
+module.exports.appsCreate = (event, context, callback) => request.errorHandler(() => {
+  validation.validate(event, {
+    auth: true,
+    body: validation.adminCreateAppSchema(),
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+      .then(user => app.insertAppByAdmin(
+        JSON.parse(event.body),
+        user
+      )),
+    db,
+    event,
+    context,
+    callback
+  );
+}, event, context, (err, res) => db.endCallback(err, res, callback));
+
+/**
  * Update app
  */
 module.exports.appsUpdate = (event, context, callback) => request.errorHandler(() => {

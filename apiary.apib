@@ -173,7 +173,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 `keboola.ex-adwords`.
 
 + Attributes
-    + id (required) - Identifier of the app, allowed characters are unaccented letters, numbers, dashes and underscores
+    + id (required) - Identifier of the app, allowed characters are unaccented letters, numbers, dashes and underscores. Length should be between 3 and 30.
     + name (required) - Do not use the word `extractor` or `writer` in your app
     + type (required) - One of: `extractor`, `application`, `writer`
     + repository (optional, object)
@@ -888,6 +888,72 @@ Management of users and apps designated for Developer Portal staff only
                     }
                 ]
             }
+
+### Create app [POST /admin/apps]
+
+Create apps accross vendors
+
++ Attributes
+    + id - Identifier of the app without vendor prefix, allowed characters are unaccented letters, numbers, dashes and underscores. Length should be between 3 and 30.
+    + vendor (required)
+    + name (required) - Do not use the word `extractor` or `writer` in your app
+    + type (required) - One of: `extractor`, `application`, `writer`
+    + repository (optional, object)
+        + type (enum[string])
+            + Members
+                + `dockerhub`
+                + `quay`
+                + `builder`
+        + uri (optional) - Image uri in the repository, e.g. `keboola/adwords-extractor`
+        + tag (optional) - Tag of the image in the repository; typically `latest` or `master` or `1.0.0`
+        + options (optional, object) - additional settings, e.g. may contain `username` and `password` for private repositories
+    + shortDescription (optional) - One sentence describing your app or the app you are integrating
+    + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
+    + licenseUrl (optional) - Can be included in your public source repository
+    + documentationUrl (optional) - Instructions to help end-user configure the application (linked from application configuration page) and payment information (if any)
+    + encryption (optional, boolean) - All parameter attributes with keys prefixed by `#` will be encrypted. If you pass sensitive data in configuration (credentials, tokens), it is encouraged to turn the encryption on
+        + Default: `false`
+    + defaultBucket (optional, boolean) - All tables should be uploaded to a pregenerated bucket
+        + Default: `false`
+    + defaultBucketStage (optional, enum[string])
+        + Members
+            + `in`
+            + `out`
+        + Default: `in`
+    + uiOptions (optional, array) - Which UI helpers to use
+        + Members
+            + `tableInput`
+            + `tableOutput`
+            + `fileInput`
+            + `fileOutput`
+            + `excludeFromNewList`
+    + imageParameters (optional) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
+    + testConfiguration (optional) - JSON configuration to test the application
+    + configurationSchema (optional) - JSON schema describing the configuration
+    + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
+    + emptyConfiguration (optional) - Default configuration
+    + actions (optional, array) - List of supported actions
+        + Default: `run`
+    + fees (optional, boolean) - Using the component in KBC implies additional fees
+        + Default: `false`
+    + limits (optional) - Description of service or usage limits. Define what is maximum expected usage of your component. This may vary depending on the memory/time limits, API usage limits and other factors.
+    + logger (optional, enum[string]) - Specify a way to log events from your application
+        + Members
+            + `standard`
+            + `gelf`
+        + Default: `standard`
+    + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + stagingStorageInput (optional, enum[string])
+       + Members
+           + `local`
+           + `s3`
+        + Default: `local`
+    + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
+        + Default: `true`
+    + permissions (optional, array) - List of specific permissions for the app. You may choose specific KBC stacks
+        + permission (object)
+            + stack: (string, required) - name of the stack
+            + projects: (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
 
 ### Update app [PATCH /admin/apps/{appId}]
 
