@@ -1,17 +1,18 @@
 'use strict';
 
 import App from '../../../lib/app';
+import Identity from '../../../lib/identity';
 import Validation from '../../../lib/validation';
 
 require('babel-polyfill');
-const _ = require('lodash');
 const request = require('../../../lib/request');
 const db = require('../../../lib/db');
 const error = require('../../../lib/error');
-const identity = require('../../../lib/identity');
 const joi = require('joi');
+const jwt = require('jsonwebtoken');
 
 const app = new App(db, process.env, error);
+const identity = new Identity(jwt, error);
 const validation = new Validation(joi, error);
 
 module.exports.appsCreate = (event, context, callback) => request.errorHandler(() => {
@@ -22,7 +23,7 @@ module.exports.appsCreate = (event, context, callback) => request.errorHandler((
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
+    .then(() => identity.getUser(event.headers.Authorization))
     .then(user => app.insertApp(JSON.parse(event.body), user)),
     db,
     event,
@@ -44,7 +45,7 @@ module.exports.appsUpdate = (event, context, callback) => request.errorHandler((
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
+    .then(() => identity.getUser(event.headers.Authorization))
     .then(user => app.updateApp(
       event.pathParameters.appId,
       JSON.parse(event.body),

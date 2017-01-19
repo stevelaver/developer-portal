@@ -2,6 +2,7 @@
 
 import App from '../lib/app';
 import Email from '../lib/email';
+import Identity from '../lib/identity';
 import Validation from '../lib/validation';
 
 require('babel-polyfill');
@@ -9,17 +10,22 @@ const _ = require('lodash');
 const aws = require('aws-sdk');
 const db = require('../lib/db');
 const error = require('../lib/error');
-const identity = require('../lib/identity');
 const joi = require('joi');
+const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
 const request = require('../lib/request');
 
 aws.config.setPromisesDependency(Promise);
+const cognito = new aws.CognitoIdentityServiceProvider({
+  region: process.env.REGION,
+});
 const app = new App(db, process.env, error);
 const email = new Email(
   new aws.SES({ apiVersion: '2010-12-01', region: process.env.REGION }),
   process.env.SES_EMAIL_FROM
 );
+
+const identity = new Identity(jwt, error);
 const validation = new Validation(joi, error);
 
 /**
@@ -35,7 +41,7 @@ module.exports.appApprove = (event, context, callback) => request.errorHandler((
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+    .then(() => identity.getAdmin(event.headers.Authorization))
     .then(user => app.approveApp(event.pathParameters.id, user))
     .then(vendor => email.send(
       vendor.email,
@@ -66,7 +72,7 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+    .then(() => identity.getAdmin(event.headers.Authorization))
     .then(() => app.listApps(
       _.get(event, 'queryStringParameters.filter', null),
       _.get(event, 'queryStringParameters.offset', null),
@@ -94,7 +100,7 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+    .then(() => identity.getAdmin(event.headers.Authorization))
     .then(() => app.getAppWithVendorForAdmin(
       event.pathParameters.id,
       _.get(event, 'pathParameters.version', null),
@@ -119,7 +125,7 @@ module.exports.appsCreate = (event, context, callback) => request.errorHandler((
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+      .then(() => identity.getAdmin(event.headers.Authorization))
       .then(user => app.insertAppByAdmin(
         JSON.parse(event.body),
         user
@@ -145,7 +151,7 @@ module.exports.appsUpdate = (event, context, callback) => request.errorHandler((
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+      .then(() => identity.getAdmin(event.headers.Authorization))
       .then(user => app.updateAppByAdmin(
         event.pathParameters.id,
         JSON.parse(event.body),
@@ -170,12 +176,11 @@ module.exports.userMakeAdmin = (event, context, callback) => request.errorHandle
         .error(Error('Parameter email must have format of email address')),
     },
   });
-  const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
-    .then(() => app.makeUserAdmin(cognito, identity, event.pathParameters.email))
+    .then(() => identity.getAdmin(event.headers.Authorization))
+    .then(() => app.makeUserAdmin(cognito, event.pathParameters.email))
     .then(() => null),
     db,
     event,
@@ -197,21 +202,17 @@ module.exports.userEnable = (event, context, callback) => request.errorHandler((
         .error(Error('Parameter email must have format of email address')),
     },
   });
-  const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+    .then(() => identity.getAdmin(event.headers.Authorization))
     .then(() => app.enableUser(cognito, event.pathParameters.email))
-    .then((userIn) => {
-      const user = identity.formatUser(userIn);
-      return email.send(
-        user.email,
-        'Welcome to Keboola Developer Portal',
-        'Welcome to Keboola Developer Portal',
-        `Your account in Keboola Developer Portal for vendor ${user.vendor} has been approved.`
-      );
-    })
+    .then(() => email.send(
+      event.pathParameters.email,
+      'Welcome to Keboola Developer Portal',
+      'Welcome to Keboola Developer Portal',
+      'Your account in Keboola Developer Portal has been approved.'
+    ))
     .then(() => null),
     db,
     event,
@@ -233,11 +234,10 @@ module.exports.users = (event, context, callback) => request.errorHandler(() => 
       filter: joi.string(),
     },
   });
-  const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getAdmin(process.env.REGION, event.headers.Authorization))
+    .then(() => identity.getAdmin(event.headers.Authorization))
     .then(() => app.listUsers(
       cognito,
       _.has(event, 'queryStringParameters.filter')
@@ -246,7 +246,7 @@ module.exports.users = (event, context, callback) => request.errorHandler(() => 
     .then(data => _.map(data.Users, item => ({
       email: item.Username,
       name: _.get(_.find(item.Attributes, o => (o.Name === 'name')), 'Value', null),
-      vendor: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', null),
+      // TODO vendor: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', null),
       createdOn: item.UserCreateDate,
       isEnabled: item.Enabled,
       status: item.UserStatus,
@@ -256,5 +256,26 @@ module.exports.users = (event, context, callback) => request.errorHandler(() => 
     event,
     context,
     callback
+  );
+}, event, context, (err, res) => db.endCallback(err, res, callback));
+
+/**
+ * Create vendor
+ */
+module.exports.vendorsCreate = (event, context, callback) => request.errorHandler(() => {
+  validation.validate(event, {
+    auth: true,
+    body: validation.adminCreateVendor(),
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(event.headers.Authorization))
+      .then(() => app.createVendor(cognito, JSON.parse(event.body))),
+    db,
+    event,
+    context,
+    callback,
+    204
   );
 }, event, context, (err, res) => db.endCallback(err, res, callback));

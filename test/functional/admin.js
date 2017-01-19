@@ -28,7 +28,7 @@ const cognito = new aws.CognitoIdentityServiceProvider({
   region: env.REGION,
 });
 const vendor = process.env.FUNC_VENDOR;
-const otherVendor = `${vendor}-other`;
+const otherVendor = `${vendor}o1`;
 const appId = `app_admin_${Date.now()}`;
 const userEmail = `u${Date.now()}.test@keboola.com`;
 let token;
@@ -36,7 +36,7 @@ let token;
 describe('admin', () => {
   before((done) => {
     async.waterfall([
-      function (callback) {
+      (cb) => {
         request.post({
           url: `${env.API_ENDPOINT}/auth/login`,
           json: true,
@@ -48,24 +48,37 @@ describe('admin', () => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('token');
           token = body.token;
-          callback();
+          cb();
         });
       },
-      function (cb) {
+      (cb) => {
         rds.query(
           'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
           [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
           err => cb(err)
         );
       },
-      function (callback) {
+      (cb) => {
+        cognito.createGroup({
+          GroupName: vendor,
+          UserPoolId: env.COGNITO_POOL_ID,
+          Description: 'test',
+        }, (err) => {
+          if (err.code !== 'GroupExistsException') {
+            cb(err);
+          } else {
+            cb();
+          }
+        });
+      },
+      (cb) => {
         rds.query(
           'DELETE FROM apps WHERE vendor=?',
           vendor,
-          err => callback(err)
+          err => cb(err)
         );
       },
-      function (cb) {
+      (cb) => {
         cognito.signUp({
           ClientId: env.COGNITO_CLIENT_ID,
           Username: userEmail,
@@ -73,11 +86,17 @@ describe('admin', () => {
           UserAttributes: [
             { Name: 'email', Value: userEmail },
             { Name: 'name', Value: 'Test' },
-            { Name: 'profile', Value: 'test' },
           ],
         }, err => cb(err));
       },
-      function (cb) {
+      (cb) => {
+        cognito.adminAddUserToGroup({
+          UserPoolId: env.COGNITO_POOL_ID,
+          Username: userEmail,
+          GroupName: vendor,
+        }, err => cb(err));
+      },
+      (cb) => {
         cognito.adminConfirmSignUp({
           UserPoolId: env.COGNITO_POOL_ID,
           Username: userEmail,
@@ -366,20 +385,88 @@ describe('admin', () => {
     ], done);
   });
 
-  after((done) => {
+  it('Create vendor', (done) => {
+    const aVendor = `${vendor}o2`;
     async.waterfall([
-      function (cb) {
+      (cb) => {
+        request.post({
+          url: `${env.API_ENDPOINT}/admin/vendors`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            id: aVendor,
+            name: aVendor,
+            address: 'test',
+            email: process.env.FUNC_USER_EMAIL,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          cb();
+        });
+      },
+      (cb) => {
+        cognito.getGroup({
+          GroupName: aVendor,
+          UserPoolId: env.COGNITO_POOL_ID,
+        }, cb);
+      },
+      (group, cb) => {
+        expect(group).to.have.property('Group');
+        cb();
+      },
+      (cb) => {
+        request.get({
+          url: `${env.API_ENDPOINT}/vendors/${aVendor}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.have.property('name');
+          expect(body.name).to.be.equal(aVendor);
+          cb();
+        });
+      },
+      (cb) => {
+        cognito.deleteGroup({
+          GroupName: aVendor,
+          UserPoolId: env.COGNITO_POOL_ID,
+        }, cb);
+      },
+      (res, cb) => {
         rds.query(
-          'DELETE FROM apps WHERE vendor=? OR vendor=?',
-          [vendor, otherVendor],
+          'DELETE FROM apps WHERE vendor=?',
+          [aVendor],
           err => cb(err)
         );
       },
-      function (cb) {
+    ], done);
+  });
+
+  after((done) => {
+    async.waterfall([
+      (cb) => {
+        rds.query(
+          'DELETE FROM apps WHERE vendor=? OR vendor=?',
+          [vendor, otherVendor],
+          () => cb()
+        );
+      },
+      (cb) => {
         cognito.adminDeleteUser({
           UserPoolId: env.COGNITO_POOL_ID,
           Username: userEmail,
-        }, err => cb(err));
+        }, () => cb());
+      },
+      (cb) => {
+        cognito.deleteGroup({
+          UserPoolId: env.COGNITO_POOL_ID,
+          GroupName: vendor,
+        }, () => cb());
       },
     ], done);
   });

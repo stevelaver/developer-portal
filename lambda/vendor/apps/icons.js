@@ -1,6 +1,7 @@
 'use strict';
 
 import App from '../../../lib/app';
+import Identity from '../../../lib/identity';
 import Validation from '../../../lib/validation';
 
 require('babel-polyfill');
@@ -8,17 +9,18 @@ const _ = require('lodash');
 const aws = require('aws-sdk');
 const db = require('../../../lib/db');
 const error = require('../../../lib/error');
-const identity = require('../../../lib/identity');
 const joi = require('joi');
+const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const Promise = require('bluebird');
 const request = require('../../../lib/request');
 
-const app = new App(db, process.env, error);
-const validation = new Validation(joi, error);
-
 aws.config.setPromisesDependency(Promise);
 const s3 = new aws.S3();
+
+const app = new App(db, process.env, error);
+const identity = new Identity(jwt, error);
+const validation = new Validation(joi, error);
 
 module.exports.links = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
@@ -30,8 +32,8 @@ module.exports.links = (event, context, callback) => request.errorHandler(() => 
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
-    .then(user => app.getIcons(s3, moment, event.pathParameters.appId, user.vendor)),
+    .then(() => identity.getUser(event.headers.Authorization))
+    .then(user => app.getIcons(s3, moment, event.pathParameters.appId, user.vendors[0])), // TODO multi-vendors
     db,
     event,
     context,

@@ -140,6 +140,14 @@ functions:
           path: "admin/users/{email}/enable"
           default:
             statusCode: 204
+  adminVendorsCreate:
+    handler: admin.vendorsCreate
+    events:
+      -
+        http:
+          authorizer: authorizer
+          method: post
+          path: "admin/vendors"
   vendorAppsApprove:
     handler: vendor-apps-approve.handler
     events:
@@ -286,14 +294,6 @@ functions:
         http:
           authorizer: authorizer
           method: get
-          path: auth/profile
-  authProfileChange:
-    handler: auth.profileChange
-    events:
-      -
-        http:
-          authorizer: authorizer
-          method: put
           path: auth/profile
   authSignup:
     handler: auth.signup

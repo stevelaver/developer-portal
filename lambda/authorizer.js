@@ -7,38 +7,38 @@ const error = require('../lib/error');
 
 const userPoolId = process.env.COGNITO_POOL_ID;
 const region = process.env.REGION;
-const iss = 'https://cognito-idp.' + region + '.amazonaws.com/' + userPoolId;
-var pems;
+const iss = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
+let pems;
 
-module.exports.authorizer = function(event, context, callback) {
-  //Download PEM for your UserPool if not already downloaded
+module.exports.authorizer = function (event, context, callback) {
+  // Download PEM for your UserPool if not already downloaded
   if (!pems) {
-    //Download the JWKs and save it as PEM
+    // Download the JWKs and save it as PEM
     request({
-       url: iss + '/.well-known/jwks.json',
-       json: true
-     }, function (error, response, body) {
-      if (!error && response.statusCode === 200) {
+      url: `${iss}/.well-known/jwks.json`,
+      json: true,
+    }, (err, response, body) => {
+      if (!err && response.statusCode === 200) {
         pems = {};
-        const keys = body['keys'];
-        for(var i = 0; i < keys.length; i++) {
-          //Convert each key to PEM
-          const key_id = keys[i].kid;
+        const keys = body.keys;
+        for (let i = 0; i < keys.length; i += 1) {
+          // Convert each key to PEM
+          const keyId = keys[i].kid;
           const modulus = keys[i].n;
           const exponent = keys[i].e;
-          const key_type = keys[i].kty;
-          const jwk = { kty: key_type, n: modulus, e: exponent};
-          pems[key_id] = jwkToPem(jwk);
+          const keyType = keys[i].kty;
+          const jwk = { kty: keyType, n: modulus, e: exponent };
+          pems[keyId] = jwkToPem(jwk);
         }
-        //Now continue with validating the token
+        // Now continue with validating the token
         return ValidateToken(pems, event, callback);
-      } else {
-        //Unable to download JWKs, fail the call
-        callback(error);
       }
+
+      // Unable to download JWKs, fail the call
+      callback(err);
     });
   } else {
-    //PEMs are already downloaded, continue with validating the token
+    // PEMs are already downloaded, continue with validating the token
     return ValidateToken(pems, event, callback);
   }
 };
@@ -46,59 +46,62 @@ module.exports.authorizer = function(event, context, callback) {
 function ValidateToken(pems, event, callback) {
   const token = event.authorizationToken;
 
-  //Fail if the token is not jwt
-  const decodedJwt = jwt.decode(token, {complete: true});
+  // Fail if the token is not jwt
+  const decodedJwt = jwt.decode(token, { complete: true });
   if (!decodedJwt) {
-    return callback(error.unauthorized());
+    return callback(error.unauthorized('Your authorization token cannot be decoded.'));
+  }
+  // console.log('TOKEN', JSON.stringify(decodedJwt));
+
+  // Fail if token is not from your UserPool
+  if (decodedJwt.payload.iss !== iss) {
+    return callback(error.unauthorized('Your authorization does not belong to this domain'));
   }
 
-  //Fail if token is not from your UserPool
-  if (decodedJwt.payload.iss != iss) {
-    return callback(error.unauthorized());
+  // Reject the jwt if it's not an 'Access Token' or 'Id Token'
+  if (decodedJwt.payload.token_use !== 'access' && decodedJwt.payload.token_use !== 'id') {
+    return callback(error.unauthorized('Your authorization token was not issued for API access'));
   }
 
-  //Reject the jwt if it's not an 'Access Token'
-  if (decodedJwt.payload.token_use != 'access') {
-    return callback(error.unauthorized());
-  }
-
-  //Get the kid from the token and retrieve corresponding PEM
+  // Get the kid from the token and retrieve corresponding PEM
   const kid = decodedJwt.header.kid;
   const pem = pems[kid];
   if (!pem) {
-    //Invalid access token
-    return callback(error.unauthorized());
+    // Invalid access token
+    return callback(error.unauthorized('Your authorization token has wrong kid'));
   }
 
-  //Verify the signature of the JWT token to ensure it's really coming from your User Pool
-  jwt.verify(token, pem, { issuer: iss }, function(err, payload) {
-    if(err) {
-      //console.log(err);
+  // Verify the signature of the JWT token to ensure it's really coming from your User Pool
+  jwt.verify(token, pem, { issuer: iss }, (err, payload) => {
+    if (err) {
+      // console.log('Token ERR', err.message);
       return callback(error.unauthorized());
-    } else {
-      //Valid token. Generate the API Gateway policy for the user
-      //Always generate the policy on value of 'sub' claim and not for 'username' because username is reassignable
-      //sub is UUID for a user which is never reassigned to another user.
-      const principalId = payload.sub;
-
-      //Get AWS AccountId and API Options
-      var apiOptions = {};
-      const tmp = event.methodArn.split(':');
-      const apiGatewayArnTmp = tmp[5].split('/');
-      const awsAccountId = tmp[4];
-      apiOptions.region = tmp[3];
-      apiOptions.restApiId = apiGatewayArnTmp[0];
-      apiOptions.stage = apiGatewayArnTmp[1];
-      const method = apiGatewayArnTmp[2];
-      var resource = '/'; // root resource
-      if (apiGatewayArnTmp[3]) {
-        resource += apiGatewayArnTmp[3];
-      }
-      //For more information on specifics of generating policy, refer to blueprint for API Gateway's Custom authorizer in Lambda console
-      const policy = new AuthPolicy(principalId, awsAccountId, apiOptions);
-      policy.allowAllMethods();
-      return callback(null, policy.build());
     }
+
+    // Valid token. Generate the API Gateway policy for the user
+    // Always generate the policy on value of 'sub' claim and not for 'username'
+    // because username is reassignable
+    // sub is UUID for a user which is never reassigned to another user.
+    const principalId = payload.sub;
+
+    // Get AWS AccountId and API Options
+    const apiOptions = {};
+    const tmp = event.methodArn.split(':');
+    const apiGatewayArnTmp = tmp[5].split('/');
+    const awsAccountId = tmp[4];
+    apiOptions.region = tmp[3];
+    apiOptions.restApiId = apiGatewayArnTmp[0];
+    apiOptions.stage = apiGatewayArnTmp[1];
+    // const method = apiGatewayArnTmp[2];
+    // const resource = '/'; // root resource
+    // if (apiGatewayArnTmp[3]) {
+    //  resource += apiGatewayArnTmp[3];
+    // }
+    // For more information on specifics of generating policy, refer to blueprint
+    // for API Gateway's Custom authorizer in Lambda console
+    const policy = new AuthPolicy(principalId, awsAccountId, apiOptions);
+    policy.allowAllMethods();
+    return callback(null, policy.build());
   });
 }
 
@@ -148,7 +151,7 @@ function AuthPolicy(principal, awsAccountId, apiOptions) {
    * @type {String}
    * @default "2012-10-17"
    */
-  this.version = "2012-10-17";
+  this.version = '2012-10-17';
 
   /**
    * The regular expression used to validate resource paths for the policy
@@ -168,17 +171,17 @@ function AuthPolicy(principal, awsAccountId, apiOptions) {
   this.denyMethods = [];
 
   if (!apiOptions || !apiOptions.restApiId) {
-    this.restApiId = "*";
+    this.restApiId = '*';
   } else {
     this.restApiId = apiOptions.restApiId;
   }
   if (!apiOptions || !apiOptions.region) {
-    this.region = "*";
+    this.region = '*';
   } else {
     this.region = apiOptions.region;
   }
   if (!apiOptions || !apiOptions.stage) {
-    this.stage = "*";
+    this.stage = '*';
   } else {
     this.stage = apiOptions.stage;
   }
@@ -191,18 +194,18 @@ function AuthPolicy(principal, awsAccountId, apiOptions) {
  * @property HttpVerb
  * @type {Object}
  */
- AuthPolicy.HttpVerb = {
-   GET   : "GET",
-   POST  : "POST",
-   PUT   : "PUT",
-   PATCH   : "PATCH",
-   HEAD  : "HEAD",
-   DELETE  : "DELETE",
-   OPTIONS : "OPTIONS",
-   ALL   : "*"
- };
+AuthPolicy.HttpVerb = {
+  GET: 'GET',
+  POST: 'POST',
+  PUT: 'PUT',
+  PATCH: 'PATCH',
+  HEAD: 'HEAD',
+  DELETE: 'DELETE',
+  OPTIONS: 'OPTIONS',
+  ALL: '*',
+};
 
-AuthPolicy.prototype = (function() {
+AuthPolicy.prototype = (function () {
   /**
    * Adds a method to the internal lists of allowed or denied methods. Each object in
    * the internal list contains a resource ARN and a condition statement. The condition
@@ -216,37 +219,37 @@ AuthPolicy.prototype = (function() {
    * @param {Object} conditions The conditions object in the format specified by the AWS docs.
    * @return {void}
    */
-  const addMethod = function(effect, verb, resource, conditions) {
-    if (verb != "*" && !AuthPolicy.HttpVerb.hasOwnProperty(verb)) {
-      throw new Error("Invalid HTTP verb " + verb + ". Allowed verbs in AuthPolicy.HttpVerb");
+  const addMethod = function (effect, verb, resource, conditions) {
+    if (verb !== '*' && !AuthPolicy.HttpVerb.hasOwnProperty(verb)) {
+      throw new Error(`Invalid HTTP verb ${verb}. Allowed verbs in AuthPolicy.HttpVerb`);
     }
 
     if (!this.pathRegex.test(resource)) {
-      throw new Error("Invalid resource path: " + resource + ". Path should match " + this.pathRegex);
+      throw new Error(`Invalid resource path: ${resource}. Path should match ${this.pathRegex}`);
     }
 
-    var cleanedResource = resource;
-    if (resource.substring(0, 1) == "/") {
-        cleanedResource = resource.substring(1, resource.length);
+    let cleanedResource = resource;
+    if (resource.substring(0, 1) === '/') {
+      cleanedResource = resource.substring(1, resource.length);
     }
-    const resourceArn = "arn:aws:execute-api:" +
-      this.region + ":" +
-      this.awsAccountId + ":" +
-      this.restApiId + "/" +
-      this.stage + "/" +
-      verb + "/" +
-      cleanedResource;
+    const resourceArn = `arn:aws:execute-api:${
+      this.region}:${
+      this.awsAccountId}:${
+      this.restApiId}/${
+      this.stage}/${
+      verb}/${
+      cleanedResource}`;
 
-    if (effect.toLowerCase() == "allow") {
+    if (effect.toLowerCase() === 'allow') {
       this.allowMethods.push({
-        resourceArn: resourceArn,
-        conditions: conditions
+        resourceArn,
+        conditions,
       });
-    } else if (effect.toLowerCase() == "deny") {
+    } else if (effect.toLowerCase() === 'deny') {
       this.denyMethods.push({
-        resourceArn: resourceArn,
-        conditions: conditions
-      })
+        resourceArn,
+        conditions,
+      });
     }
   };
 
@@ -259,11 +262,11 @@ AuthPolicy.prototype = (function() {
    * @return {Object} An empty statement object with the Action, Effect, and Resource
    *          properties prepopulated.
    */
-  const getEmptyStatement = function(effect) {
-    effect = effect.substring(0, 1).toUpperCase() + effect.substring(1, effect.length).toLowerCase();
-    var statement = {};
-    statement.Action = "execute-api:Invoke";
-    statement.Effect = effect;
+  const getEmptyStatement = function (effect) {
+    const statement = {};
+    statement.Action = 'execute-api:Invoke';
+    statement.Effect = effect.substring(0, 1).toUpperCase()
+      + effect.substring(1, effect.length).toLowerCase();
     statement.Resource = [];
 
     return statement;
@@ -279,18 +282,18 @@ AuthPolicy.prototype = (function() {
    *        and the conditions for the policy
    * @return {Array} an array of formatted statements for the policy.
    */
-  const getStatementsForEffect = function(effect, methods) {
-    var statements = [];
+  const getStatementsForEffect = function (effect, methods) {
+    const statements = [];
 
     if (methods.length > 0) {
-      var statement = getEmptyStatement(effect);
+      const statement = getEmptyStatement(effect);
 
-      for (var i = 0; i < methods.length; i++) {
+      for (let i = 0; i < methods.length; i += 1) {
         const curMethod = methods[i];
         if (curMethod.conditions === null || curMethod.conditions.length === 0) {
           statement.Resource.push(curMethod.resourceArn);
         } else {
-          var conditionalStatement = getEmptyStatement(effect);
+          const conditionalStatement = getEmptyStatement(effect);
           conditionalStatement.Resource.push(curMethod.resourceArn);
           conditionalStatement.Condition = curMethod.conditions;
           statements.push(conditionalStatement);
@@ -313,8 +316,8 @@ AuthPolicy.prototype = (function() {
      *
      * @method allowAllMethods
      */
-    allowAllMethods: function() {
-      addMethod.call(this, "allow", "*", "*", null);
+    allowAllMethods() {
+      addMethod.call(this, 'allow', '*', '*', null);
     },
 
     /**
@@ -322,8 +325,8 @@ AuthPolicy.prototype = (function() {
      *
      * @method denyAllMethods
      */
-    denyAllMethods: function() {
-      addMethod.call(this, "deny", "*", "*", null);
+    denyAllMethods() {
+      addMethod.call(this, 'deny', '*', '*', null);
     },
 
     /**
@@ -336,8 +339,8 @@ AuthPolicy.prototype = (function() {
      * @param {string} resource The resource path. For example "/pets"
      * @return {void}
      */
-    allowMethod: function(verb, resource) {
-      addMethod.call(this, "allow", verb, resource, null);
+    allowMethod(verb, resource) {
+      addMethod.call(this, 'allow', verb, resource, null);
     },
 
     /**
@@ -350,8 +353,8 @@ AuthPolicy.prototype = (function() {
      * @param {string} resource The resource path. For example "/pets"
      * @return {void}
      */
-    denyMethod : function(verb, resource) {
-      addMethod.call(this, "deny", verb, resource, null);
+    denyMethod(verb, resource) {
+      addMethod.call(this, 'deny', verb, resource, null);
     },
 
     /**
@@ -366,8 +369,8 @@ AuthPolicy.prototype = (function() {
      * @param {Object} conditions The conditions object in the format specified by the AWS docs
      * @return {void}
      */
-    allowMethodWithConditions: function(verb, resource, conditions) {
-      addMethod.call(this, "allow", verb, resource, conditions);
+    allowMethodWithConditions(verb, resource, conditions) {
+      addMethod.call(this, 'allow', verb, resource, conditions);
     },
 
     /**
@@ -382,8 +385,8 @@ AuthPolicy.prototype = (function() {
      * @param {Object} conditions The conditions object in the format specified by the AWS docs
      * @return {void}
      */
-    denyMethodWithConditions : function(verb, resource, conditions) {
-      addMethod.call(this, "deny", verb, resource, conditions);
+    denyMethodWithConditions(verb, resource, conditions) {
+      addMethod.call(this, 'deny', verb, resource, conditions);
     },
 
     /**
@@ -395,25 +398,24 @@ AuthPolicy.prototype = (function() {
      * @method build
      * @return {Object} The policy object that can be serialized to JSON.
      */
-    build: function() {
+    build() {
       if ((!this.allowMethods || this.allowMethods.length === 0) &&
           (!this.denyMethods || this.denyMethods.length === 0)) {
-        throw new Error("No statements defined for the policy");
+        throw new Error('No statements defined for the policy');
       }
 
-      var policy = {};
+      const policy = {};
       policy.principalId = this.principalId;
-      var doc = {};
+      const doc = {};
       doc.Version = this.version;
       doc.Statement = [];
 
-      doc.Statement = doc.Statement.concat(getStatementsForEffect.call(this, "Allow", this.allowMethods));
-      doc.Statement = doc.Statement.concat(getStatementsForEffect.call(this, "Deny", this.denyMethods));
+      doc.Statement = doc.Statement.concat(getStatementsForEffect.call(this, 'Allow', this.allowMethods));
+      doc.Statement = doc.Statement.concat(getStatementsForEffect.call(this, 'Deny', this.denyMethods));
 
       policy.policyDocument = doc;
 
       return policy;
-    }
+    },
   };
-
-})();
+}());

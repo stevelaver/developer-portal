@@ -1,14 +1,15 @@
 'use strict';
 
 import Auth from '../../lib/auth';
+import Identity from '../../lib/identity';
 import Validation from '../../lib/validation';
 
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
 const error = require('../../lib/error');
-const identity = require('../../lib/identity');
 const joi = require('joi');
+const jwt = require('jsonwebtoken');
 const mysql = require('mysql');
 const notification = require('../../lib/notification');
 const Promise = require('bluebird');
@@ -24,6 +25,7 @@ const cognito = new aws.CognitoIdentityServiceProvider({
 notification.setHook(process.env.SLACK_HOOK_URL, process.env.SERVICE_NAME);
 
 const auth = new Auth(cognito, process.env, error);
+const identity = new Identity(jwt, error);
 const validation = new Validation(joi, error);
 
 /**
@@ -38,23 +40,27 @@ const confirm = function (event, context, callback) {
 
   return request.responseAuthPromise(
     auth.confirm(event.pathParameters.email, event.pathParameters.code)
-    .then((userData) => {
-      const user = identity.formatUser(userData);
-      return notification.approveUser(user);
-    }),
-    event,
-    context,
-    callback,
-    204
-  );
+      .then(data => cognito.adminListGroupsForUser({
+        UserPoolId: this.env.COGNITO_POOL_ID,
+        Username: data.Username,
+      }).promise())
+      .then(groups => notification.approveUser({
+        email: event.pathParameters.email,
+        vendors: groups.Groups.map(g => g.GroupName),
+      })),
+      event,
+      context,
+      callback,
+      204
+    );
 };
 module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandler(() => {
   confirm(event, context, (err) => {
     request.htmlResponse(err, {
       header: 'Account confirmation',
       content: 'Your account has been successfully confirmed. Now you have ' +
-        'to wait for approval from our staff. Your account is disabled ' +
-        'until then.',
+      'to wait for approval from our staff. Your account is disabled ' +
+      'until then.',
     }, event, context, callback);
   });
 }, event, context, callback);
@@ -71,7 +77,7 @@ module.exports.confirmResend = (event, context, callback) => request.errorHandle
     body: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
-        'format of email address')),
+          'format of email address')),
       password: joi.string().required()
         .error(Error('Parameter password is required')),
     },
@@ -96,7 +102,7 @@ module.exports.forgot = (event, context, callback) => request.errorHandler(() =>
     path: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
-        'format of email address')),
+          'format of email address')),
     },
   });
 
@@ -118,14 +124,14 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
     path: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
-        'format of email address')),
+          'format of email address')),
     },
     body: {
       password: joi.string().required().min(8)
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
         .error(Error('Parameter newPassword is required, must have ' +
-        'at least 8 characters and contain at least one lowercase letter, ' +
-        'one uppercase letter and one number')),
+          'at least 8 characters and contain at least one lowercase letter, ' +
+          'one uppercase letter and one number')),
       code: joi.string().required()
         .error(Error('Parameter code is required')),
     },
@@ -154,7 +160,7 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
     body: {
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
-        'format of email address')),
+          'format of email address')),
       password: joi.string().required()
         .error(Error('Parameter password is required')),
     },
@@ -179,42 +185,10 @@ module.exports.profile = (event, context, callback) => request.errorHandler(() =
   });
 
   return request.responseAuthPromise(
-    identity.getUser(process.env.REGION, event.headers.Authorization),
+    identity.getUser(event.headers.Authorization),
     event,
     context,
     callback
-  );
-}, event, context, callback);
-
-
-/**
- * Profile Change
- */
-module.exports.profileChange = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, {
-    auth: true,
-    body: {
-      oldPassword: joi.string().required()
-        .error(Error('Parameter oldPassword is required')),
-      newPassword: joi.string().required().min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-        .error(Error('Parameter newPassword is required, must have ' +
-          'at least 8 characters and contain at least one lowercase ' +
-          'letter, one uppercase letter and one number')),
-    },
-  });
-
-  const body = JSON.parse(event.body);
-  return request.responseAuthPromise(
-    auth.changePassword(
-      event.headers.Authorization,
-      body.oldPassword,
-      body.newPassword
-    ),
-    event,
-    context,
-    callback,
-    204
   );
 }, event, context, callback);
 
@@ -230,12 +204,12 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
         .error(Error('Parameter name is required')),
       email: joi.string().email().required()
         .error(Error('Parameter email is required and should have ' +
-        'format of email address')),
+          'format of email address')),
       password: joi.string().required().min(8)
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
         .error(Error('Parameter password is required, must have ' +
-        'at least 8 characters and contain at least one lowercase letter, ' +
-        'one uppercase letter and one number')),
+          'at least 8 characters and contain at least one lowercase letter, ' +
+          'one uppercase letter and one number')),
       vendor: joi.string().required()
         .error(Error('Parameter vendor is required')),
     },

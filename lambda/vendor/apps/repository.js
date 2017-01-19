@@ -1,5 +1,6 @@
 'use strict';
 
+import Identity from '../../../lib/identity';
 import Repository from '../../../lib/repository';
 import Validation from '../../../lib/validation';
 
@@ -7,12 +8,15 @@ require('babel-polyfill');
 const aws = require('aws-sdk');
 const db = require('../../../lib/db');
 const error = require('../../../lib/error');
-const identity = require('../../../lib/identity');
 const joi = require('joi');
+const jwt = require('jsonwebtoken');
+const Promise = require('bluebird');
 const request = require('../../../lib/request');
 
 aws.config.setPromisesDependency(Promise);
 const ecr = new aws.ECR({ region: process.env.REGION });
+
+const identity = new Identity(jwt, error);
 const repository = new Repository(db, ecr, aws, process.env, error);
 const validation = new Validation(joi, error);
 
@@ -29,9 +33,9 @@ module.exports.create = (event, context, callback) => request.errorHandler(() =>
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
+      .then(() => identity.getUser(event.headers.Authorization))
       .then(user => repository.create(
-        user.vendor,
+        user.vendors[0], // TODO multi-vendors
         event.pathParameters.appId,
         user.email,
       )),
@@ -56,10 +60,10 @@ module.exports.get = (event, context, callback) => request.errorHandler(() => {
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => identity.getUser(process.env.REGION, event.headers.Authorization))
+      .then(() => identity.getUser(event.headers.Authorization))
       .then(user => repository.get(
         new aws.STS({ region: process.env.REGION }),
-        user.vendor,
+        user.vendors[0], // TODO multi-vendors
         event.pathParameters.appId,
       )),
     db,

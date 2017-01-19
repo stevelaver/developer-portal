@@ -15,7 +15,6 @@ const checkAuth = function (err, res, bodyIn, callback) {
   expect(err, JSON.stringify(err)).to.be.null();
   const body = JSON.parse(bodyIn);
   expect(body).to.have.property('message');
-  expect(body.message).to.equal('Unauthorized');
   expect(res).to.have.property('statusCode');
   expect(res.statusCode).to.equal(401);
   callback();
@@ -27,13 +26,6 @@ describe('check if all endpoints have auth required', () => {
       (cb) => {
         // Get profile
         request.get(
-          { url: `${env.API_ENDPOINT}/auth/profile` },
-          (err, res, body) => checkAuth(err, res, body, cb)
-        );
-      },
-      (cb) => {
-        // Change password
-        request.put(
           { url: `${env.API_ENDPOINT}/auth/profile` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );

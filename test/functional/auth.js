@@ -31,12 +31,29 @@ const userPassword2 = 'uiOU.-jfdksfj89';
 const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
 
 describe('auth', () => {
-  before((cb) => {
-    rds.query(
-      'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
-      [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
-      err => cb(err)
-    );
+  before((done) => {
+    async.waterfall([
+      (cb) => {
+        rds.query(
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+          [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        cognito.createGroup({
+          GroupName: vendor,
+          UserPoolId: env.COGNITO_POOL_ID,
+          Description: 'test',
+        }, (err) => {
+          if (err && err.code !== 'GroupExistsException') {
+            cb(err);
+          } else {
+            cb();
+          }
+        });
+      },
+    ], done);
   });
 
   it('approve user flow', (done) => {
@@ -153,42 +170,9 @@ describe('auth', () => {
         }, (err, res, bodyIn) => {
           expect(err).to.be.null();
           const body = JSON.parse(bodyIn);
-          expect(body, JSON.stringify(body)).to.have.property('vendor');
-          expect(body.vendor).to.equal(vendor);
+          expect(body, JSON.stringify(body)).to.have.property('vendors');
+          expect(body.vendors).to.include(vendor);
           cb(null, token);
-        });
-      },
-      (token, cb) => {
-        // 7) Change password
-        request.put({
-          url: `${env.API_ENDPOINT}/auth/profile`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-          body: {
-            oldPassword: userPassword1,
-            newPassword: userPassword2,
-          },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
-          cb();
-        });
-      },
-      (cb) => {
-        // 8) Login with new password
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/login`,
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword2,
-          },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('token');
-          cb();
         });
       },
     ], done);

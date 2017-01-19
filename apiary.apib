@@ -99,27 +99,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
                 "vendor": "keboola"
             }
 
-### Change password [PUT /auth/profile]
-
-+ Attributes
-    + oldPassword (required)
-    + newPassword (required)
-
-+ Request
-
-    + Headers
-
-            Authorization: {your_token}
-    + Body
-
-            {
-                "oldPassword": "old password",
-                "newPassword": "new password"
-            }
-
-+ Response 204 (application/json)
-
-### Forgot password [POST /auth/forgot/{email}]
+### Reset password [POST /auth/forgot/{email}]
 
 Sends email with confirmation code which has to be used in the next API call
 
