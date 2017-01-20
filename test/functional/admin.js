@@ -59,19 +59,6 @@ describe('admin', () => {
         );
       },
       (cb) => {
-        cognito.createGroup({
-          GroupName: vendor,
-          UserPoolId: env.COGNITO_POOL_ID,
-          Description: 'test',
-        }, (err) => {
-          if (err.code !== 'GroupExistsException') {
-            cb(err);
-          } else {
-            cb();
-          }
-        });
-      },
-      (cb) => {
         rds.query(
           'DELETE FROM apps WHERE vendor=?',
           vendor,
@@ -86,14 +73,8 @@ describe('admin', () => {
           UserAttributes: [
             { Name: 'email', Value: userEmail },
             { Name: 'name', Value: 'Test' },
+            { Name: 'profile', Value: 'test' },
           ],
-        }, err => cb(err));
-      },
-      (cb) => {
-        cognito.adminAddUserToGroup({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-          GroupName: vendor,
         }, err => cb(err));
       },
       (cb) => {
@@ -408,16 +389,6 @@ describe('admin', () => {
         });
       },
       (cb) => {
-        cognito.getGroup({
-          GroupName: aVendor,
-          UserPoolId: env.COGNITO_POOL_ID,
-        }, cb);
-      },
-      (group, cb) => {
-        expect(group).to.have.property('Group');
-        cb();
-      },
-      (cb) => {
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${aVendor}`,
           headers: {
@@ -432,12 +403,6 @@ describe('admin', () => {
         });
       },
       (cb) => {
-        cognito.deleteGroup({
-          GroupName: aVendor,
-          UserPoolId: env.COGNITO_POOL_ID,
-        }, cb);
-      },
-      (res, cb) => {
         rds.query(
           'DELETE FROM apps WHERE vendor=?',
           [aVendor],
@@ -460,12 +425,6 @@ describe('admin', () => {
         cognito.adminDeleteUser({
           UserPoolId: env.COGNITO_POOL_ID,
           Username: userEmail,
-        }, () => cb());
-      },
-      (cb) => {
-        cognito.deleteGroup({
-          UserPoolId: env.COGNITO_POOL_ID,
-          GroupName: vendor,
         }, () => cb());
       },
     ], done);

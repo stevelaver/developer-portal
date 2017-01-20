@@ -93,10 +93,10 @@ Account needs to be confirmed by code from confirmation email sent on his email 
     + Body
 
             {
-                "id": "bd5a108d-f44f-4d0e-b9ce-e0a9ef29be45",
                 "email": "john@keboola.com",
                 "name": "John Doe",
-                "vendor": "keboola"
+                "vendors": ["keboola"]
+                "isAdmin": false
             }
 
 ### Reset password [POST /auth/forgot/{email}]
@@ -314,7 +314,8 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 
 ### Generate links for icons upload [POST /vendor/apps/{appId}/icons]
 
-API call generates pre-signed urls to S3 where you can upload app icons.
+API call generates pre-signed urls to S3. You can upload e.g. using such curl command:
+`curl -H "Content-Type:image/png" --upload-file file.png "https://...."`
 
 + Parameters
     + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`

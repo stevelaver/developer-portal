@@ -40,19 +40,6 @@ describe('auth', () => {
           err => cb(err)
         );
       },
-      (cb) => {
-        cognito.createGroup({
-          GroupName: vendor,
-          UserPoolId: env.COGNITO_POOL_ID,
-          Description: 'test',
-        }, (err) => {
-          if (err && err.code !== 'GroupExistsException') {
-            cb(err);
-          } else {
-            cb();
-          }
-        });
-      },
     ], done);
   });
 

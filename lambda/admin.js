@@ -180,7 +180,7 @@ module.exports.userMakeAdmin = (event, context, callback) => request.errorHandle
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getAdmin(event.headers.Authorization))
-    .then(() => app.makeUserAdmin(cognito, event.pathParameters.email))
+    .then(() => app.makeUserAdmin(cognito, Identity, event.pathParameters.email))
     .then(() => null),
     db,
     event,
@@ -271,7 +271,7 @@ module.exports.vendorsCreate = (event, context, callback) => request.errorHandle
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.createVendor(cognito, JSON.parse(event.body))),
+      .then(() => app.createVendor(JSON.parse(event.body))),
     db,
     event,
     context,

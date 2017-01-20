@@ -40,13 +40,14 @@ const confirm = function (event, context, callback) {
 
   return request.responseAuthPromise(
     auth.confirm(event.pathParameters.email, event.pathParameters.code)
-      .then(data => cognito.adminListGroupsForUser({
+      .then(data => cognito.adminGetUser({
         UserPoolId: this.env.COGNITO_POOL_ID,
         Username: data.Username,
       }).promise())
-      .then(groups => notification.approveUser({
+      .then(user => Identity.formatUser(user))
+      .then(user => notification.approveUser({
         email: event.pathParameters.email,
-        vendors: groups.Groups.map(g => g.GroupName),
+        vendors: user.vendors,
       })),
       event,
       context,
