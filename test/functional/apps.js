@@ -228,7 +228,7 @@ describe('apps', () => {
       function (callback) {
         // Request url to upload icons
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}/icons`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/icons`,
           headers: {
             Authorization: token,
           },

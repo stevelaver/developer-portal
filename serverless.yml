@@ -142,6 +142,31 @@ functions:
           method: post
           path: "admin/vendors"
 
+  appsIconsLinks:
+    handler: vendor-apps-icons.links
+    events:
+      -
+        http:
+          authorizer: authorizer
+          method: post
+          path: "apps/{vendor}/{app}/icons"
+  appsIconsUpload:
+    handler: vendor-apps-icons.upload
+    events:
+      -
+        s3:
+          bucket: "${file(./env.yml):S3_BUCKET}"
+          event: "s3:ObjectCreated:Put"
+          suffix: .png
+  appsUpdate:
+    handler: vendor-apps-update.appsUpdate
+    events:
+      -
+        http:
+          authorizer: authorizer
+          method: patch
+          path: apps/{vendor}/{app}
+
   vendorAppsApprove:
     handler: vendor-apps-approve.handler
     events:
@@ -171,22 +196,6 @@ functions:
           authorizer: authorizer
           method: get
           path: "vendor/apps/{appId}/versions/{version}"
-  vendorAppsIconsLinks:
-    handler: vendor-apps-icons.links
-    events:
-      -
-        http:
-          authorizer: authorizer
-          method: post
-          path: "vendor/apps/{appId}/icons"
-  vendorAppsIconsUpload:
-    handler: vendor-apps-icons.upload
-    events:
-      -
-        s3:
-          bucket: "${file(./env.yml):S3_BUCKET}"
-          event: "s3:ObjectCreated:Put"
-          suffix: .png
   vendorAppsList:
     handler: vendor-apps-list.appsList
     events:
@@ -211,14 +220,6 @@ functions:
           authorizer: authorizer
           method: get
           path: "vendor/apps/{appId}/repository"
-  vendorAppsUpdate:
-    handler: vendor-apps-update.appsUpdate
-    events:
-      -
-        http:
-          authorizer: authorizer
-          method: patch
-          path: apps/{vendor}/{app}
   vendorAppsVersionsList:
     handler: vendor-apps-versions.list
     events:

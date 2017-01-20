@@ -26,14 +26,21 @@ module.exports.links = (event, context, callback) => request.errorHandler(() => 
   validation.validate(event, {
     auth: true,
     path: {
-      appId: joi.string().required(),
+      vendor: joi.string().required(),
+      app: joi.string().required(),
     },
   });
 
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getUser(event.headers.Authorization))
-    .then(user => app.getIcons(s3, moment, event.pathParameters.appId, user.vendors[0])), // TODO multi-vendors
+    .then(user => app.getIcons(
+      s3,
+      moment,
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+    )),
     db,
     event,
     context,
