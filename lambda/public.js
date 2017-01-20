@@ -1,6 +1,7 @@
 'use strict';
 
 import App from '../lib/app';
+import Identity from '../lib/identity';
 import Validation from '../lib/validation';
 
 require('babel-polyfill');
@@ -11,7 +12,7 @@ const html = require('../views/landing.html');
 const joi = require('joi');
 const request = require('../lib/request');
 
-const app = new App(db, process.env, error);
+const app = new App(db, Identity, process.env, error);
 const validation = new Validation(joi, error);
 
 /**

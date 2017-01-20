@@ -98,14 +98,13 @@ describe('admin', () => {
       },
       function (cb) {
         request.post({
-          url: `${env.API_ENDPOINT}/admin/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${otherVendor}/apps`,
           headers: {
             Authorization: token,
           },
           json: true,
           body: {
             id: `${appId}-2`,
-            vendor: otherVendor,
             name: 'test',
             type: 'extractor',
           },

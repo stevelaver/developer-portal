@@ -71,7 +71,7 @@ describe('apps', () => {
       function (callback) {
         // Try to create app with forbidden attribute
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
           headers: {
             Authorization: token,
           },
@@ -92,7 +92,7 @@ describe('apps', () => {
       function (callback) {
         // Create app
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
           headers: {
             Authorization: token,
           },
@@ -111,7 +111,7 @@ describe('apps', () => {
       function (callback) {
         // Create second app
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
           headers: {
             Authorization: token,
           },
@@ -387,7 +387,7 @@ describe('apps', () => {
       function (callback) {
         // Create app should fail on wrong permissions schema
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
           headers: {
             Authorization: token,
           },
@@ -420,7 +420,7 @@ describe('apps', () => {
       function (callback) {
         // Create app should fail on non-existing stack
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
           headers: {
             Authorization: token,
           },
@@ -453,7 +453,7 @@ describe('apps', () => {
       function (callback) {
         // Create app
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
           headers: {
             Authorization: token,
           },

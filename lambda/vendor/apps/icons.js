@@ -18,7 +18,7 @@ const request = require('../../../lib/request');
 aws.config.setPromisesDependency(Promise);
 const s3 = new aws.S3();
 
-const app = new App(db, process.env, error);
+const app = new App(db, Identity, process.env, error);
 const identity = new Identity(jwt, error);
 const validation = new Validation(joi, error);
 

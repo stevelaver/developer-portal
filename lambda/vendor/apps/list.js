@@ -12,7 +12,7 @@ const joi = require('joi');
 const jwt = require('jsonwebtoken');
 const request = require('../../../lib/request');
 
-const app = new App(db, process.env, error);
+const app = new App(db, Identity, process.env, error);
 const identity = new Identity(jwt, error);
 const validation = new Validation(joi, error);
 

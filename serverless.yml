@@ -70,6 +70,7 @@ functions:
         http:
           method: patch
           path: "{anything}"
+
   adminAppsApprove:
     handler: admin.appApprove
     events:
@@ -80,14 +81,6 @@ functions:
           path: "admin/apps/{id}/approve"
           default:
             statusCode: 204
-  adminAppsCreate:
-    handler: admin.appsCreate
-    events:
-      -
-        http:
-          authorizer: authorizer
-          method: post
-          path: "admin/apps"
   adminAppsDetail:
     handler: admin.appsDetail
     events:
@@ -148,6 +141,7 @@ functions:
           authorizer: authorizer
           method: post
           path: "admin/vendors"
+
   vendorAppsApprove:
     handler: vendor-apps-approve.handler
     events:
@@ -156,14 +150,14 @@ functions:
           authorizer: authorizer
           method: post
           path: "vendor/apps/{appId}/approve"
-  vendorAppsCreate:
+  vendorsAppsCreate:
     handler: vendor-apps-update.appsCreate
     events:
       -
         http:
           authorizer: authorizer
           method: post
-          path: vendor/apps
+          path: "vendors/{vendor}/apps"
   vendorAppsDetail:
     handler: vendor-apps-list.appsDetail
     events:

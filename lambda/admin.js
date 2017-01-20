@@ -19,7 +19,7 @@ aws.config.setPromisesDependency(Promise);
 const cognito = new aws.CognitoIdentityServiceProvider({
   region: process.env.REGION,
 });
-const app = new App(db, process.env, error);
+const app = new App(db, Identity, process.env, error);
 const email = new Email(
   new aws.SES({ apiVersion: '2010-12-01', region: process.env.REGION }),
   process.env.SES_EMAIL_FROM
@@ -115,29 +115,6 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
 
 
 /**
- * Create app
- */
-module.exports.appsCreate = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, {
-    auth: true,
-    body: validation.adminCreateAppSchema(),
-  });
-
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(user => app.insertAppByAdmin(
-        JSON.parse(event.body),
-        user
-      )),
-    db,
-    event,
-    context,
-    callback
-  );
-}, event, context, (err, res) => db.endCallback(err, res, callback));
-
-/**
  * Update app
  */
 module.exports.appsUpdate = (event, context, callback) => request.errorHandler(() => {
@@ -180,7 +157,7 @@ module.exports.userMakeAdmin = (event, context, callback) => request.errorHandle
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getAdmin(event.headers.Authorization))
-    .then(() => app.makeUserAdmin(cognito, Identity, event.pathParameters.email))
+    .then(() => app.makeUserAdmin(cognito, event.pathParameters.email))
     .then(() => null),
     db,
     event,
