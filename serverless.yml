@@ -218,7 +218,7 @@ functions:
         http:
           authorizer: authorizer
           method: patch
-          path: vendor/apps/{appId}
+          path: apps/{vendor}/{app}
   vendorAppsVersionsList:
     handler: vendor-apps-versions.list
     events:
@@ -303,11 +303,11 @@ functions:
       -
         http:
           method: get
-          path: "apps/{appId}"
+          path: "apps/{vendor}/{app}"
       -
         http:
           method: get
-          path: "apps/{appId}/versions/{version}"
+          path: "apps/{vendor}/{app}/versions/{version}"
   appsList:
     handler: public.list
     events:
@@ -321,7 +321,7 @@ functions:
       -
         http:
           method: get
-          path: "apps/{appId}/versions"
+          path: "apps/{vendor}/{app}/versions"
   vendorsList:
     handler: public.vendorsList
     events:

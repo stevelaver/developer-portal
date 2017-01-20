@@ -233,10 +233,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 + Response 201
 
 
-### Update app [PATCH /vendor/apps/{appId}]
+### Update app [PATCH /apps/{vendor}/{app}]
 
 + Parameters
-    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
 
 + Attributes
     + name (required) - Do not use the word `extractor` or `writer` in your app
@@ -613,9 +614,13 @@ Shows all apps having flags `isApproved` and `isPublic` set to `true`.
                 }
             ]
 
-### Get app detail [GET /apps/{appId}]
+### Get app detail [GET /apps/{vendor}/{app}]
 
 Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
+
++ Parameters
+    + vendor
+    + app
 
 + Response 200 (application/json)
 

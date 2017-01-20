@@ -33,7 +33,7 @@ describe('check if all endpoints have auth required', () => {
       (cb) => {
         // Create app
         request.post(
-          { url: `${env.API_ENDPOINT}/vendor/apps` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
@@ -61,7 +61,7 @@ describe('check if all endpoints have auth required', () => {
       (cb) => {
         // Update app
         request.patch(
-          { url: `${env.API_ENDPOINT}/vendor/apps/app` },
+          { url: `${env.API_ENDPOINT}/apps/keboola/app` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },

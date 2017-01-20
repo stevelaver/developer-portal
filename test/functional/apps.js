@@ -163,7 +163,7 @@ describe('apps', () => {
       function (callback) {
         // Public app profile should not exist
         request.get({
-          url: `${env.API_ENDPOINT}/apps/${appId1}`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
@@ -188,7 +188,7 @@ describe('apps', () => {
       function (callback) {
         // Update app
         request.patch({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
           headers: {
             Authorization: token,
           },
@@ -301,7 +301,7 @@ describe('apps', () => {
       function (callback) {
         // Public app profile should exist now
         request.get({
-          url: `${env.API_ENDPOINT}/apps/${appId1}`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
@@ -356,7 +356,7 @@ describe('apps', () => {
       function (callback) {
         // Public app version
         request.get({
-          url: `${env.API_ENDPOINT}/apps/${appId1}/versions/1`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/versions/1`,
         }, (err, res, bodyRaw) => {
           expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
@@ -368,7 +368,7 @@ describe('apps', () => {
       function (callback) {
         // Public app list versions
         request.get({
-          url: `${env.API_ENDPOINT}/apps/${appId1}/versions`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/versions`,
         }, (err, res, bodyRaw) => {
           expect(err).to.be.null();
           const body = JSON.parse(bodyRaw);
@@ -479,7 +479,7 @@ describe('apps', () => {
       function (callback) {
         // Update app
         request.patch({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId3}`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId3}`,
           headers: {
             Authorization: token,
           },
@@ -529,7 +529,7 @@ describe('apps', () => {
       function (callback) {
         // Public app profile should not exist
         request.get({
-          url: `${env.API_ENDPOINT}/apps/${appId3}`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId3}`,
         }, (err, res, bodyRaw) => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();

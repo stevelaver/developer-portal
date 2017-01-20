@@ -47,7 +47,8 @@ module.exports.appsUpdate = (event, context, callback) => request.errorHandler((
   validation.validate(event, {
     auth: true,
     path: {
-      appId: joi.string().required(),
+      app: joi.string().required(),
+      vendor: joi.string().required(),
     },
     body: validation.updateAppSchema(),
   });
@@ -56,7 +57,8 @@ module.exports.appsUpdate = (event, context, callback) => request.errorHandler((
     db.connect(process.env)
     .then(() => identity.getUser(event.headers.Authorization))
     .then(user => app.updateApp(
-      event.pathParameters.appId,
+      event.pathParameters.app,
+      event.pathParameters.vendor,
       JSON.parse(event.body),
       user
     )),
