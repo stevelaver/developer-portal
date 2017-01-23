@@ -24,15 +24,20 @@ module.exports.handler = (event, context, callback) => request.errorHandler(() =
   validation.validate(event, {
     auth: true,
     path: {
-      appId: joi.string().required(),
+      vendor: joi.string().required(),
+      app: joi.string().required(),
     },
   });
 
   return request.responseDbPromise(
     db.connect(process.env)
-    .then(() => identity.getUser(event.headers.Authorization))
-    .then(user => app.requestApproval(event.pathParameters.appId, user.vendors[0])) // TODO multi-vendors
-    .then(() => notification.approveApp(event.pathParameters.appId)),
+      .then(() => identity.getUser(event.headers.Authorization))
+      .then(user => app.requestApproval(
+        event.pathParameters.app,
+        event.pathParameters.vendor,
+        user,
+      ))
+      .then(() => notification.approveApp(event.pathParameters.app)),
     db,
     event,
     context,

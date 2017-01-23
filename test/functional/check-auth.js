@@ -40,21 +40,21 @@ describe('check if all endpoints have auth required', () => {
       (cb) => {
         // Get app detail
         request.get(
-          { url: `${env.API_ENDPOINT}/vendor/apps/app` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
       (cb) => {
         // List apps
         request.get(
-          { url: `${env.API_ENDPOINT}/vendor/apps` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
       (cb) => {
         // Approve
         request.post(
-          { url: `${env.API_ENDPOINT}/vendor/apps/app/approve` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app/approve` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
@@ -75,21 +75,21 @@ describe('check if all endpoints have auth required', () => {
       (cb) => {
         // Rollback version
         request.post(
-          { url: `${env.API_ENDPOINT}/vendor/apps/app/versions/1/rollback` },
+          { url: `${env.API_ENDPOINT}/apps/keboola/app/versions/1/rollback` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
       (cb) => {
         // List versions
         request.get(
-          { url: `${env.API_ENDPOINT}/vendor/apps/app/versions` },
+          { url: `${env.API_ENDPOINT}/apps/keboola/app/versions` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
       (cb) => {
         // Get version
         request.get(
-          { url: `${env.API_ENDPOINT}/vendor/apps/app/versions/1` },
+          { url: `${env.API_ENDPOINT}/apps/keboola/app/versions/1` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },

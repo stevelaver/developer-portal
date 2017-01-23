@@ -20,13 +20,17 @@ module.exports.appsList = (event, context, callback) => request.errorHandler(() 
   validation.validate(event, {
     auth: true,
     pagination: true,
+    path: {
+      vendor: joi.string().required(),
+    },
   });
 
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getUser(event.headers.Authorization))
     .then(user => app.listAppsForVendor(
-      user.vendors[0], // TODO multi-vendors
+      event.pathParameters.vendor,
+      user,
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null),
     )),
@@ -41,7 +45,8 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
   validation.validate(event, {
     auth: true,
     path: {
-      appId: joi.string().required(),
+      vendor: joi.string().required(),
+      app: joi.string().required(),
       version: joi.number().integer(),
     },
   });
@@ -50,9 +55,10 @@ module.exports.appsDetail = (event, context, callback) => request.errorHandler((
     db.connect(process.env)
     .then(() => identity.getUser(event.headers.Authorization))
     .then(user => app.getAppForVendor(
-      event.pathParameters.appId,
-      user.vendors[0], // TODO multi-vendors
-      event.pathParameters.version
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+      _.get(event, 'pathParameters.version', null),
     )),
     db,
     event,

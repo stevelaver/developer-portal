@@ -17,7 +17,7 @@ aws.config.setPromisesDependency(Promise);
 const ecr = new aws.ECR({ region: process.env.REGION });
 
 const identity = new Identity(jwt, error);
-const repository = new Repository(db, ecr, aws, process.env, error);
+const repository = new Repository(db, ecr, aws, Identity, process.env, error);
 const validation = new Validation(joi, error);
 
 /**
@@ -27,7 +27,8 @@ module.exports.create = (event, context, callback) => request.errorHandler(() =>
   validation.validate(event, {
     auth: true,
     path: {
-      appId: joi.string().required(),
+      vendor: joi.string().required(),
+      app: joi.string().required(),
     },
   });
 
@@ -35,9 +36,9 @@ module.exports.create = (event, context, callback) => request.errorHandler(() =>
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
       .then(user => repository.create(
-        user.vendors[0], // TODO multi-vendors
-        event.pathParameters.appId,
-        user.email,
+        event.pathParameters.app,
+        event.pathParameters.vendor,
+        user,
       )),
     db,
     event,
@@ -54,7 +55,8 @@ module.exports.get = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
     auth: true,
     path: {
-      appId: joi.string().required(),
+      vendor: joi.string().required(),
+      app: joi.string().required(),
     },
   });
 
@@ -63,8 +65,9 @@ module.exports.get = (event, context, callback) => request.errorHandler(() => {
       .then(() => identity.getUser(event.headers.Authorization))
       .then(user => repository.get(
         new aws.STS({ region: process.env.REGION }),
-        user.vendors[0], // TODO multi-vendors
-        event.pathParameters.appId,
+        event.pathParameters.app,
+        event.pathParameters.vendor,
+        user,
       )),
     db,
     event,

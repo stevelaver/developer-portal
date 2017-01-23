@@ -43,7 +43,6 @@ module.exports.detail = (event, context, callback) => request.errorHandler(() =>
     path: {
       vendor: joi.string().required(),
       app: joi.string().required(),
-      version: joi.number().integer(),
     },
   });
 
@@ -51,7 +50,7 @@ module.exports.detail = (event, context, callback) => request.errorHandler(() =>
     db.connect(process.env)
     .then(() => app.getAppWithVendor(
       event.pathParameters.app,
-      _.get(event, 'pathParameters.version', null),
+      null,
       true
     )),
     db,
@@ -84,33 +83,6 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
     context,
     callback
   );
-}, event, context, (err, res) => db.endCallback(err, res, callback));
-
-
-/**
- * App Versions
- */
-module.exports.versions = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, {
-    path: {
-      vendor: joi.string().required(),
-      app: joi.string().required(),
-    },
-    pagination: true,
-  });
-
-  return request.responseDbPromise(
-      db.connect(process.env)
-      .then(() => app.listPublishedAppVersions(
-        event.pathParameters.app,
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null)
-      )),
-      db,
-      event,
-      context,
-      callback
-    );
 }, event, context, (err, res) => db.endCallback(err, res, callback));
 
 

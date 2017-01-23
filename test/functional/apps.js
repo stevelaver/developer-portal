@@ -130,7 +130,7 @@ describe('apps', () => {
       function (callback) {
         // Get app detail
         request.get({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
           headers: {
             Authorization: token,
           },
@@ -145,7 +145,7 @@ describe('apps', () => {
       function (callback) {
         // List apps
         request.get({
-          url: `${env.API_ENDPOINT}/vendor/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
           headers: {
             Authorization: token,
           },
@@ -174,7 +174,7 @@ describe('apps', () => {
       function (callback) {
         // Approve should fail
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}/approve`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
           headers: {
             Authorization: token,
           },
@@ -213,7 +213,7 @@ describe('apps', () => {
       function (callback) {
         // Approve should fail on missing icons
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}/approve`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
           headers: {
             Authorization: token,
           },
@@ -279,7 +279,7 @@ describe('apps', () => {
         // Wait few seconds if icon handling lambda has delay
         setTimeout(() => {
           request.post({
-            url: `${env.API_ENDPOINT}/vendor/apps/${appId1}/approve`,
+            url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
             headers: {
               Authorization: token,
             },
@@ -313,7 +313,7 @@ describe('apps', () => {
       function (callback) {
         // List versions
         request.get({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}/versions`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/versions`,
           headers: {
             Authorization: token,
           },
@@ -328,7 +328,7 @@ describe('apps', () => {
       function (callback) {
         // Get version
         request.get({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId1}/versions/1`,
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/versions/1`,
           headers: {
             Authorization: token,
           },
@@ -350,30 +350,6 @@ describe('apps', () => {
           expect(body).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(0);
           expect(body[0]).to.have.property('id');
-          callback();
-        });
-      },
-      function (callback) {
-        // Public app version
-        request.get({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/versions/1`,
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
-          callback();
-        });
-      },
-      function (callback) {
-        // Public app list versions
-        request.get({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/versions`,
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body).to.have.length.above(0);
           callback();
         });
       },
@@ -501,7 +477,7 @@ describe('apps', () => {
       function (callback) {
         // Get app detail
         request.get({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId3}`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId3}`,
           headers: {
             Authorization: token,
           },
@@ -560,7 +536,7 @@ describe('apps', () => {
       function (callback) {
         // Create app
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
           headers: {
             Authorization: token,
           },
@@ -579,7 +555,7 @@ describe('apps', () => {
       function (callback) {
         // Create repository
         request.post({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId}/repository`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId}/repository`,
           headers: {
             Authorization: token,
           },
@@ -591,7 +567,7 @@ describe('apps', () => {
       function (callback) {
         // Get repository credentials
         request.get({
-          url: `${env.API_ENDPOINT}/vendor/apps/${appId}/repository`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId}/repository`,
           headers: {
             Authorization: token,
           },

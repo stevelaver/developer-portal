@@ -100,3 +100,7 @@ CLOUDFRONT_URI: dttajxboh9b9k.cloudfront.net
 API_ENDPOINT: 'https://1puon0n5y2.execute-api.eu-west-1.amazonaws.com/dev'
 PROFILE: dev
 ```
+
+### CI and deployment
+
+CI is configured on Travis, see https://travis-ci.org/keboola/developer-portal. Deployment is run automatically after releasing a version on Github. Travis uses special AWS IAM user with restricted rights in production account. See `iam-user-template.json` for details.  

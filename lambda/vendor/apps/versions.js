@@ -21,7 +21,8 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
     auth: true,
     pagination: true,
     path: {
-      appId: joi.string().required(),
+      app: joi.string().required(),
+      vendor: joi.string().required(),
     },
   });
 
@@ -29,8 +30,9 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
     db.connect(process.env)
     .then(() => identity.getUser(event.headers.Authorization))
     .then(user => app.listAppVersions(
-      event.pathParameters.appId,
-      user.vendors[0], // TODO multi-vendors
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null)
     )),
@@ -46,7 +48,8 @@ module.exports.rollback = (event, context, callback) => request.errorHandler(() 
   validation.validate(event, {
     auth: true,
     path: {
-      appId: joi.string().required(),
+      app: joi.string().required(),
+      vendor: joi.string().required(),
       version: joi.number(),
     },
   });
@@ -54,7 +57,12 @@ module.exports.rollback = (event, context, callback) => request.errorHandler(() 
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getUser(event.headers.Authorization))
-    .then(user => app.rollbackAppVersion(event.pathParameters.appId, user)),
+    .then(user => app.rollbackAppVersion(
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      event.pathParameters.version,
+      user
+    )),
     db,
     event,
     context,

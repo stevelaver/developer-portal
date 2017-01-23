@@ -129,13 +129,13 @@ Sends email with confirmation code which has to be used in the next API call
 + Response 204 (application/json)
 
 
-## Apps [/vendor/apps]
+## Apps
 
 Manual approval from Keboola is required before an app is allowed to be published.
 Apps can be created and updated freely before requesting approval.
 
 App needs to have 32px and 64px icons in png format uploaded to S3. You get
-pre-signed urls from `/apps/{appId}/icons` API call.
+pre-signed urls from `/apps/{vendor}/{app}/icons` API call.
 
 Apps are automatically versioned after each change. You can rollback to previous
 version any time.
@@ -316,13 +316,14 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 + Response 204
 
 
-### Generate links for icons upload [POST /vendor/apps/{appId}/icons]
+### Generate links for icons upload [POST /apps/{vendor}/{app}/icons]
 
 API call generates pre-signed urls to S3. You can upload e.g. using such curl command:
 `curl -H "Content-Type:image/png" --upload-file file.png "https://...."`
 
 + Parameters
-    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
 
 + Request
 
@@ -340,9 +341,10 @@ API call generates pre-signed urls to S3. You can upload e.g. using such curl co
                 "expires": "2016-08-12T16:16:27Z"
             }
 
-### List all vendor apps [GET /vendor/apps?offset=0&limit=1000]
+### List all vendor apps [GET /vendors/{vendor}/apps?offset=0&limit=1000]
 
 + Parameters
+    + vendor
     + offset (optional) - pagination offset
         + Default: 0
     + limit (optional) - pagination limit
@@ -365,10 +367,11 @@ API call generates pre-signed urls to S3. You can upload e.g. using such curl co
                 }
             ]
 
-### Get app detail [GET /vendor/apps/{appId}]
+### Get app detail [GET /vendors/{vendor}/apps/{app}]
 
 + Parameters
-    + appId
+    + vendor
+    + app
 
 + Response 200 (application/json)
 
@@ -429,7 +432,7 @@ API call generates pre-signed urls to S3. You can upload e.g. using such curl co
             }
 
 
-### Request approval [POST /vendor/apps/{appId}/approve]
+### Request approval [POST /vendors/{vendor}/apps/{app}/approve]
 
 Request will be sent only if the app has icons uploaded and all these attributes set:
 - name
@@ -441,7 +444,8 @@ Request will be sent only if the app has icons uploaded and all these attributes
 - documentationUrl
 
 + Parameters
-    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
 
 + Request
 
@@ -452,10 +456,11 @@ Request will be sent only if the app has icons uploaded and all these attributes
 + Response 202
 
 
-### List versions [GET /vendor/apps/{appId}/versions?offset=0&limit=1000]
+### List versions [GET /apps/{vendor}/{app}/versions?offset=0&limit=1000]
 
 + Parameters
-    + appId
+    + vendor
+    + app
     + offset (optional) - pagination offset
         + Default: 0
     + limit (optional) - pagination limit
@@ -511,9 +516,10 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 }
             ]
 
-### Get version detail [GET /vendor/apps/{appId}/versions/{version}]
+### Get version detail [GET /apps/{vendor}/{app}/versions/{version}]
 
 + Parameters
+    + vendor
     + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
     + version
 
@@ -565,12 +571,13 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 "stagingStorageInput": "local"
             }
 
-### Rollback version [POST /vendor/apps/{appId}/versions/{version}/rollback]
+### Rollback version [POST /apps/{vendor}/{app}/versions/{version}/rollback]
 
 Takes settings from chosen version and creates new version with it.
 
 + Parameters
-    + appId
+    + vendor
+    + app
     + version
 
 + Request (application/json)
@@ -815,10 +822,10 @@ Management of users and apps designated for Developer Portal staff only
                 }
             ]
 
-### Get app detail [GET /admin/apps/{appId}]
+### Get app detail [GET /admin/apps/{app}]
 
 + Parameters
-    + appId
+    + app
 
 + Response 200 (application/json)
 
@@ -879,12 +886,12 @@ Management of users and apps designated for Developer Portal staff only
             }
 
 
-### Update app [PATCH /admin/apps/{appId}]
+### Update app [PATCH /admin/apps/{app}]
 
 Allows to update apps accross vendors
 
 + Parameters
-    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
 
 + Attributes
     + name (required) - Do not use the word `extractor` or `writer` in your app
@@ -946,10 +953,10 @@ Allows to update apps accross vendors
             + stack: (string, required) - name of the stack
             + projects: (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
 
-### Approve app [POST /admin/apps/{id}/approve]
+### Approve app [POST /admin/apps/{app}/approve]
 
 + Parameters
-    + id
+    + app
 
 + Request
 

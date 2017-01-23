@@ -43,9 +43,11 @@ provider:
     KeboolaStack: "developer-portal"
 
 functions:
+  # Service
   logger:
       handler: logger.handler
 
+  # Common
   landingPage:
     handler: public.landing
     events:
@@ -73,6 +75,7 @@ functions:
           method: patch
           path: "{anything}"
 
+  # Admin
   adminAppsApprove:
     handler: admin.appApprove
     events:
@@ -138,6 +141,7 @@ functions:
           method: post
           path: "admin/vendors"
 
+  # Apps management
   appsIconsLinks:
     handler: vendor-apps-icons.links
     events:
@@ -161,16 +165,31 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: patch
-          path: apps/{vendor}/{app}
-
-  vendorAppsApprove:
+          path: "apps/{vendor}/{app}"
+  appsVersionsList:
+    handler: vendor-apps-versions.list
+    events:
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: get
+          path: "/apps/{vendor}/{app}/versions"
+  appsVersionsRollback:
+    handler: vendor-apps-versions.rollback
+    events:
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "apps/{vendor}/{app}/versions/{version}/rollback"
+  vendorsAppsApprove:
     handler: vendor-apps-approve.handler
     events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
-          path: "vendor/apps/{appId}/approve"
+          path: "vendors/{vendor}/apps/{app}/approve"
   vendorsAppsCreate:
     handler: vendor-apps-update.appsCreate
     events:
@@ -179,27 +198,27 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps"
-  vendorAppsDetail:
+  vendorsAppsDetail:
     handler: vendor-apps-list.appsDetail
     events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
-          path: "vendor/apps/{appId}"
+          path: "vendors/{vendor}/apps/{app}"
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
-          path: "vendor/apps/{appId}/versions/{version}"
-  vendorAppsList:
+          path: "/apps/{vendor}/{app}/versions/{version}"
+  vendorsAppsList:
     handler: vendor-apps-list.appsList
     events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
-          path: vendor/apps
+          path: "vendors/{vendor}/apps"
   vendorAppsRepositoryCreate:
     handler: vendor-apps-repository.create
     events:
@@ -207,7 +226,7 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
-          path: "vendor/apps/{appId}/repository"
+          path: "apps/{vendor}/{app}/repository"
   vendorAppsRepositoryGet:
     handler: vendor-apps-repository.get
     events:
@@ -215,25 +234,9 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
-          path: "vendor/apps/{appId}/repository"
-  vendorAppsVersionsList:
-    handler: vendor-apps-versions.list
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
-          path: "vendor/apps/{appId}/versions"
-  vendorAppsVersionsRollback:
-    handler: vendor-apps-versions.rollback
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: post
-          path: "vendor/apps/{appId}/versions/{version}/rollback"
+          path: "apps/{vendor}/{app}/repository"
 
-
+  # Auth
   authEmailTrigger:
     handler: auth-email.emailTrigger
   authConfirmPost:
@@ -256,7 +259,7 @@ functions:
       -
         http:
           method: post
-          path: auth/confirm
+          path: "auth/confirm"
   authForgot:
     handler: auth.forgot
     events:
@@ -277,7 +280,7 @@ functions:
       -
         http:
           method: post
-          path: auth/login
+          path: "auth/login"
   authProfile:
     handler: auth.profile
     events:
@@ -285,15 +288,16 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
-          path: auth/profile
+          path: "auth/profile"
   authSignup:
     handler: auth.signup
     events:
       -
         http:
           method: post
-          path: auth/signup
+          path: "auth/signup"
 
+  # Public
   appsDetail:
     handler: public.detail
     events:
@@ -301,24 +305,13 @@ functions:
         http:
           method: get
           path: "apps/{vendor}/{app}"
-      -
-        http:
-          method: get
-          path: "apps/{vendor}/{app}/versions/{version}"
   appsList:
     handler: public.list
     events:
       -
         http:
           method: get
-          path: apps
-  appsVersionsList:
-    handler: public.versions
-    events:
-      -
-        http:
-          method: get
-          path: "apps/{vendor}/{app}/versions"
+          path: "apps"
   vendorsList:
     handler: public.vendorsList
     events:
