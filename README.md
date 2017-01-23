@@ -14,7 +14,7 @@ Cloudfront distribution, Lambda functions and API Gateway. All resources are
 prefixed with `SERVICE_NAME` variable. Please ensure that the prefix is unique,
 if resources with same identifiers already exist, the installation will fail.
 
-1. Install Serverless 1.2: `npm install -g serverless@1.2`
+1. Install Serverless: `npm install -g serverless/serverless`
 2. Install AWS CLI (e.g. `pip install awscli` on Mac)
 3. Install Yarn (see https://yarnpkg.com/en/docs/install)
 4. Download git repository: `git clone git@github.com:keboola/developer-portal.git`
