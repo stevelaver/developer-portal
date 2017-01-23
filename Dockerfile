@@ -1,7 +1,7 @@
 FROM node:alpine
 
 # aws cli
-RUN apk add --update python py-pip
+RUN apk add --update python py-pip git
 RUN pip install awscli
 
 # serverless
