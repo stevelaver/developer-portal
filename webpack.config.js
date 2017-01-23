@@ -6,7 +6,6 @@ module.exports = {
     admin: ['babel-polyfill', './lambda/admin.js'],
     auth: ['babel-polyfill', './lambda/auth/auth.js'],
     'auth-email': ['babel-polyfill', './lambda/auth/email.js'],
-    authorizer: ['babel-polyfill', './lambda/authorizer.js'],
     logger: ['babel-polyfill', './lambda/logger.js'],
     public: ['babel-polyfill', './lambda/public.js'],
     'vendor-apps-approve': ['babel-polyfill', './lambda/vendor/apps/approve.js'],
@@ -22,7 +21,9 @@ module.exports = {
     libraryTarget: 'commonjs',
   },
   target: 'node',
-  externals: [nodeExternals()],
+  externals: [nodeExternals({
+    modulesFromFile: true,
+  })],
   module: {
     loaders: [
       {
