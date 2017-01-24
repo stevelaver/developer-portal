@@ -223,11 +223,10 @@ module.exports.users = (event, context, callback) => request.errorHandler(() => 
     .then(data => _.map(data.Users, item => ({
       email: item.Username,
       name: _.get(_.find(item.Attributes, o => (o.Name === 'name')), 'Value', null),
-      // TODO vendor: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', null),
+      vendors: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', null).split(','),
       createdOn: item.UserCreateDate,
       isEnabled: item.Enabled,
       status: item.UserStatus,
-      id: _.get(_.find(item.Attributes, o => (o.Name === 'sub')), 'Value', null),
     }))),
     db,
     event,
