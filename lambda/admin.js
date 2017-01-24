@@ -222,8 +222,8 @@ module.exports.users = (event, context, callback) => request.errorHandler(() => 
     ))
     .then(data => _.map(data.Users, item => ({
       email: item.Username,
-      name: _.get(_.find(item.Attributes, o => (o.Name === 'name')), 'Value', null),
-      vendors: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', null).split(','),
+      name: _.get(_.find(item.Attributes, o => (o.Name === 'name')), 'Value', ''),
+      vendors: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', '').split(','),
       createdOn: item.UserCreateDate,
       isEnabled: item.Enabled,
       status: item.UserStatus,
