@@ -1,9 +1,14 @@
 'use strict';
 
+import Log from '../lib/log';
+
 require('babel-polyfill');
 const _ = require('lodash');
-const log = require('../lib/log');
+const papertrail = require('winston-papertrail').Papertrail;
+const winston = require('winston');
 const zlib = require('zlib');
+
+const log = new Log(papertrail, winston);
 
 exports.handler = function (event, context, callback) {
   const payload = new Buffer(event.awslogs.data, 'base64');
@@ -13,7 +18,7 @@ exports.handler = function (event, context, callback) {
       return callback(err);
     }
 
-    const logger = log.init(process.env.LOG_HOST, process.env.LOG_PORT, process.env.SERVICE_NAME);
+    const logger = log.get(process.env.LOG_HOST, process.env.LOG_PORT, process.env.SERVICE_NAME);
     const data = JSON.parse(result.toString('utf8'));
 
     data.logEvents.forEach((line) => {
