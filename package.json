@@ -20,8 +20,7 @@
     "lodash": "^4.17.4",
     "moment": "^2.15.0",
     "mysql": "^2.11.1",
-    "request": "^2.74.0",
-    "request-promise": "^4.1.1",
+    "request-promise-lite": "^0.8.1",
     "winston": "*",
     "winston-papertrail": "^1.0.0"
   },
@@ -45,9 +44,11 @@
     "mocha": "*",
     "mocha-webpack": "^0.7.0",
     "mustache-loader": "^0.4.0",
+    "request": "^2.79.0",
     "serverless-offline": "^3.8.1",
     "serverless-run-function-plugin": "^0.0.6",
     "serverless-webpack": "^1.0.0-rc.3",
+    "sinon": "^1.17.7",
     "webpack": "^1.13.2",
     "webpack-node-externals": "^1.5.4",
     "yamljs": "^0.2.8"

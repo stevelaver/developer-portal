@@ -48,3 +48,5 @@ _meta
 
 .env-test
 deploy.sh
+deploy-*.sh
+test.sh

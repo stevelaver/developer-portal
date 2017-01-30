@@ -43,7 +43,10 @@ script:
   - node ./scripts/create-env.js ./env.yml TEST
   - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
-    mocha --timeout 0 test/functional
+    mocha --timeout 0 --compilers js:babel-core/register test/functional
+  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
+    mocha --timeout 0 --compilers js:babel-core/register test/lib
 
 deploy:
   provider: script

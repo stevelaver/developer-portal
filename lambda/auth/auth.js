@@ -2,6 +2,7 @@
 
 import Auth from '../../lib/auth';
 import Identity from '../../lib/identity';
+import Notification from '../../lib/notification';
 import Validation from '../../lib/validation';
 
 require('babel-polyfill');
@@ -11,9 +12,10 @@ const error = require('../../lib/error');
 const joi = require('joi');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql');
-const notification = require('../../lib/notification');
 const Promise = require('bluebird');
 const request = require('../../lib/request');
+const requestLib = require('request-promise-lite');
+
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
@@ -22,10 +24,14 @@ aws.config.setPromisesDependency(Promise);
 const cognito = new aws.CognitoIdentityServiceProvider({
   region: process.env.REGION,
 });
-notification.setHook(process.env.SLACK_HOOK_URL, process.env.SERVICE_NAME);
 
 const auth = new Auth(cognito, process.env, error);
 const identity = new Identity(jwt, error);
+const notification = new Notification(
+  requestLib,
+  process.env.SLACK_HOOK_URL,
+  process.env.SERVICE_NAME
+);
 const validation = new Validation(joi, error);
 
 /**
