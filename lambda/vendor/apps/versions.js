@@ -60,8 +60,8 @@ module.exports.rollback = (event, context, callback) => request.errorHandler(() 
     .then(user => app.rollbackAppVersion(
       event.pathParameters.app,
       event.pathParameters.vendor,
-      event.pathParameters.version,
-      user
+      user,
+      event.pathParameters.version
     )),
     db,
     event,
