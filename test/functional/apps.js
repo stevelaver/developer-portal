@@ -529,6 +529,99 @@ describe('apps', () => {
     ], done);
   });
 
+  it('app version rollback', (done) => {
+    const appName4 = `a4_${Date.now()}`;
+    const appId4 = `${vendor}.${appName4}`;
+    const newAppName4 = `a44_${Date.now()}`;
+    async.waterfall([
+      function (callback) {
+        // Create app
+        request.post({
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            id: appName4,
+            name: appName4,
+            type: 'extractor',
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          callback();
+        });
+      },
+      function (callback) {
+        // Update app
+        request.patch({
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId4}`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            name: newAppName4,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          callback();
+        });
+      },
+      function (callback) {
+        // Get app detail
+        request.get({
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          const body = JSON.parse(bodyRaw);
+          expect(err).to.be.null();
+          expect(body, bodyRaw).to.have.property('name');
+          expect(body.name).to.equal(newAppName4);
+          expect(body, bodyRaw).to.have.property('version');
+          callback();
+        });
+      },
+      function (callback) {
+        // Rollback
+        request.post({
+          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId4}/versions/1/rollback`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            name: newAppName4,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          callback();
+        });
+      },
+      function (callback) {
+        // Get app detail
+        request.get({
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          const body = JSON.parse(bodyRaw);
+          expect(err).to.be.null();
+          expect(body, bodyRaw).to.have.property('name');
+          expect(body.name).to.equal(appName4);
+          expect(body, bodyRaw).to.have.property('version');
+          callback(null, body.version);
+        });
+      },
+    ], done);
+  });
+
   /* it('ECR', (done) => {
     const appName = `a3_${Date.now()}`;
     const appId = `${vendor}.${appName}`;
