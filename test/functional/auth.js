@@ -32,7 +32,7 @@ const otherVendor = `${vendor}o1`;
 
 const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
 
-describe('auth', () => {
+describe('Auth', () => {
   before((done) => {
     async.waterfall([
       (cb) => {

@@ -35,7 +35,7 @@ const appId = `app_admin_${Date.now()}`;
 const userEmail = `u${Date.now()}.test@keboola.com`;
 let token;
 
-describe('admin', () => {
+describe('Admin', () => {
   before((done) => {
     async.waterfall([
       (cb) => {

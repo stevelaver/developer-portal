@@ -31,10 +31,10 @@ const appName2 = `a2_${Date.now()}`;
 const appId1 = `${vendor}.${appName1}`;
 let token;
 
-describe('apps', () => {
+describe('Apps', () => {
   before((done) => {
     async.waterfall([
-      function (callback) {
+      (cb) => {
         request.post({
           url: `${env.API_ENDPOINT}/auth/login`,
           json: true,
@@ -46,17 +46,17 @@ describe('apps', () => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('token');
           token = body.token;
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         rds.query(
           'DELETE FROM apps WHERE vendor=?',
           vendor,
-          err => callback(err)
+          err => cb(err)
         );
       },
-      function (cb) {
+      (cb) => {
         rds.query(
           'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
           [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
@@ -66,9 +66,9 @@ describe('apps', () => {
     ], done);
   });
 
-  it('new app flow', (done) => {
+  it('New App', (done) => {
     async.waterfall([
-      function (callback) {
+      (cb) => {
         // Try to create app with forbidden attribute
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -86,10 +86,10 @@ describe('apps', () => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorType');
           expect(body.errorType).to.be.equal('UnprocessableEntity');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Create app
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -105,10 +105,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Create second app
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -124,10 +124,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Get app detail
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
@@ -139,10 +139,10 @@ describe('apps', () => {
           expect(err).to.be.null();
           expect(body, bodyRaw).to.have.property('id');
           expect(body.id).to.be.equal(appId1);
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // List apps
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -157,10 +157,10 @@ describe('apps', () => {
           expect(body[0].id).to.be.oneOf([`${vendor}.${appName1}`, `${vendor}.${appName2}`]);
           expect(body[1]).to.have.property('id');
           expect(body[1].id).to.be.oneOf([`${vendor}.${appName1}`, `${vendor}.${appName2}`]);
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Public app profile should not exist
         request.get({
           url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
@@ -168,10 +168,10 @@ describe('apps', () => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
           expect(body).to.have.property('errorMessage');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Approve should fail
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
@@ -182,10 +182,10 @@ describe('apps', () => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorMessage');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Update app
         request.patch({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
@@ -207,10 +207,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Approve should fail on missing icons
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
@@ -222,10 +222,10 @@ describe('apps', () => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorMessage');
           expect(body.errorMessage).to.include('App icon');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Request url to upload icons
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/icons`,
@@ -238,10 +238,10 @@ describe('apps', () => {
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body, JSON.stringify(body)).to.have.property('32');
           expect(body, JSON.stringify(body)).to.have.property('64');
-          callback(null, body);
+          cb(null, body);
         });
       },
-      function (icons, callback) {
+      (icons, cb) => {
         // Upload 32px icon
         const stats = fs.statSync(`${__dirname}/icon.png`);
         fs.createReadStream(`${__dirname}/icon.png`).pipe(request.put({
@@ -252,10 +252,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body).to.be.empty();
-          callback(null, icons);
+          cb(null, icons);
         }));
       },
-      function (icons, callback) {
+      (icons, cb) => {
         // Upload 64px icon
         const stats = fs.statSync(`${__dirname}/icon.png`);
         fs.createReadStream(`${__dirname}/icon.png`).pipe(request.put({
@@ -266,15 +266,15 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body).to.be.empty();
-          callback();
+          cb();
         }));
       },
-      function (callback) {
+      (cb) => {
         setTimeout(() => {
-          callback();
+          cb();
         }, 10000);
       },
-      function (callback) {
+      (cb) => {
         // Approve should succeed
         // Wait few seconds if icon handling lambda has delay
         setTimeout(() => {
@@ -286,19 +286,19 @@ describe('apps', () => {
           }, (err, res, body) => {
             expect(err).to.be.null();
             expect(body).to.be.empty();
-            callback();
+            cb();
           });
         }, 5000);
       },
-      function (callback) {
+      (cb) => {
         // Manual approval
         rds.query(
           'UPDATE apps SET isApproved=1 WHERE id=?',
           appId1,
-          err => callback(err)
+          err => cb(err)
         );
       },
-      function (callback) {
+      (cb) => {
         // Public app profile should exist now
         request.get({
           url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
@@ -307,10 +307,10 @@ describe('apps', () => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // List versions
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/versions`,
@@ -322,10 +322,10 @@ describe('apps', () => {
           expect(err).to.be.null();
           expect(body).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(1);
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Get version
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/versions/1`,
@@ -337,10 +337,10 @@ describe('apps', () => {
           const body = JSON.parse(bodyRaw);
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
           expect(body).to.have.property('id');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Public apps list should have at least one result
         request.get({
           url: `${env.API_ENDPOINT}/apps`,
@@ -350,17 +350,17 @@ describe('apps', () => {
           expect(body).to.not.have.property('errorMessage');
           expect(body).to.have.length.above(0);
           expect(body[0]).to.have.property('id');
-          callback();
+          cb();
         });
       },
     ], done);
   });
 
-  it('app with permissions flow', (done) => {
+  it('App With Permissions', (done) => {
     const appName3 = `a4_${Date.now()}`;
     const appId3 = `${vendor}.${appName3}`;
     async.waterfall([
-      function (callback) {
+      (cb) => {
         // Create app should fail on wrong permissions schema
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -383,17 +383,17 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorMessage');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         rds.query(
           'DELETE FROM stacks WHERE name=?',
           'stack',
-          err => callback(err)
+          err => cb(err)
         );
       },
-      function (callback) {
+      (cb) => {
         // Create app should fail on non-existing stack
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -416,17 +416,17 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorMessage');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         rds.query(
           'INSERT INTO stacks SET name=?',
           'stack',
-          err => callback(err)
+          err => cb(err)
         );
       },
-      function (callback) {
+      (cb) => {
         // Create app
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -449,10 +449,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Update app
         request.patch({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId3}`,
@@ -471,10 +471,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Get app detail
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId3}`,
@@ -491,18 +491,18 @@ describe('apps', () => {
           expect(body.permissions[0].stack).to.equal('stack');
           expect(body.permissions[0].projects).to.deep.equal([2, 3]);
           expect(body.id).to.be.equal(appId3);
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Manual approval
         rds.query(
           'UPDATE apps SET isApproved=1 WHERE id=?',
           appId3,
-          err => callback(err)
+          err => cb(err)
         );
       },
-      function (callback) {
+      (cb) => {
         // Public app profile should not exist
         request.get({
           url: `${env.API_ENDPOINT}/apps/${vendor}/${appId3}`,
@@ -511,10 +511,10 @@ describe('apps', () => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorType');
           expect(body.errorType).to.be.equal('NotFound');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Public apps list should not contain the app
         request.get({
           url: `${env.API_ENDPOINT}/apps`,
@@ -523,18 +523,18 @@ describe('apps', () => {
           expect(err).to.be.null();
           expect(body).to.not.have.property('errorMessage');
           expect(_.map(body, app => app.id)).to.not.include(appId3);
-          callback();
+          cb();
         });
       },
     ], done);
   });
 
-  it('app version rollback', (done) => {
+  it('App Version Rollback', (done) => {
     const appName4 = `a4_${Date.now()}`;
     const appId4 = `${vendor}.${appName4}`;
     const newAppName4 = `a44_${Date.now()}`;
     async.waterfall([
-      function (callback) {
+      (cb) => {
         // Create app
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -550,10 +550,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Update app
         request.patch({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
@@ -567,10 +567,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Get app detail
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
@@ -583,10 +583,10 @@ describe('apps', () => {
           expect(body, bodyRaw).to.have.property('name');
           expect(body.name).to.equal(newAppName4);
           expect(body, bodyRaw).to.have.property('version');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Rollback
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}/versions/1/rollback`,
@@ -600,10 +600,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Get app detail
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
@@ -616,7 +616,146 @@ describe('apps', () => {
           expect(body, bodyRaw).to.have.property('name');
           expect(body.name).to.equal(appName4);
           expect(body, bodyRaw).to.have.property('version');
-          callback(null, body.version);
+          cb(null, body.version);
+        });
+      },
+    ], done);
+  });
+
+  it('Public Apps Listing', (done) => {
+    let testApp1;
+    let testApp2;
+    async.waterfall([
+      (cb) => {
+        rds.query(
+          'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+          [`${vendor}.${appId1}List1`, vendor, 'test1'],
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        rds.query(
+          'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+          [`${vendor}.${appId1}List2`, vendor, 'test2'],
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        // Public list all
+        request.get({
+          url: `${env.API_ENDPOINT}/apps`,
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.length.of.at.least(2);
+          expect(body[0]).to.have.property('name');
+          testApp1 = body[0].name;
+          expect(body[1]).to.have.property('name');
+          testApp2 = body[1].name;
+          cb();
+        });
+      },
+      (cb) => {
+        // Public list limit
+        request.get({
+          url: `${env.API_ENDPOINT}/apps?offset=0&limit=1`,
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.lengthOf(1);
+          expect(body[0]).to.have.property('name');
+          expect(body[0].name).to.be.equal(testApp1);
+          cb();
+        });
+      },
+      (cb) => {
+        // Public list limit
+        request.get({
+          url: `${env.API_ENDPOINT}/apps?offset=1&limit=1`,
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.lengthOf(1);
+          expect(body[0]).to.have.property('name');
+          expect(body[0].name).to.be.equal(testApp2);
+          cb();
+        });
+      },
+    ], done);
+  });
+
+  it('Vendor Apps Listing', (done) => {
+    let testApp1;
+    let testApp2;
+    async.waterfall([
+      (cb) => {
+        rds.query(
+          'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+          [`${vendor}.${appId1}List3`, vendor, 'test1'],
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        rds.query(
+          'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+          [`${vendor}.${appId1}List4`, vendor, 'test2'],
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        // Vendor list all
+        request.get({
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.length.of.at.least(2);
+          expect(body[0]).to.have.property('name');
+          testApp1 = body[0].name;
+          expect(body[1]).to.have.property('name');
+          testApp2 = body[1].name;
+          cb();
+        });
+      },
+      (cb) => {
+        // Vendor list limit
+        request.get({
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps?offset=0&limit=1`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.lengthOf(1);
+          expect(body[0]).to.have.property('name');
+          expect(body[0].name).to.be.equal(testApp1);
+          cb();
+        });
+      },
+      (cb) => {
+        // Vendor list limit
+        request.get({
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps?offset=1&limit=1`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyRaw) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
+          expect(body, bodyRaw).to.not.have.property('errorMessage');
+          expect(body).to.have.lengthOf(1);
+          expect(body[0]).to.have.property('name');
+          expect(body[0].name).to.be.equal(testApp2);
+          cb();
         });
       },
     ], done);
@@ -626,7 +765,7 @@ describe('apps', () => {
     const appName = `a3_${Date.now()}`;
     const appId = `${vendor}.${appName}`;
     async.waterfall([
-      function (callback) {
+      (cb) => {
         // Create app
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
@@ -642,10 +781,10 @@ describe('apps', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.be.empty();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Create repository
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId}/repository`,
@@ -654,10 +793,10 @@ describe('apps', () => {
           },
         }, (err) => {
           expect(err).to.be.null();
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Get repository credentials
         request.get({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId}/repository`,
@@ -668,10 +807,10 @@ describe('apps', () => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
           expect(body).to.not.have.property('errorMessage');
-          callback();
+          cb();
         });
       },
-      function (callback) {
+      (cb) => {
         // Delete repository
         const ecr = new aws.ECR({ region: env.REGION });
         ecr.deleteRepository({
@@ -684,25 +823,25 @@ describe('apps', () => {
 
   after((done) => {
     async.waterfall([
-      function (callback) {
+      (cb) => {
         rds.query(
           'DELETE FROM apps WHERE vendor=?',
           vendor,
-          err => callback(err)
+          err => cb(err)
         );
       },
-      function (callback) {
+      (cb) => {
         // Clear icons from s3
         const s3 = new aws.S3();
         s3.listObjects(
           { Bucket: env.S3_BUCKET, Prefix: `${appId1}/` },
           (err, data) => {
             if (data && _.has(data, 'Contents')) {
-              async.each(data.Contents, (file, cb) => {
-                s3.deleteObject({ Bucket: env.S3_BUCKET, Key: file.Key }, cb);
-              }, callback);
+              async.each(data.Contents, (file, cb2) => {
+                s3.deleteObject({ Bucket: env.S3_BUCKET, Key: file.Key }, cb2);
+              }, cb);
             } else {
-              callback();
+              cb();
             }
           }
         );
