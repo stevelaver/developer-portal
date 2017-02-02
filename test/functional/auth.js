@@ -29,7 +29,6 @@ const vendor = `v${Date.now()}`;
 const userEmail = `u${Date.now()}@test.com`;
 const userPassword1 = 'uiOU.-jfdksfj88';
 const otherVendor = `${vendor}o1`;
-let token;
 
 const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
 
@@ -69,7 +68,7 @@ describe('auth', () => {
         }, (err, res, body) => {
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.have.property('errorType');
-          expect(body.errorType, JSON.stringify(body)).to.equal('NotFound');
+          expect(body.errorType, JSON.stringify(body)).to.equal('BadRequest');
           cb();
         });
       },
@@ -207,11 +206,12 @@ describe('auth', () => {
     ], done);
   });
 
-  it('Add User to a Vendor', (done) => {
+  it('Join a Vendor', (done) => {
+    let token;
     async.waterfall([
       (cb) => {
         cognito.adminUpdateUserAttributes({
-          UserPoolId: this.env.COGNITO_POOL_ID,
+          UserPoolId: env.COGNITO_POOL_ID,
           Username: process.env.FUNC_USER_EMAIL,
           UserAttributes: [
             {
@@ -219,7 +219,7 @@ describe('auth', () => {
               Value: vendor,
             },
           ],
-        }, cb);
+        }, () => cb());
       },
       (cb) => {
         request.post({
@@ -236,17 +236,6 @@ describe('auth', () => {
           cb();
         });
       },
-      cb =>
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }).promise()
-          .then(data => Identity.formatUser(data))
-          .then((user) => {
-            expect(user).to.have.property('vendors');
-            expect(user.vendors).to.not.include(otherVendor);
-          })
-          .then(() => cb()),
       (cb) => {
         // Add vendor
         request.post({
@@ -263,14 +252,15 @@ describe('auth', () => {
       cb =>
         cognito.adminGetUser({
           UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
+          Username: process.env.FUNC_USER_EMAIL,
         }).promise()
           .then(data => Identity.formatUser(data))
           .then((user) => {
             expect(user).to.have.property('vendors');
             expect(user.vendors).to.include(otherVendor);
           })
-          .then(() => cb()),
+          .then(() => cb())
+          .catch(err => cb(err)),
     ], done);
   });
 

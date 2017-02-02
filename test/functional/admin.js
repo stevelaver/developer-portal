@@ -386,7 +386,8 @@ describe('admin', () => {
             expect(user).to.have.property('vendors');
             expect(user.vendors).to.not.include(otherVendor);
           })
-          .then(() => cb()),
+          .then(() => cb())
+          .catch(err => cb(err)),
       (cb) => {
         // Add vendor
         request.post({

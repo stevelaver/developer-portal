@@ -8,17 +8,13 @@ import Validation from '../../lib/validation';
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
+const db = require('../../lib/db');
 const error = require('../../lib/error');
 const joi = require('joi');
 const jwt = require('jsonwebtoken');
-const mysql = require('mysql');
 const Promise = require('bluebird');
 const request = require('../../lib/request');
 const requestLib = require('request-promise-lite');
-
-
-Promise.promisifyAll(mysql);
-Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 aws.config.setPromisesDependency(Promise);
 const cognito = new aws.CognitoIdentityServiceProvider({
@@ -171,11 +167,11 @@ module.exports.joinVendor = (event, context, callback) => request.errorHandler((
     },
   });
 
-  return request.responseAuthPromise(
+  return request.responsePromise(
     identity.getUser(event.headers.Authorization)
       .then((user) => {
         if (user.isAdmin) {
-          return auth.joinVendor(user, event.pathParameters.vendor);
+          return auth.joinVendor(db, Identity, user, event.pathParameters.vendor);
         }
         return notification.approveJoinVendor({
           email: user.email,
@@ -234,7 +230,6 @@ module.exports.profile = (event, context, callback) => request.errorHandler(() =
 /**
  * Signup
  */
-let db;
 module.exports.signup = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
     body: {
@@ -252,24 +247,10 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
         .error(Error('Parameter vendor is required')),
     },
   });
-  db = mysql.createConnection({
-    host: process.env.RDS_HOST,
-    user: process.env.RDS_USER,
-    password: process.env.RDS_PASSWORD,
-    database: process.env.RDS_DATABASE,
-    ssl: 'Amazon RDS',
-    port: process.env.RDS_PORT,
-  });
   const body = JSON.parse(event.body);
 
   return request.responseAuthPromise(
-    auth.signUp(
-      db,
-      body.email,
-      body.password,
-      body.name,
-      body.vendor
-    ),
+    auth.signUp(db, body.email, body.password, body.name, body.vendor),
     event,
     context,
     callback,
