@@ -242,7 +242,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 + Response 201
 
 
-### Update app [PATCH /apps/{vendor}/{app}]
+### Update app [PATCH /vendors/{vendor}/apps/{app}]
 
 + Parameters
     + vendor
@@ -325,7 +325,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 + Response 204
 
 
-### Generate links for icons upload [POST /apps/{vendor}/{app}/icons]
+### Generate links for icons upload [POST /vendors/{vendor}/apps/{app}/icons]
 
 API call generates pre-signed urls to S3. You can upload e.g. using such curl command:
 `curl -H "Content-Type:image/png" --upload-file file.png "https://...."`
@@ -465,7 +465,7 @@ Request will be sent only if the app has icons uploaded and all these attributes
 + Response 202
 
 
-### List versions [GET /apps/{vendor}/{app}/versions?offset=0&limit=1000]
+### List versions [GET /vendors/{vendor}/apps/{app}/versions?offset=0&limit=1000]
 
 + Parameters
     + vendor
@@ -525,7 +525,7 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 }
             ]
 
-### Get version detail [GET /apps/{vendor}/{app}/versions/{version}]
+### Get version detail [GET /vendors/{vendor}/apps/{app}/versions/{version}]
 
 + Parameters
     + vendor
@@ -580,7 +580,7 @@ Request will be sent only if the app has icons uploaded and all these attributes
                 "stagingStorageInput": "local"
             }
 
-### Rollback version [POST /apps/{vendor}/{app}/versions/{version}/rollback]
+### Rollback version [POST /vendors/{vendor}/apps/{app}/versions/{version}/rollback]
 
 Takes settings from chosen version and creates new version with it.
 

@@ -188,7 +188,7 @@ describe('apps', () => {
       function (callback) {
         // Update app
         request.patch({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
           headers: {
             Authorization: token,
           },
@@ -228,7 +228,7 @@ describe('apps', () => {
       function (callback) {
         // Request url to upload icons
         request.post({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/icons`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/icons`,
           headers: {
             Authorization: token,
           },
@@ -313,7 +313,7 @@ describe('apps', () => {
       function (callback) {
         // List versions
         request.get({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/versions`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/versions`,
           headers: {
             Authorization: token,
           },
@@ -328,7 +328,7 @@ describe('apps', () => {
       function (callback) {
         // Get version
         request.get({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}/versions/1`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/versions/1`,
           headers: {
             Authorization: token,
           },
@@ -455,7 +455,7 @@ describe('apps', () => {
       function (callback) {
         // Update app
         request.patch({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId3}`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId3}`,
           headers: {
             Authorization: token,
           },
@@ -556,7 +556,7 @@ describe('apps', () => {
       function (callback) {
         // Update app
         request.patch({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId4}`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
           headers: {
             Authorization: token,
           },
@@ -589,7 +589,7 @@ describe('apps', () => {
       function (callback) {
         // Rollback
         request.post({
-          url: `${env.API_ENDPOINT}/apps/${vendor}/${appId4}/versions/1/rollback`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}/versions/1/rollback`,
           headers: {
             Authorization: token,
           },

@@ -20,8 +20,8 @@ const checkAuth = function (err, res, bodyIn, callback) {
   callback();
 };
 
-describe('check if all endpoints have auth required', () => {
-  it('check apps', (done) => {
+describe('Check if all endpoints have auth required', () => {
+  it('Check Auth', (done) => {
     async.parallel([
       (cb) => {
         // Get profile
@@ -30,6 +30,18 @@ describe('check if all endpoints have auth required', () => {
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
+      (cb) => {
+        // Join vendor
+        request.post(
+          { url: `${env.API_ENDPOINT}/auth/vendors/keboola` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
+      },
+    ], done);
+  });
+
+  it('Check Apps', (done) => {
+    async.parallel([
       (cb) => {
         // Create app
         request.post(
@@ -61,42 +73,42 @@ describe('check if all endpoints have auth required', () => {
       (cb) => {
         // Update app
         request.patch(
-          { url: `${env.API_ENDPOINT}/apps/keboola/app` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
       (cb) => {
         // Request url to upload icons
         request.post(
-          { url: `${env.API_ENDPOINT}/apps/keboola/app/icons` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app/icons` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
       (cb) => {
         // Rollback version
         request.post(
-          { url: `${env.API_ENDPOINT}/apps/keboola/app/versions/1/rollback` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app/versions/1/rollback` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
       (cb) => {
         // List versions
         request.get(
-          { url: `${env.API_ENDPOINT}/apps/keboola/app/versions` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app/versions` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
       (cb) => {
         // Get version
         request.get(
-          { url: `${env.API_ENDPOINT}/apps/keboola/app/versions/1` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app/versions/1` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
     ], done);
   });
 
-  it('check admin', (done) => {
+  it('Check Admin', (done) => {
     async.parallel([
       (cb) => {
         // List users
@@ -109,6 +121,13 @@ describe('check if all endpoints have auth required', () => {
         // Enable user
         request.post(
           { url: `${env.API_ENDPOINT}/admin/users/test@test.com/enable` },
+          (err, res, body) => checkAuth(err, res, body, cb)
+        );
+      },
+      (cb) => {
+        // Add vendor
+        request.post(
+          { url: `${env.API_ENDPOINT}/admin/users/test@test.com/vendors/keboola` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
