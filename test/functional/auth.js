@@ -1,5 +1,7 @@
 'use strict';
 
+import Identity from '../../lib/identity';
+
 require('dotenv').config({ path: '.env-test', silent: true });
 const async = require('async');
 const aws = require('aws-sdk');
@@ -26,7 +28,8 @@ const rds = mysql.createConnection({
 const vendor = `v${Date.now()}`;
 const userEmail = `u${Date.now()}@test.com`;
 const userPassword1 = 'uiOU.-jfdksfj88';
-const userPassword2 = 'uiOU.-jfdksfj89';
+const otherVendor = `${vendor}o1`;
+let token;
 
 const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
 
@@ -40,10 +43,17 @@ describe('auth', () => {
           err => cb(err)
         );
       },
+      (cb) => {
+        rds.query(
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+          [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+          err => cb(err)
+        );
+      },
     ], done);
   });
 
-  it('approve user flow', (done) => {
+  it('Approve User', (done) => {
     async.waterfall([
       (cb) => {
         // 1) Signup with non-existing vendor
@@ -165,7 +175,7 @@ describe('auth', () => {
     ], done);
   });
 
-  it('forgot password flow', (done) => {
+  it('Forgot Password', (done) => {
     async.waterfall([
       (cb) => {
         request.post({
@@ -197,11 +207,75 @@ describe('auth', () => {
     ], done);
   });
 
-  after((done) => {
+  it('Add User to a Vendor', (done) => {
     async.waterfall([
       (cb) => {
-        rds.query('DELETE FROM vendors WHERE id=?', vendor, () => cb());
+        cognito.adminUpdateUserAttributes({
+          UserPoolId: this.env.COGNITO_POOL_ID,
+          Username: process.env.FUNC_USER_EMAIL,
+          UserAttributes: [
+            {
+              Name: 'profile',
+              Value: vendor,
+            },
+          ],
+        }, cb);
       },
+      (cb) => {
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/login`,
+          json: true,
+          body: {
+            email: process.env.FUNC_USER_EMAIL,
+            password: process.env.FUNC_USER_PASSWORD,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.have.property('token');
+          token = body.token;
+          cb();
+        });
+      },
+      cb =>
+        cognito.adminGetUser({
+          UserPoolId: env.COGNITO_POOL_ID,
+          Username: userEmail,
+        }).promise()
+          .then(data => Identity.formatUser(data))
+          .then((user) => {
+            expect(user).to.have.property('vendors');
+            expect(user.vendors).to.not.include(otherVendor);
+          })
+          .then(() => cb()),
+      (cb) => {
+        // Add vendor
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/vendors/${otherVendor}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          cb();
+        });
+      },
+      cb =>
+        cognito.adminGetUser({
+          UserPoolId: env.COGNITO_POOL_ID,
+          Username: userEmail,
+        }).promise()
+          .then(data => Identity.formatUser(data))
+          .then((user) => {
+            expect(user).to.have.property('vendors');
+            expect(user.vendors).to.include(otherVendor);
+          })
+          .then(() => cb()),
+    ], done);
+  });
+
+  after((done) => {
+    async.waterfall([
       (cb) => {
         cognito.adminDeleteUser(
           { UserPoolId: env.COGNITO_POOL_ID, Username: userEmail },

@@ -128,6 +128,15 @@ Sends email with confirmation code which has to be used in the next API call
 
 + Response 204 (application/json)
 
+### Request to join a vendor [POST /auth/vendors/{vendor}]
+
+Request to join a vendor. You will recieve an email confirmation once it is approved.
+
++ Parameters
+    + vendor
+
++ Response 204 (application/json)
+
 
 ## Apps [/vendors]
 
@@ -768,6 +777,8 @@ Management of users and apps designated for Developer Portal staff only
 
 ### Enable user [POST /admin/users/{email}/enable]
 
+It will send email confirmation to a user.
+
 + Parameters
     + email
 
@@ -778,6 +789,18 @@ Management of users and apps designated for Developer Portal staff only
             Authorization: {admin_token}
 
 + Response 204
+
+
+### Add user to a vendor [POST /admin/users/{email}/vendors/{vendor}]
+
+It will send email confirmation to a user.
+
++ Parameters
+    + email
+    + vendor
+
++ Response 204 (application/json)
+
 
 ### Make user admin [POST /admin/users/{email}/admin]
 

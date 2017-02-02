@@ -4,13 +4,13 @@ custom:
   cognitoPoolArn: "arn:aws:cognito-idp:${file(./env.yml):REGION}:${file(./env.yml):ACCOUNT_ID}:userpool/${file(./env.yml):COGNITO_POOL_ID}"
   cognitoAuthorizer:
     arn: ${self:custom.cognitoPoolArn}
+  logSubscriptionFunction: logger
 
 service: "${file(./env.yml):SERVICE_NAME}"
 
 plugins:
   - db-migration
-  - serverless-offline
-  - serverless-run-function-plugin
+  #- log-subscription
   - serverless-webpack
 
 package:
@@ -29,7 +29,6 @@ provider:
   runtime: nodejs4.3
   memory: 256
   timeout: 30
-  cfLogs: true
   versionFunctions: false
   environment: ${file(./env.yml)}
   role: developerPortalLambdaRole
@@ -124,6 +123,14 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/users/{email}/admin"
+  adminUsersAddVendor:
+    handler: admin.userAddVendor
+    events:
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "admin/users/{email}/vendors/{vendor}"
   adminUsersEnable:
     handler: admin.userEnable
     events:
@@ -274,6 +281,14 @@ functions:
         http:
           method: post
           path: "auth/forgot/{email}/confirm"
+  authJoinVendor:
+    handler: auth.joinVendor
+    events:
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "auth/vendors/{vendor}"
   authLogin:
     handler: auth.login
     events:

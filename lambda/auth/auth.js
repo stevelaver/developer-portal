@@ -47,7 +47,7 @@ const confirm = function (event, context, callback) {
   return request.responseAuthPromise(
     auth.confirm(event.pathParameters.email, event.pathParameters.code)
       .then(data => cognito.adminGetUser({
-        UserPoolId: this.env.COGNITO_POOL_ID,
+        UserPoolId: process.env.COGNITO_POOL_ID,
         Username: data.Username,
       }).promise())
       .then(user => Identity.formatUser(user))
@@ -151,6 +151,37 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
       body.password,
       body.code
     ),
+    event,
+    context,
+    callback,
+    204
+  );
+}, event, context, callback);
+
+
+/**
+ * Join Vendor
+ */
+module.exports.joinVendor = (event, context, callback) => request.errorHandler(() => {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      vendor: joi.string().required()
+        .error(Error('Parameter vendor is required and must be a string')),
+    },
+  });
+
+  return request.responseAuthPromise(
+    identity.getUser(event.headers.Authorization)
+      .then((user) => {
+        if (user.isAdmin) {
+          return auth.joinVendor(user, event.pathParameters.vendor);
+        }
+        return notification.approveJoinVendor({
+          email: user.email,
+          vendor: event.pathParameters.vendor,
+        });
+      }),
     event,
     context,
     callback,

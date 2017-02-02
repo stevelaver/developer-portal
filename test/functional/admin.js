@@ -1,5 +1,7 @@
 'use strict';
 
+import Identity from '../../lib/identity';
+
 require('dotenv').config({ path: '.env-test', silent: true });
 const _ = require('lodash');
 const async = require('async');
@@ -60,6 +62,13 @@ describe('admin', () => {
       },
       (cb) => {
         rds.query(
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+          [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        rds.query(
           'DELETE FROM apps WHERE vendor=?',
           vendor,
           err => cb(err)
@@ -89,14 +98,14 @@ describe('admin', () => {
   it('Create and Edit App', (done) => {
     const appId2 = `${otherVendor}.${appId}-2`;
     async.waterfall([
-      function (cb) {
+      (cb) => {
         rds.query(
           'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
           [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
           err => cb(err)
         );
       },
-      function (cb) {
+      (cb) => {
         request.post({
           url: `${env.API_ENDPOINT}/vendors/${otherVendor}/apps`,
           headers: {
@@ -114,7 +123,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         // Get app detail
         request.get({
           url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
@@ -130,7 +139,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         // Update app
         request.patch({
           url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
@@ -147,7 +156,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         // Get app detail
         request.get({
           url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
@@ -168,14 +177,14 @@ describe('admin', () => {
 
   it('Approve App', (done) => {
     async.waterfall([
-      function (cb) {
+      (cb) => {
         rds.query(
           'INSERT INTO `apps` SET id=?, vendor=?, name=?',
           [appId, vendor, 'test'],
           err => cb(err)
         );
       },
-      function (cb) {
+      (cb) => {
         // Get app detail
         request.get({
           url: `${env.API_ENDPOINT}/admin/apps/${appId}`,
@@ -191,7 +200,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         // List unapproved apps
         request.get({
           url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,
@@ -211,7 +220,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         // Approve
         request.post({
           url: `${env.API_ENDPOINT}/admin/apps/${appId}/approve`,
@@ -224,7 +233,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         // List unapproved apps without the approved one
         request.get({
           url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,
@@ -249,13 +258,13 @@ describe('admin', () => {
 
   it('Approve User', (done) => {
     async.waterfall([
-      function (cb) {
+      (cb) => {
         cognito.adminDisableUser({
           UserPoolId: env.COGNITO_POOL_ID,
           Username: userEmail,
         }, err => cb(err));
       },
-      function (cb) {
+      (cb) => {
         // List unapproved users
         request.get({
           url: `${env.API_ENDPOINT}/admin/users?filter=disabled`,
@@ -275,7 +284,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         // Enable
         request.post({
           url: `${env.API_ENDPOINT}/admin/users/${userEmail}/enable`,
@@ -288,7 +297,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         // List unapproved apps without the approved one
         request.get({
           url: `${env.API_ENDPOINT}/admin/users?filter=enabled`,
@@ -313,7 +322,7 @@ describe('admin', () => {
 
   it('Make User Admin', (done) => {
     async.waterfall([
-      function (cb) {
+      (cb) => {
         cognito.adminGetUser({
           UserPoolId: env.COGNITO_POOL_ID,
           Username: userEmail,
@@ -331,7 +340,7 @@ describe('admin', () => {
         expect(userIsAdmin).to.be.false();
         cb();
       },
-      function (cb) {
+      (cb) => {
         // Make user admin
         request.post({
           url: `${env.API_ENDPOINT}/admin/users/${userEmail}/admin`,
@@ -344,7 +353,7 @@ describe('admin', () => {
           cb();
         });
       },
-      function (cb) {
+      (cb) => {
         cognito.adminGetUser({
           UserPoolId: env.COGNITO_POOL_ID,
           Username: userEmail,
@@ -362,6 +371,46 @@ describe('admin', () => {
         expect(userIsAdmin).to.be.true();
         cb();
       },
+    ], done);
+  });
+
+  it('Add User to a Vendor', (done) => {
+    async.waterfall([
+      cb =>
+        cognito.adminGetUser({
+          UserPoolId: env.COGNITO_POOL_ID,
+          Username: userEmail,
+        }).promise()
+          .then(data => Identity.formatUser(data))
+          .then((user) => {
+            expect(user).to.have.property('vendors');
+            expect(user.vendors).to.not.include(otherVendor);
+          })
+          .then(() => cb()),
+      (cb) => {
+        // Add vendor
+        request.post({
+          url: `${env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.be.empty();
+          cb();
+        });
+      },
+      cb =>
+        cognito.adminGetUser({
+          UserPoolId: env.COGNITO_POOL_ID,
+          Username: userEmail,
+        }).promise()
+          .then(data => Identity.formatUser(data))
+          .then((user) => {
+            expect(user).to.have.property('vendors');
+            expect(user.vendors).to.include(otherVendor);
+          })
+          .then(() => cb()),
     ], done);
   });
 

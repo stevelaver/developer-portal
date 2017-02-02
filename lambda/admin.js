@@ -169,6 +169,38 @@ module.exports.userMakeAdmin = (event, context, callback) => request.errorHandle
 
 
 /**
+ * Add vendor to user
+ */
+module.exports.userAddVendor = (event, context, callback) => request.errorHandler(() => {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      email: joi.string().email()
+        .error(Error('Parameter email must have format of email address')),
+      vendor: joi.string()
+        .error(Error('Parameter vendor must be a string')),
+    },
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(event.headers.Authorization))
+      .then(() => app.addUserToVendor(
+        cognito,
+        event.pathParameters.email,
+        event.pathParameters.vendor
+      ))
+      .then(() => null),
+    db,
+    event,
+    context,
+    callback,
+    204
+  );
+}, event, context, (err, res) => db.endCallback(err, res, callback));
+
+
+/**
  * Enable user
  */
 module.exports.userEnable = (event, context, callback) => request.errorHandler(() => {

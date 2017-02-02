@@ -2,7 +2,7 @@ SET foreign_key_checks = 0;
 
 DROP TABLE IF EXISTS vendors;
 CREATE TABLE `vendors` (
-  `id` varchar(15) NOT NULL,
+  `id` varchar(32) NOT NULL,
   `name` varchar(128) NOT NULL,
   `address` varchar(255) NOT NULL,
   `email` varchar(128) NOT NULL,
@@ -18,8 +18,8 @@ CREATE TABLE `stacks` (
 
 DROP TABLE IF EXISTS apps;
 CREATE TABLE `apps` (
-  `id` varchar(50) NOT NULL,
-  `vendor` varchar(15) NOT NULL,
+  `id` varchar(128) NOT NULL,
+  `vendor` varchar(32) NOT NULL,
   `isApproved` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `isPublic` int(1) unsigned NOT NULL DEFAULT '1',
   `createdOn` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -68,7 +68,7 @@ CREATE TABLE `apps` (
 
 DROP TABLE IF EXISTS appVersions;
 CREATE TABLE `appVersions` (
-  `id` varchar(50) NOT NULL,
+  `id` varchar(128) NOT NULL,
   `version` int(10) unsigned NOT NULL DEFAULT '1',
   `name` varchar(128) NOT NULL,
   `type` varchar(20) DEFAULT NULL,
