@@ -51,7 +51,7 @@ class Setup {
   }
 
   static saveAccountId() {
-    exec(`aws sts get-caller-identity --output text --query Account`, (err, out) => {
+    exec('aws sts get-caller-identity --output text --query Account', (err, out) => {
       if (err) {
         console.error(`AWS get identity error: ${err}`);
         return done();
@@ -100,6 +100,7 @@ class Setup {
         cf.createStack({
           StackName: `${env.SERVICE_NAME}-vpc`,
           TemplateBody: fs.readFileSync(`${__dirname}/cf-vpc.json`, 'utf8'),
+          Tags: [{ KeboolaStack: 'developer-portal' }],
         }, (err, res) => {
           if (err) {
             cb(err);
@@ -286,12 +287,16 @@ class Setup {
     async.each(_.keys(yaml.load(`${__dirname}/../serverless.yml`).functions), (item, cb2) => {
       if (item !== 'logger') {
         async.waterfall([
+          cb3 => setTimeout(cb3, _.random(500, 5000)),
           (cb3) => {
-            exec(`serverless invoke -f ${item}`, (err) => {
-              if (err) {
-                console.warn(`Serverless invoke ${item} error: ${err}`);
+            exec(`aws logs create-log-group --region ${env.REGION} \
+              --log-group-name /aws/lambda/${env.SERVICE_NAME}-${env.STAGE}-${item} \
+              --tags KeboolaStack=developer-portal`, (err) => {
+              if (err && !_.includes(err.message, 'ResourceAlreadyExistsException')) {
+                cb3(err);
+              } else {
+                cb3();
               }
-              cb3();
             });
           },
           (cb3) => {
@@ -307,18 +312,20 @@ class Setup {
             });
           },
           (cb3) => {
-            setTimeout(() => {
-              exec(`aws logs put-subscription-filter --region ${env.REGION} \
-                --filter-pattern '' \
-                --filter-name LambdaToPapertrail-${env.SERVICE_NAME}-${env.STAGE} \
-                --log-group-name /aws/lambda/${env.SERVICE_NAME}-${env.STAGE}-${item} \
-                --destination-arn arn:aws:lambda:${env.REGION}:${env.ACCOUNT_ID}:function:${env.SERVICE_NAME}-${env.STAGE}-logger`, (err) => {
-                if (err) {
-                  console.warn(`- Put subscription filter ${item} error: ${err}`);
-                }
-                cb3(err);
-              });
-            }, 10000);
+            exec(`aws logs put-subscription-filter --region ${env.REGION} \
+              --filter-pattern '' \
+              --filter-name LambdaToPapertrail-${env.SERVICE_NAME}-${env.STAGE} \
+              --log-group-name /aws/lambda/${env.SERVICE_NAME}-${env.STAGE}-${item} \
+              --destination-arn arn:aws:lambda:${env.REGION}:${env.ACCOUNT_ID}:function:${env.SERVICE_NAME}-${env.STAGE}-logger`, (err) => {
+              if (err) {
+                console.warn(`- Put subscription filter ${item} error: ${err}`);
+              }
+              cb3(err);
+            });
+          },
+          (cb3) => {
+            console.info(`- subscribed to log of function ${item}`);
+            cb3();
           },
         ], cb2);
       } else {
@@ -328,7 +335,7 @@ class Setup {
       if (err) {
         console.error(`Subscribe logs error: ${err}`);
       }
-      console.info('- Logs subscribed');
+      console.info('-- Logs subscribed');
       return done();
     });
   }
@@ -355,35 +362,6 @@ class Setup {
       }
       return done();
     });
-  }
-
-  static createIndexPage() {
-    const cf = new aws.CloudFormation();
-    async.waterfall([
-      (cb) => {
-        exec(`aws s3 cp static/* s3://${env.S3_BUCKET} --recursive --acl public-read`, err => cb(err));
-      },
-      (cb) => {
-        cf.updateStack({
-          StackName: `${env.SERVICE_NAME}-${env.STAGE}`,
-          TemplateBody: '', // TODO
-        }, (err, res) => {
-          if (err) {
-            cb(err);
-          } else {
-            cb(null, res.StackId);
-          }
-        });
-      },
-      (stackId, cb) => {
-        cf.waitFor('stackUpdateComplete', { StackName: `${env.SERVICE_NAME}-${env.STAGE}` }, (err, res) => {
-          if (err) {
-            cb(err);
-          }
-          cb(null, _.keyBy(res.Stacks[0].Outputs, 'OutputKey'));
-        });
-      },
-    ], err => done(err));
   }
 
 }
@@ -433,10 +411,6 @@ switch (args[0]) {
 
   case 'init-database':
     Setup.initDatabase();
-    break;
-
-  case 'create-index-page':
-    Setup.createIndexPage();
     break;
 
   case 'subscribe-logs':
