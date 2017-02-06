@@ -80,7 +80,7 @@ describe('Check if all endpoints have auth required', () => {
       (cb) => {
         // Request url to upload icons
         request.post(
-          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app/icons` },
+          { url: `${env.API_ENDPOINT}/vendors/keboola/apps/app/icon` },
           (err, res, body) => checkAuth(err, res, body, cb)
         );
       },
