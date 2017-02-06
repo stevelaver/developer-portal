@@ -9,7 +9,7 @@ module.exports = {
     logger: ['babel-polyfill', './lambda/logger.js'],
     public: ['babel-polyfill', './lambda/public.js'],
     'vendor-apps-approve': ['babel-polyfill', './lambda/vendor/apps/approve.js'],
-    'vendor-apps-icons': ['babel-polyfill', './lambda/vendor/apps/icons.js'],
+    'vendor-apps-icon': ['babel-polyfill', './lambda/vendor/apps/icon.js'],
     'vendor-apps-list': ['babel-polyfill', './lambda/vendor/apps/list.js'],
     'vendor-apps-repository': ['babel-polyfill', './lambda/vendor/apps/repository.js'],
     'vendor-apps-update': ['babel-polyfill', './lambda/vendor/apps/update.js'],

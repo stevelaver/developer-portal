@@ -325,9 +325,9 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 + Response 204
 
 
-### Generate links for icons upload [POST /vendors/{vendor}/apps/{app}/icons]
+### Generate link for icon upload [POST /vendors/{vendor}/apps/{app}/icon]
 
-API call generates pre-signed urls to S3. You can upload e.g. using such curl command:
+API call generates pre-signed url to S3. You can upload e.g. using such curl command:
 `curl -H "Content-Type:image/png" --upload-file file.png "https://...."`
 
 + Parameters
@@ -345,8 +345,7 @@ API call generates pre-signed urls to S3. You can upload e.g. using such curl co
     + Body
 
             {
-                "32": "https://dev-portal-icons.s3.amazonaws.com/keboola.ex-adwords-v2-32.png?AWSAccessKeyId=%7BaccessKey%7D&Content-Type=image%2Fpng&Expires=1471018587&Signature=%7Bsignature%7D&x-amz-security-token=%7Btoken%7D",
-                "64": "https://dev-portal-icons.s3.amazonaws.com/keboola.ex-adwords-v2-64.png?AWSAccessKeyId=%7BaccessKey%7D&Content-Type=image%2Fpng&Expires=1471018587&Signature=%7Bsignature%7D&x-amz-security-token=%7Btoken%7D",
+                "link": "https://dev-portal-icons.s3.amazonaws.com/keboola.ex-adwords-v2-64.png?AWSAccessKeyId=%7BaccessKey%7D&Content-Type=image%2Fpng&Expires=1471018587&Signature=%7Bsignature%7D&x-amz-security-token=%7Btoken%7D",
                 "expires": "2016-08-12T16:16:27Z"
             }
 
@@ -443,7 +442,7 @@ API call generates pre-signed urls to S3. You can upload e.g. using such curl co
 
 ### Request approval [POST /vendors/{vendor}/apps/{app}/approve]
 
-Request will be sent only if the app has icons uploaded and all these attributes set:
+Request will be sent only if the app has an icon uploaded and all these attributes set:
 - name
 - type
 - repository

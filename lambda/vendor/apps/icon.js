@@ -9,6 +9,7 @@ const _ = require('lodash');
 const aws = require('aws-sdk');
 const db = require('../../../lib/db');
 const error = require('../../../lib/error');
+const jimp = require('jimp');
 const joi = require('joi');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
@@ -22,7 +23,7 @@ const app = new App(db, Identity, process.env, error);
 const identity = new Identity(jwt, error);
 const validation = new Validation(joi, error);
 
-module.exports.links = (event, context, callback) => request.errorHandler(() => {
+module.exports.getLink = (event, context, callback) => request.errorHandler(() => {
   validation.validate(event, {
     auth: true,
     path: {
@@ -34,7 +35,7 @@ module.exports.links = (event, context, callback) => request.errorHandler(() => 
   return request.responseDbPromise(
     db.connect(process.env)
     .then(() => identity.getUser(event.headers.Authorization))
-    .then(user => app.getIcons(
+    .then(user => app.getIconLink(
       s3,
       moment,
       event.pathParameters.app,
@@ -62,18 +63,18 @@ module.exports.upload = (event, context, callback) => request.errorHandler(() =>
   const key = event.Records[0].s3.object.key;
   const path = key.split('/');
   const appId = path[1];
-  const size = path[2];
 
-  if (event.Records[0].eventName !== 'ObjectCreated:Put' || path[0] !== 'icons') {
+  if (
+    event.Records[0].eventName !== 'ObjectCreated:Put'
+    || path.length !== 3
+    || path[0] !== 'icons'
+    || path[2] !== 'upload.png'
+  ) {
     return callback();
   }
-
-  if (Number(size) !== 32 && Number(size) !== 64) {
-    throw Error(`Icon size is invalid. File: ${key}`);
-  }
-
+  console.log(JSON.stringify(event));
   return db.connect(process.env)
-  .then(() => app.uploadIcon(s3, appId, size, `${bucket}/${key}`))
+  .then(() => app.uploadIcon(s3, jimp, appId, bucket, key))
   .then(() => db.endCallback(null, null, callback))
   .catch(err => db.endCallback(err, null, callback));
 }, event, context, (err, res) => db.endCallback(err, res, callback));

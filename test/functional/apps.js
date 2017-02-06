@@ -228,7 +228,7 @@ describe('Apps', () => {
       (cb) => {
         // Request url to upload icons
         request.post({
-          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/icons`,
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/icon`,
           headers: {
             Authorization: token,
           },
@@ -236,30 +236,15 @@ describe('Apps', () => {
           const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
           expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body, JSON.stringify(body)).to.have.property('32');
-          expect(body, JSON.stringify(body)).to.have.property('64');
+          expect(body, JSON.stringify(body)).to.have.property('link');
           cb(null, body);
         });
       },
       (icons, cb) => {
-        // Upload 32px icon
+        // Upload icon
         const stats = fs.statSync(`${__dirname}/icon.png`);
         fs.createReadStream(`${__dirname}/icon.png`).pipe(request.put({
-          url: icons['32'],
-          headers: {
-            'Content-Length': stats.size,
-          },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body).to.be.empty();
-          cb(null, icons);
-        }));
-      },
-      (icons, cb) => {
-        // Upload 64px icon
-        const stats = fs.statSync(`${__dirname}/icon.png`);
-        fs.createReadStream(`${__dirname}/icon.png`).pipe(request.put({
-          url: icons['64'],
+          url: icons.link,
           headers: {
             'Content-Length': stats.size,
           },
