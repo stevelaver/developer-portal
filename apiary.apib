@@ -330,6 +330,8 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 API call generates pre-signed url to S3. You can upload e.g. using such curl command:
 `curl -H "Content-Type:image/png" --upload-file file.png "https://...."`
 
+The icon should have dimensions 64x64px or it will be resized after upload.
+
 + Parameters
     + vendor
     + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
