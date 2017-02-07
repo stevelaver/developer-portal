@@ -84,6 +84,7 @@
     {
       "Effect":"Allow",
       "Action":[
+        "events:*",
         "logs:DescribeLogStreams",
         "logs:FilterLogEvents",
         "cloudwatch:GetMetricStatistics",
