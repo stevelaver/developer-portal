@@ -37,6 +37,7 @@ before_script:
     -e COGNITO_CLIENT_ID=$TEST_COGNITO_CLIENT_ID
     -e CLOUDFRONT_URI=$TEST_CLOUDFRONT_URI
     -e API_ENDPOINT=$TEST_API_ENDPOINT
+    -e WARMUP_ENABLED=$TEST_WARMUP_ENABLED
     keboola/developer-portal
 
 script:
@@ -79,6 +80,7 @@ deploy:
       -e COGNITO_CLIENT_ID=$DEPLOY_COGNITO_CLIENT_ID
       -e CLOUDFRONT_URI=$DEPLOY_CLOUDFRONT_URI
       -e API_ENDPOINT=$DEPLOY_API_ENDPOINT
+      -e WARMUP_ENABLED=$DEPLOY_WARMUP_ENABLED
       keboola/developer-portal
   on:
     tags: true

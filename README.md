@@ -99,7 +99,12 @@ RDS_PORT: 3306
 CLOUDFRONT_URI: dttajxboh9b9k.cloudfront.net
 API_ENDPOINT: 'https://1puon0n5y2.execute-api.eu-west-1.amazonaws.com/dev'
 PROFILE: dev
+WARMUP_ENABLED: true
 ```
+
+### Lambda Warm Up
+
+If you change variable `WARMUP_ENABLED` in `env.yml` to `true`, a CloudWatch schedule will be enabled to keep lambda functions for public apps list and landing page warmed up using 15 minutes ping. 
 
 ### CI and deployment
 

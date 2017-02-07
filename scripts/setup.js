@@ -39,6 +39,7 @@ class Setup {
       LOG_HOST: process.env.LOG_HOST,
       LOG_PORT: process.env.LOG_PORT,
       SLACK_HOOK_URL: process.env.SLACK_HOOK_URL,
+      WARMUP_ENABLED: false,
     };
     fs.writeFile(
       `${__dirname}/../env.yml`,

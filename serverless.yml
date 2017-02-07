@@ -54,6 +54,10 @@ functions:
         http:
           method: get
           path: "/"
+      -
+        schedule:
+          rate: rate(15 minutes)
+          enabled: ${file(./env.yml):WARMUP_ENABLED}
   notFoundPage:
     handler: public.notFound
     events:
@@ -327,6 +331,10 @@ functions:
         http:
           method: get
           path: "apps"
+      -
+        schedule:
+          rate: rate(15 minutes)
+          enabled: ${file(./env.yml):WARMUP_ENABLED}
   vendorsList:
     handler: public.vendorsList
     events:
