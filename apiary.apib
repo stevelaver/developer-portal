@@ -359,7 +359,7 @@ The icon should have dimensions 64x64px or it will be resized after upload.
                 "expires": "2016-08-12T16:16:27Z"
             }
 
-### List all vendor apps [GET /vendors/{vendor}/apps?offset=0&limit=1000]
+### List all vendor apps [GET /vendors/{vendor}/apps?offset={offset}&limit={limit}]
 
 + Parameters
     + vendor
@@ -474,7 +474,7 @@ Request will be sent only if the app has an icon uploaded and all these attribut
 + Response 202
 
 
-### List versions [GET /vendors/{vendor}/apps/{app}/versions?offset=0&limit=1000]
+### List versions [GET /vendors/{vendor}/apps/{app}/versions?offset={offset}&limit={limit}]
 
 + Parameters
     + vendor
@@ -538,7 +538,7 @@ Request will be sent only if the app has an icon uploaded and all these attribut
 
 + Parameters
     + vendor
-    + appId - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
     + version
 
 + Request
@@ -610,7 +610,7 @@ Takes settings from chosen version and creates new version with it.
 
 ## Public API [/apps]
 
-### List published apps [GET /apps?offset=0&limit=1000]
+### List published apps [GET /apps?offset={offset}&limit={limit}]
 
 Shows all apps having flags `isApproved` and `isPublic` set to `true`.
 
@@ -703,7 +703,7 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 "isApproved": true
             }
 
-### List vendors [GET /vendors?offset=0&limit=1000]
+### List vendors [GET /vendors?offset={offset}&limit={limit}]
 
 + Parameters
     + offset (optional) - pagination offset
@@ -986,9 +986,9 @@ Allows to update apps accross vendors
     + forwardToken (optional, boolean)
     + forwardTokenDetails (optional, boolean)
     + injectEnvironment (optional, boolean)
-    + cpuShares (optional, integer)
+    + cpuShares (optional, number)
     + requiredMemory (optional, string)
-    + processTimeout (optional, integer)
+    + processTimeout (optional, number)
     + legacyUri (optional, string)
     + configurationFormat (optional, enum[string])
         + Members
@@ -1002,6 +1002,21 @@ Allows to update apps accross vendors
             + stack: (string, required) - name of the stack
             + projects: (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
 
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "shortDescription": "Reads reports defined by awql queries"
+            }
+
++ Response 204
+
+
 ### Approve app [POST /admin/apps/{app}/approve]
 
 + Parameters
@@ -1012,5 +1027,23 @@ Allows to update apps accross vendors
     + Headers
 
             Authorization: {admin_token}
+
++ Response 204
+
+
+### Create vendor [POST /admin/vendors]
+
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
+    + Body
+
+            {
+                "shortDescription": "Reads reports defined by awql queries"
+            }
 
 + Response 204

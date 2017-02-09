@@ -143,14 +143,6 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/users/{email}/enable"
-  adminVendorsCreate:
-    handler: admin.vendorsCreate
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: post
-          path: "admin/vendors"
 
   # Apps management
   vendorsAppsApprove:
@@ -336,7 +328,7 @@ functions:
           rate: rate(15 minutes)
           enabled: ${file(./env.yml):WARMUP_ENABLED}
   vendors:
-    handler: public-vendors.vendors
+    handler: vendors.vendors
     events:
       -
         http:
@@ -346,6 +338,11 @@ functions:
         http:
           method: get
           path: "vendors/{vendor}"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "admin/vendors"
   stacksList:
     handler: public.stacksList
     events:

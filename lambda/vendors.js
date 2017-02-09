@@ -1,18 +1,22 @@
 'use strict';
 
-import App from '../../lib/app';
-import Identity from '../../lib/identity';
-import Validation from '../../lib/validation';
+import Identity from '../lib/identity';
+import Vendor from '../app/vendor';
+import Validation from '../lib/validation';
 
 require('babel-polyfill');
 const _ = require('lodash');
-const db = require('../../lib/db');
-const error = require('../../lib/error');
 const joi = require('joi');
-const request = require('../../lib/request');
+const jwt = require('jsonwebtoken');
 
-const app = new App(db, Identity, process.env, error);
+const db = require('../lib/db');
+const error = require('../lib/error');
+const request = require('../lib/request');
+
+const identity = new Identity(jwt, error);
+const vendor = new Vendor(db, error);
 const validation = new Validation(joi, error);
+
 
 function getVendorsList(event, context, callback) {
   validation.validate(event, {
@@ -21,7 +25,7 @@ function getVendorsList(event, context, callback) {
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => app.listVendors(
+      .then(() => vendor.list(
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null),
       )),
@@ -39,11 +43,29 @@ function getVendor(event, context, callback) {
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => app.getVendor(event.pathParameters.vendor)),
+      .then(() => vendor.get(event.pathParameters.vendor)),
     db,
     event,
     context,
     callback
+  );
+}
+
+function createVendor(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    body: validation.adminCreateVendor(),
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(event.headers.Authorization))
+      .then(() => vendor.create(JSON.parse(event.body))),
+    db,
+    event,
+    context,
+    callback,
+    204
   );
 }
 
@@ -53,6 +75,8 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
       return getVendorsList(event, context, callback);
     case '/vendors/{vendor}':
       return getVendor(event, context, callback);
+    case '/admin/vendors':
+      return createVendor(event, context, callback);
     default:
       throw error.badRequest();
   }

@@ -266,24 +266,3 @@ module.exports.users = (event, context, callback) => request.errorHandler(() => 
     callback
   );
 }, event, context, (err, res) => db.endCallback(err, res, callback));
-
-/**
- * Create vendor
- */
-module.exports.vendorsCreate = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, {
-    auth: true,
-    body: validation.adminCreateVendor(),
-  });
-
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.createVendor(JSON.parse(event.body))),
-    db,
-    event,
-    context,
-    callback,
-    204
-  );
-}, event, context, (err, res) => db.endCallback(err, res, callback));

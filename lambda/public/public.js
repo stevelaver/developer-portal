@@ -84,18 +84,3 @@ module.exports.list = (event, context, callback) => request.errorHandler(() => {
     callback
   );
 }, event, context, (err, res) => db.endCallback(err, res, callback));
-
-
-/**
- * Stacks List
- */
-module.exports.stacksList = (event, context, callback) => request.errorHandler(() => {
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => app.listStacks()),
-    db,
-    event,
-    context,
-    callback
-  );
-}, event, context, (err, res) => db.endCallback(err, res, callback));
