@@ -20,8 +20,8 @@ const validation = new Validation(joi, error);
  */
 module.exports.landing = (event, context, callback) => request.htmlErrorHandler(() =>
   callback(null, {
-    headers: {'Content-Type': 'text/html'},
-    body: html({apiEndpoint: process.env.API_ENDPOINT}),
+    headers: { 'Content-Type': 'text/html' },
+    body: html({ apiEndpoint: process.env.API_ENDPOINT }),
     statusCode: 200,
   })
   , event, context, callback);

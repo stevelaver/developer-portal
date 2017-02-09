@@ -1,26 +1,29 @@
 'use strict';
 
-import Auth from '../../lib/auth';
 import Identity from '../../lib/identity';
 import Notification from '../../lib/notification';
+import Login from '../../app/login';
 import Validation from '../../lib/validation';
+import Vendor from '../../app/vendor';
 
 require('babel-polyfill');
+const joi = require('joi');
+const requestLib = require('request-promise-lite');
+
 const aws = require('aws-sdk');
+const jwt = require('jsonwebtoken');
+const moment = require('moment');
+
 const db = require('../../lib/db');
 const error = require('../../lib/error');
-const joi = require('joi');
-const jwt = require('jsonwebtoken');
-const Promise = require('bluebird');
 const request = require('../../lib/request');
-const requestLib = require('request-promise-lite');
 
 aws.config.setPromisesDependency(Promise);
 const cognito = new aws.CognitoIdentityServiceProvider({
   region: process.env.REGION,
 });
 
-const auth = new Auth(cognito, process.env, error);
+const app = new Login(cognito, db, process.env, error);
 const identity = new Identity(jwt, error);
 const notification = new Notification(
   requestLib,
@@ -30,10 +33,27 @@ const notification = new Notification(
 const validation = new Validation(joi, error);
 
 
-/**
- * Forgot
- */
-module.exports.forgot = (event, context, callback) => request.errorHandler(() => {
+function login(event, context, callback) {
+  validation.validate(event, {
+    body: {
+      email: joi.string().email().required()
+        .error(Error('Parameter email is required and should have ' +
+          'format of email address')),
+      password: joi.string().required()
+        .error(Error('Parameter password is required')),
+    },
+  });
+
+  const body = JSON.parse(event.body);
+  return request.responseAuthPromise(
+    app.login(moment, body.email, body.password),
+    event,
+    context,
+    callback
+  );
+}
+
+function forgot(event, context, callback) {
   validation.validate(event, {
     path: {
       email: joi.string().email().required()
@@ -43,19 +63,15 @@ module.exports.forgot = (event, context, callback) => request.errorHandler(() =>
   });
 
   return request.responseAuthPromise(
-    auth.forgot(event.pathParameters.email),
+    app.forgot(event.pathParameters.email),
     event,
     context,
     callback,
     204
   );
-}, event, context, callback);
+}
 
-
-/**
- * Forgot Confirm
- */
-module.exports.forgotConfirm = (event, context, callback) => request.errorHandler(() => {
+function forgotConfirm(event, context, callback) {
   validation.validate(event, {
     path: {
       email: joi.string().email().required()
@@ -75,7 +91,7 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
 
   const body = JSON.parse(event.body);
   return request.responseAuthPromise(
-    auth.confirmForgotPassword(
+    app.confirmForgotPassword(
       event.pathParameters.email,
       body.password,
       body.code
@@ -85,13 +101,22 @@ module.exports.forgotConfirm = (event, context, callback) => request.errorHandle
     callback,
     204
   );
-}, event, context, callback);
+}
 
+function profile(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+  });
 
-/**
- * Join Vendor
- */
-module.exports.joinVendor = (event, context, callback) => request.errorHandler(() => {
+  return request.responseAuthPromise(
+    identity.getUser(event.headers.Authorization),
+    event,
+    context,
+    callback
+  );
+}
+
+function joinVendor(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: {
@@ -104,7 +129,8 @@ module.exports.joinVendor = (event, context, callback) => request.errorHandler((
     identity.getUser(event.headers.Authorization)
       .then((user) => {
         if (user.isAdmin) {
-          return auth.joinVendor(db, Identity, user, event.pathParameters.vendor);
+          const vendor = new Vendor(db, process.env, error);
+          return vendor.join(cognito, Identity, user, event.pathParameters.vendor);
         }
         return notification.approveJoinVendor({
           email: user.email,
@@ -116,45 +142,21 @@ module.exports.joinVendor = (event, context, callback) => request.errorHandler((
     callback,
     204
   );
-}, event, context, callback);
+}
 
-
-/**
- * Login
- */
 module.exports.login = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, {
-    body: {
-      email: joi.string().email().required()
-        .error(Error('Parameter email is required and should have ' +
-          'format of email address')),
-      password: joi.string().required()
-        .error(Error('Parameter password is required')),
-    },
-  });
-
-  const body = JSON.parse(event.body);
-  return request.responseAuthPromise(
-    auth.login(body.email, body.password),
-    event,
-    context,
-    callback
-  );
-}, event, context, callback);
-
-
-/**
- * Profile
- */
-module.exports.profile = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, {
-    auth: true,
-  });
-
-  return request.responseAuthPromise(
-    identity.getUser(event.headers.Authorization),
-    event,
-    context,
-    callback
-  );
-}, event, context, callback);
+  switch (event.resource) {
+    case '/auth/login':
+      return login(event, context, callback);
+    case '/auth/forgot/{email}':
+      return forgot(event, context, callback);
+    case '/auth/forgot/{email}/confirm':
+      return forgotConfirm(event, context, callback);
+    case '/auth/profile':
+      return profile(event, context, callback);
+    case '/auth/vendors/{vendor}':
+      return joinVendor(event, context, callback);
+    default:
+      throw error.badRequest();
+  }
+}, event, context, (err, res) => db.endCallback(err, res, callback));

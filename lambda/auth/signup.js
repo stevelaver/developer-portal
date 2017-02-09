@@ -7,10 +7,10 @@ import Validation from '../../lib/validation';
 
 require('babel-polyfill');
 const _ = require('lodash');
+const aws = require('aws-sdk');
 const joi = require('joi');
 const requestLib = require('request-promise-lite');
 
-const aws = require('aws-sdk');
 const db = require('../../lib/db');
 const error = require('../../lib/error');
 const request = require('../../lib/request');

@@ -13,7 +13,7 @@ const db = require('../lib/db');
 const error = require('../lib/error');
 const request = require('../lib/request');
 
-const app = new Vendor(db, error);
+const app = new Vendor(db, process.env, error);
 const identity = new Identity(jwt, error);
 const validation = new Validation(joi, error);
 
