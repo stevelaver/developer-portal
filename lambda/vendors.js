@@ -13,8 +13,8 @@ const db = require('../lib/db');
 const error = require('../lib/error');
 const request = require('../lib/request');
 
+const app = new Vendor(db, error);
 const identity = new Identity(jwt, error);
-const vendor = new Vendor(db, error);
 const validation = new Validation(joi, error);
 
 
@@ -25,7 +25,7 @@ function getVendorsList(event, context, callback) {
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => vendor.list(
+      .then(() => app.list(
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null),
       )),
@@ -43,7 +43,7 @@ function getVendor(event, context, callback) {
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => vendor.get(event.pathParameters.vendor)),
+      .then(() => app.get(event.pathParameters.vendor)),
     db,
     event,
     context,
@@ -60,7 +60,7 @@ function createVendor(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => vendor.create(JSON.parse(event.body))),
+      .then(() => app.create(JSON.parse(event.body))),
     db,
     event,
     context,

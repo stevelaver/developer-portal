@@ -6,6 +6,7 @@ module.exports = {
     admin: ['babel-polyfill', './lambda/admin.js'],
     auth: ['babel-polyfill', './lambda/auth/auth.js'],
     'auth-email': ['babel-polyfill', './lambda/auth/email.js'],
+    'auth-signup': ['babel-polyfill', './lambda/auth/signup.js'],
     logger: ['babel-polyfill', './lambda/logger.js'],
     public: ['babel-polyfill', './lambda/public/public.js'],
     'public-stacks': ['babel-polyfill', './lambda/public/stacks.js'],

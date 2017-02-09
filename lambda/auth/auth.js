@@ -6,7 +6,6 @@ import Notification from '../../lib/notification';
 import Validation from '../../lib/validation';
 
 require('babel-polyfill');
-const _ = require('lodash');
 const aws = require('aws-sdk');
 const db = require('../../lib/db');
 const error = require('../../lib/error');
@@ -29,73 +28,6 @@ const notification = new Notification(
   process.env.SERVICE_NAME
 );
 const validation = new Validation(joi, error);
-
-/**
- * Confirm
- */
-const confirm = function (event, context, callback) {
-  if (!_.has(event.pathParameters, 'code')) {
-    throw error.badRequest('Parameter code is required');
-  } else if (!_.has(event.pathParameters, 'email')) {
-    throw error.badRequest('Parameter email is required');
-  }
-
-  return request.responseAuthPromise(
-    auth.confirm(event.pathParameters.email, event.pathParameters.code)
-      .then(data => cognito.adminGetUser({
-        UserPoolId: process.env.COGNITO_POOL_ID,
-        Username: data.Username,
-      }).promise())
-      .then(user => Identity.formatUser(user))
-      .then(user => notification.approveUser({
-        name: user.name,
-        email: event.pathParameters.email,
-        vendors: user.vendors,
-      })),
-      event,
-      context,
-      callback,
-      204
-    );
-};
-module.exports.confirmGet = (event, context, callback) => request.htmlErrorHandler(() => {
-  confirm(event, context, (err) => {
-    request.htmlResponse(err, {
-      header: 'Account confirmation',
-      content: 'Your account has been successfully confirmed. Now you have ' +
-      'to wait for approval from our staff. Your account is disabled ' +
-      'until then.',
-    }, event, context, callback);
-  });
-}, event, context, callback);
-module.exports.confirmPost = (event, context, callback) => request.errorHandler(() => {
-  confirm(event, context, callback);
-}, event, context, callback);
-
-
-/**
- * Confirm Resend
- */
-module.exports.confirmResend = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, {
-    body: {
-      email: joi.string().email().required()
-        .error(Error('Parameter email is required and should have ' +
-          'format of email address')),
-      password: joi.string().required()
-        .error(Error('Parameter password is required')),
-    },
-  });
-
-  const body = JSON.parse(event.body);
-  return request.responseAuthPromise(
-    auth.confirmResend(body.email, body.password),
-    event,
-    context,
-    callback,
-    204
-  );
-}, event, context, callback);
 
 
 /**
@@ -224,37 +156,5 @@ module.exports.profile = (event, context, callback) => request.errorHandler(() =
     event,
     context,
     callback
-  );
-}, event, context, callback);
-
-
-/**
- * Signup
- */
-module.exports.signup = (event, context, callback) => request.errorHandler(() => {
-  validation.validate(event, {
-    body: {
-      name: joi.string().required()
-        .error(Error('Parameter name is required')),
-      email: joi.string().email().required()
-        .error(Error('Parameter email is required and should have ' +
-          'format of email address')),
-      password: joi.string().required().min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
-        .error(Error('Parameter password is required, must have ' +
-          'at least 8 characters and contain at least one lowercase letter, ' +
-          'one uppercase letter and one number')),
-      vendor: joi.string().required()
-        .error(Error('Parameter vendor is required')),
-    },
-  });
-  const body = JSON.parse(event.body);
-
-  return request.responseAuthPromise(
-    auth.signUp(db, body.email, body.password, body.name, body.vendor),
-    event,
-    context,
-    callback,
-    204
   );
 }, event, context, callback);

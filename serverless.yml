@@ -242,27 +242,6 @@ functions:
   # Auth
   authEmailTrigger:
     handler: auth-email.emailTrigger
-  authConfirmPost:
-    handler: auth.confirmPost
-    events:
-      -
-        http:
-          method: post
-          path: "auth/confirm/{email}/{code}"
-  authConfirmGet:
-    handler: auth.confirmGet
-    events:
-      -
-        http:
-          method: get
-          path: "auth/confirm/{email}/{code}"
-  authConfirmResend:
-    handler: auth.confirmResend
-    events:
-      -
-        http:
-          method: post
-          path: "auth/confirm"
   authForgot:
     handler: auth.forgot
     events:
@@ -301,12 +280,24 @@ functions:
           method: get
           path: "auth/profile"
   authSignup:
-    handler: auth.signup
+    handler: auth-signup.signup
     events:
       -
         http:
           method: post
           path: "auth/signup"
+      -
+        http:
+          method: post
+          path: "auth/confirm/{email}/{code}"
+      -
+        http:
+          method: get
+          path: "auth/confirm/{email}/{code}"
+      -
+        http:
+          method: post
+          path: "auth/confirm"
 
   # Public
   appsDetail:
