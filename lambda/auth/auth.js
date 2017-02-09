@@ -48,6 +48,7 @@ const confirm = function (event, context, callback) {
       }).promise())
       .then(user => Identity.formatUser(user))
       .then(user => notification.approveUser({
+        name: user.name,
         email: event.pathParameters.email,
         vendors: user.vendors,
       })),
