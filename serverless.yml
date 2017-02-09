@@ -335,16 +335,13 @@ functions:
         schedule:
           rate: rate(15 minutes)
           enabled: ${file(./env.yml):WARMUP_ENABLED}
-  vendorsList:
-    handler: public.vendorsList
+  vendors:
+    handler: public-vendors.vendors
     events:
       -
         http:
           method: get
           path: "vendors"
-  vendorDetail:
-    handler: public.vendorDetail
-    events:
       -
         http:
           method: get
