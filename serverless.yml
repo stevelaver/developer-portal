@@ -42,11 +42,10 @@ provider:
     KeboolaStack: "developer-portal"
 
 functions:
-  # Service
+
   logger:
       handler: logger.handler
 
-  # Common
   public:
     handler: public.public
     events:
@@ -75,7 +74,6 @@ functions:
           method: patch
           path: "{anything}"
 
-  # Admin
   adminApps:
     handler: admin-apps.apps
     events:
@@ -99,33 +97,25 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: patch
           path: "admin/apps/{id}"
-  adminUsersList:
-    handler: admin.users
+
+  adminUsers:
+    handler: admin-users.users
     events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "admin/users"
-  adminUsersMakeAdmin:
-    handler: admin.userMakeAdmin
-    events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/users/{email}/admin"
-  adminUsersAddVendor:
-    handler: admin.userAddVendor
-    events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/users/{email}/vendors/{vendor}"
-  adminUsersEnable:
-    handler: admin.userEnable
-    events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
