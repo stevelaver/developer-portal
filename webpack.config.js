@@ -4,6 +4,7 @@ const path = require('path');
 module.exports = {
   entry: {
     admin: ['babel-polyfill', './lambda/admin.js'],
+    'admin-apps': ['babel-polyfill', './lambda/admin/apps.js'],
     'auth-email': ['babel-polyfill', './lambda/auth/email.js'],
     'auth-login': ['babel-polyfill', './lambda/auth/login.js'],
     'auth-signup': ['babel-polyfill', './lambda/auth/signup.js'],
