@@ -123,25 +123,19 @@ functions:
           path: "admin/users/{email}/enable"
 
   # Apps management
-  vendorsAppsApprove:
-    handler: vendor-apps-approve.handler
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: post
-          path: "vendors/{vendor}/apps/{app}/approve"
-  vendorsAppsCreate:
-    handler: vendor-apps-update.appsCreate
+  apps:
+    handler: apps.apps
     events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps"
-  vendorsAppsDetail:
-    handler: vendor-apps-list.appsDetail
-    events:
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: get
+          path: "vendors/{vendor}/apps"
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
@@ -150,76 +144,62 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
+          method: patch
+          path: "vendors/{vendor}/apps/{app}"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "vendors/{vendor}/apps/{app}/approve"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: get
+          path: "vendors/{vendor}/apps/{app}/versions"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "vendors/{vendor}/apps/{app}/versions/{version}"
-  vendorsAppsIconLinks:
-    handler: vendor-apps-icon.getLink
-    events:
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "vendors/{vendor}/apps/{app}/versions/{version}/rollback"
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps/{app}/icon"
-  vendorsAppsIconUpload:
-    handler: vendor-apps-icon.upload
+
+  iconUpload:
+    handler: icon.upload
     events:
       -
         s3:
           bucket: "${file(./env.yml):S3_BUCKET}"
           event: "s3:ObjectCreated:Put"
           suffix: .png
-  vendorsAppsList:
-    handler: vendor-apps-list.appsList
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
-          path: "vendors/{vendor}/apps"
-  vendorAppsRepositoryCreate:
-    handler: vendor-apps-repository.create
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: post
-          path: "vendors/{vendor}/apps/{app}/repository"
-  vendorAppsRepositoryGet:
-    handler: vendor-apps-repository.get
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
-          path: "vendors/{vendor}/apps/{app}/repository"
-  vendorsAppsUpdate:
-    handler: vendor-apps-update.appsUpdate
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: patch
-          path: "vendors/{vendor}/apps/{app}"
-  vendorsAppsVersionsList:
-    handler: vendor-apps-versions.list
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
-          path: "/vendors/{vendor}/apps/{app}/versions"
-  appsVersionsRollback:
-    handler: vendor-apps-versions.rollback
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: post
-          path: "vendors/{vendor}/apps/{app}/versions/{version}/rollback"
+#  vendorAppsRepositoryCreate:
+#    handler: vendor-apps-repository.create
+#    events:
+#      -
+#        http:
+#          authorizer: ${self:custom.cognitoAuthorizer}
+#          method: post
+#          path: "vendors/{vendor}/apps/{app}/repository"
+#  vendorAppsRepositoryGet:
+#    handler: vendor-apps-repository.get
+#    events:
+#      -
+#        http:
+#          authorizer: ${self:custom.cognitoAuthorizer}
+#          method: get
+#          path: "vendors/{vendor}/apps/{app}/repository"
 
-  # Auth
   authEmailTrigger:
     handler: auth-email.emailTrigger
+
   authLogin:
     handler: auth-login.login
     events:
@@ -245,6 +225,7 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "auth/vendors/{vendor}"
+
   authSignup:
     handler: auth-signup.signup
     events:
@@ -265,7 +246,6 @@ functions:
           method: post
           path: "auth/confirm"
 
-  # Public
   appsPublic:
     handler: public-apps.apps
     events:
@@ -281,6 +261,7 @@ functions:
         schedule:
           rate: rate(15 minutes)
           enabled: ${file(./env.yml):WARMUP_ENABLED}
+
   vendors:
     handler: vendors.vendors
     events:
@@ -297,7 +278,8 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/vendors"
-  stacksList:
+
+  stacks:
     handler: public.stacksList
     events:
       -
