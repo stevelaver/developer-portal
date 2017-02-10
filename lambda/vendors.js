@@ -78,6 +78,6 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
     case '/admin/vendors':
       return createVendor(event, context, callback);
     default:
-      throw error.badRequest();
+      throw error.notFound();
   }
 }, event, context, (err, res) => db.endCallback(err, res, callback));

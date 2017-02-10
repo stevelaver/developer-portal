@@ -47,8 +47,8 @@ functions:
       handler: logger.handler
 
   # Common
-  landingPage:
-    handler: public.landing
+  public:
+    handler: public.public
     events:
       -
         http:
@@ -58,9 +58,6 @@ functions:
         schedule:
           rate: rate(15 minutes)
           enabled: ${file(./env.yml):WARMUP_ENABLED}
-  notFoundPage:
-    handler: public.notFound
-    events:
       -
         http:
           method: get
@@ -288,16 +285,13 @@ functions:
           path: "auth/confirm"
 
   # Public
-  appsDetail:
-    handler: public.detail
+  appsPublic:
+    handler: public-apps.apps
     events:
       -
         http:
           method: get
           path: "apps/{vendor}/{app}"
-  appsList:
-    handler: public.list
-    events:
       -
         http:
           method: get

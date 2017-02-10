@@ -9,6 +9,7 @@ module.exports = {
     'auth-signup': ['babel-polyfill', './lambda/auth/signup.js'],
     logger: ['babel-polyfill', './lambda/logger.js'],
     public: ['babel-polyfill', './lambda/public/public.js'],
+    'public-apps': ['babel-polyfill', './lambda/public/apps.js'],
     'public-stacks': ['babel-polyfill', './lambda/public/stacks.js'],
     'vendor-apps-approve': ['babel-polyfill', './lambda/vendor/apps/approve.js'],
     'vendor-apps-icon': ['babel-polyfill', './lambda/vendor/apps/icon.js'],

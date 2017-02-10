@@ -127,6 +127,6 @@ module.exports.signup = (event, context, callback) => request.errorHandler(() =>
     case '/auth/confirm':
       return resend(event, context, callback);
     default:
-      throw error.badRequest();
+      throw error.notFound();
   }
 }, event, context, (err, res) => db.endCallback(err, res, callback));

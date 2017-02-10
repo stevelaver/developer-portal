@@ -157,6 +157,6 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
     case '/auth/vendors/{vendor}':
       return joinVendor(event, context, callback);
     default:
-      throw error.badRequest();
+      throw error.notFound();
   }
 }, event, context, (err, res) => db.endCallback(err, res, callback));
