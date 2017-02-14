@@ -85,9 +85,8 @@
       "Effect":"Allow",
       "Action":[
         "events:*",
-        "logs:DescribeLogStreams",
-        "logs:FilterLogEvents",
-        "cloudwatch:GetMetricStatistics",
+        "logs:*",
+        "cloudwatch:*",
         "cloudfront:GetDistribution",
         "rds:DescribeDBInstances",
         "ec2:DescribeSecurityGroups",

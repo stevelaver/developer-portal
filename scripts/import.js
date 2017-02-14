@@ -248,6 +248,7 @@ const getData = function (callbackMain) {
         requiredMemory: _.get(app, 'data.memory', null),
         processTimeout: _.get(app, 'data.process_timeout', null),
         encryption: _.includes(app.flags, 'encrypt'),
+        network: _.get(app, 'data.network', 'bridge'),
         defaultBucket: _.get(app, 'data.image_parameters.default_bucket', false),
         defaultBucketStage: _.get(app, 'data.default_bucket_stage', null),
         forwardToken: _.get(app, 'data.forward_token', false),

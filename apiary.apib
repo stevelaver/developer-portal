@@ -203,6 +203,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
         + Default: `false`
     + defaultBucket (optional, boolean) - All tables should be uploaded to a pregenerated bucket
         + Default: `false`
+    + network (optional, enum[string]) - Type of connection to outer network
+        + Members
+            + `none`
+            + `bridge`
+        + Default: `bridge`
     + defaultBucketStage (optional, enum[string])
         + Members
             + `in`
@@ -288,6 +293,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
     + documentationUrl (optional) - Instructions to help end-user configure the application (linked from application configuration page) and payment information (if any)
     + encryption (optional, boolean) - All parameter attributes with keys prefixed by `#` will be encrypted. If you pass sensitive data in configuration (credentials, tokens), it is encouraged to turn the encryption on
         + Default: `false`
+    + network (optional, enum[string]) - Type of connection to outer network
+        + Members
+            + `none`
+            + `bridge`
+        + Default: `bridge`
     + defaultBucket (optional, boolean) - All tables should be uploaded to a pregenerated bucket
         + Default: `false`
     + defaultBucketStage (optional, enum[string])
@@ -440,6 +450,7 @@ The icon should have dimensions 64x64px or it will be resized after upload.
                 "requiredMemory": null,
                 "processTimeout": null,
                 "encryption": true,
+                "network": "bridge",
                 "defaultBucket": false,
                 "defaultBucketStage": "in",
                 "forwardToken": false,
@@ -536,6 +547,7 @@ Request will be sent only if the app has an icon uploaded and all these attribut
                     "requiredMemory": null,
                     "processTimeout": null,
                     "encryption": false,
+                    "network": "bridge",
                     "defaultBucket": false,
                     "defaultBucketStage": "in",
                     "forwardToken": false,
@@ -593,6 +605,7 @@ Request will be sent only if the app has an icon uploaded and all these attribut
                 "requiredMemory": null,
                 "processTimeout": null,
                 "encryption": false,
+                "network": "bridge",
                 "defaultBucket": false,
                 "defaultBucketStage": "in",
                 "forwardToken": false,
@@ -704,6 +717,7 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 "requiredMemory": null,
                 "processTimeout": null,
                 "encryption": true,
+                "network": "bridge",
                 "defaultBucket": false,
                 "defaultBucketStage": "in",
                 "forwardToken": false,
@@ -928,6 +942,7 @@ It will send email confirmation to a user.
                 "requiredMemory": null,
                 "processTimeout": null,
                 "encryption": true,
+                "network": "bridge",
                 "defaultBucket": false,
                 "defaultBucketStage": "in",
                 "forwardToken": false,
@@ -992,6 +1007,11 @@ Allows to update apps across vendors
     + documentationUrl (optional) - Instructions to help end-user configure the application (linked from application configuration page) and payment information (if any)
     + encryption (optional, boolean) - All parameter attributes with keys prefixed by `#` will be encrypted. If you pass sensitive data in configuration (credentials, tokens), it is encouraged to turn the encryption on
         + Default: `false`
+    + network (optional, enum[string]) - Type of connection to outer network
+        + Members
+            + `none`
+            + `bridge`
+        + Default: `bridge`
     + defaultBucket (optional, boolean) - All tables should be uploaded to a pregenerated bucket
         + Default: `false`
     + defaultBucketStage (optional, enum[string])
