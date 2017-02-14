@@ -33,6 +33,7 @@ enabled manually so user needs to wait for approval before he proceeds.
 
 + Response 204
 
+
 ### Confirm account [POST /auth/confirm/{email}/{code}]
 
 Account needs to be confirmed by code from confirmation email sent on his email address.
@@ -58,6 +59,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
 
 + Response 204
 
+
 ### Login [POST /auth/login]
 
 + Attributes
@@ -80,6 +82,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
                 "expires": "2016-08-12T09:25:56Z"
             }
 
+
 ### Get user profile [GET /auth/profile]
 
 + Request
@@ -99,6 +102,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
                 "isAdmin": false
             }
 
+
 ### Reset password [POST /auth/forgot/{email}]
 
 Sends email with confirmation code which has to be used in the next API call
@@ -107,6 +111,7 @@ Sends email with confirmation code which has to be used in the next API call
     + email
 
 + Response 204 (application/json)
+
 
 ### Forgot password confirmation [POST /auth/forgot/{email}/confirm]
 
@@ -128,6 +133,7 @@ Sends email with confirmation code which has to be used in the next API call
 
 + Response 204 (application/json)
 
+
 ### Request to join a vendor [POST /auth/vendors/{vendor}]
 
 Request to join a vendor. You will recieve an email confirmation once it is approved.
@@ -135,7 +141,14 @@ Request to join a vendor. You will recieve an email confirmation once it is appr
 + Parameters
     + vendor
 
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
 + Response 204 (application/json)
+
 
 
 ## Apps [/vendors]
@@ -368,6 +381,11 @@ The icon should have dimensions 64x64px or it will be resized after upload.
     + limit (optional) - pagination limit
         + Default: 1000
 
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
 
 + Response 200 (application/json)
 
@@ -390,6 +408,12 @@ The icon should have dimensions 64x64px or it will be resized after upload.
 + Parameters
     + vendor
     + app
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
 
 + Response 200 (application/json)
 
@@ -534,6 +558,7 @@ Request will be sent only if the app has an icon uploaded and all these attribut
                 }
             ]
 
+
 ### Get version detail [GET /vendors/{vendor}/apps/{app}/versions/{version}]
 
 + Parameters
@@ -589,6 +614,7 @@ Request will be sent only if the app has an icon uploaded and all these attribut
                 "stagingStorageInput": "local"
             }
 
+
 ### Rollback version [POST /vendors/{vendor}/apps/{app}/versions/{version}/rollback]
 
 Takes settings from chosen version and creates new version with it.
@@ -598,7 +624,7 @@ Takes settings from chosen version and creates new version with it.
     + app
     + version
 
-+ Request (application/json)
++ Request
 
     + Headers
 
@@ -703,6 +729,7 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 "isApproved": true
             }
 
+
 ### List vendors [GET /vendors?offset={offset}&limit={limit}]
 
 + Parameters
@@ -724,6 +751,7 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 }
             ]
 
+
 ### Get vendor detail [GET /vendors/{vendor}]
 
 + Response 200 (application/json)
@@ -737,6 +765,7 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 "email": "support@keboola.com"
             }
 
+
 ### List stacks [GET /stacks]
 
 + Response 200 (application/json)
@@ -747,6 +776,8 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 "connection.keboola.com",
                 "connection-eu-west-1.keboola.com"
             ]
+
+
 
 ## Admin API [/admin]
 
@@ -808,7 +839,13 @@ It will send email confirmation to a user.
     + email
     + vendor
 
-+ Response 204 (application/json)
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
 
 
 ### Make user admin [POST /admin/users/{email}/admin]
@@ -823,6 +860,7 @@ It will send email confirmation to a user.
             Authorization: {admin_token}
 
 + Response 204
+
 
 ### List apps [GET /admin/apps?filter={filter}]
 
@@ -853,10 +891,17 @@ It will send email confirmation to a user.
                 }
             ]
 
+
 ### Get app detail [GET /admin/apps/{app}]
 
 + Parameters
     + app
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
 
 + Response 200 (application/json)
 
@@ -919,7 +964,7 @@ It will send email confirmation to a user.
 
 ### Update app [PATCH /admin/apps/{app}]
 
-Allows to update apps accross vendors
+Allows to update apps across vendors
 
 + Parameters
     + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
