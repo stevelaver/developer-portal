@@ -27,46 +27,6 @@ class logSubscription {
       throw new this.serverless.classes.Error('Configure the logger function in custom.logSubscriptionFunction of serverless.yml');
     }
 
-    _.each(this.serverless.service.provider.compiledCloudFormationTemplate.Resources, (val, key) => {
-      if (val.Type === 'AWS::Lambda::Permission' && val.Properties.Principal === 'apigateway.amazonaws.com') {
-        _.unset(this.serverless.service.provider.compiledCloudFormationTemplate.Resources, key);
-      }
-    });
-
-    // _.merge(
-    //   this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-    //   {
-    //     LambdaPermissionForApi: {
-    //       Type: 'AWS::Lambda::Permission',
-    //       Properties: {
-    //         Action: "lambda:InvokeFunction",
-    //         FunctionName: '*',
-    //         Principal: "apigateway.amazonaws.com",
-    //         SourceArn: {
-    //           "Fn::Join": [
-    //             "",
-    //             [
-    //               "arn:aws:execute-api:",
-    //               {
-    //                 "Ref": "AWS::Region"
-    //               },
-    //               ":",
-    //               {
-    //                 "Ref": "AWS::AccountId"
-    //               },
-    //               ":",
-    //               {
-    //                 "Ref": "ApiGatewayRestApi"
-    //               },
-    //               "/*/*"
-    //             ]
-    //           ]
-    //         }
-    //       }
-    //     }
-    //   }
-    // );
-
     const loggerFunctionData = this.serverless.service.getFunction(loggerFunction);
     _.merge(
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,

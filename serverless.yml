@@ -10,7 +10,7 @@ service: "${file(./env.yml):SERVICE_NAME}"
 
 plugins:
   - db-migration
-  #- log-subscription
+  - log-subscription
   - serverless-webpack
 
 package:
