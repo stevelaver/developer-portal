@@ -167,6 +167,8 @@ const getData = function (callbackMain) {
           app.repoType = 'dockerhub';
         } else if (_.startsWith(app.data.definition.type, 'builder')) {
           app.repoType = 'builder';
+        } else if (_.startsWith(app.data.definition.type, 'aws-ecr')) {
+          app.repoType = 'ecr';
         } else {
           app.repoType = null;
         }
@@ -249,7 +251,7 @@ const getData = function (callbackMain) {
         processTimeout: _.get(app, 'data.process_timeout', null),
         encryption: _.includes(app.flags, 'encrypt'),
         network: _.get(app, 'data.network', 'bridge'),
-        defaultBucket: _.get(app, 'data.image_parameters.default_bucket', false),
+        defaultBucket: _.get(app, 'data.default_bucket', false),
         defaultBucketStage: _.get(app, 'data.default_bucket_stage', null),
         forwardToken: _.get(app, 'data.forward_token', false),
         forwardTokenDetails: _.get(app, 'data.forward_token_details', false),
@@ -278,7 +280,7 @@ const getData = function (callbackMain) {
 };
 
 const saveData = function (data, callbackMain) {
-  async.parallel([
+  async.waterfall([
     function (cb) {
       rds.query('SET FOREIGN_KEY_CHECKS = 0;TRUNCATE TABLE appVersions;TRUNCATE TABLE apps;', err => cb(err));
     },
@@ -308,12 +310,33 @@ const saveData = function (data, callbackMain) {
   ], callbackMain);
 };
 
+const addNewData = function (data, callbackMain) {
+  async.each(data, (resApp, callback) => {
+    return db.checkAppNotExists(resApp.id)
+      .then(() => {
+        console.log(`- Importing ${resApp.id}`);
+        return db.insertApp(resApp);
+      })
+      .catch(() => {
+        // exists, skip
+      })
+      .then(() => callback);
+  }, callbackMain);
+};
+
 if (args[0] === 'data') {
   getData((err, res) => {
     if (err) {
       throw err;
     }
     saveData(res, () => process.exit());
+  });
+} else if (args[0] === 'new-data') {
+  getData((err, res) => {
+    if (err) {
+      throw err;
+    }
+    addNewData(res, () => process.exit());
   });
 } else if (args[0] === 'icons') {
   getIcons((err) => {
