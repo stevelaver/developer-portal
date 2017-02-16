@@ -206,6 +206,51 @@ describe('Auth', () => {
     ], done);
   });
 
+  it('Refresh Token', (done) => {
+    async.waterfall([
+      (cb) => {
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/login`,
+          json: true,
+          body: {
+            email: process.env.FUNC_USER_EMAIL,
+            password: process.env.FUNC_USER_PASSWORD,
+          },
+        }, (err, res, body) => {
+          expect(err).to.be.null();
+          expect(body, JSON.stringify(body)).to.have.property('refreshToken');
+          cb(null, body.refreshToken);
+        });
+      },
+      (token, cb) => {
+        request.get({
+          url: `${env.API_ENDPOINT}/auth/token`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyIn) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyIn);
+          expect(body, JSON.stringify(body)).to.have.property('token');
+          cb(null, body.token);
+        });
+      },
+      (token, cb) => {
+        request.get({
+          url: `${env.API_ENDPOINT}/auth/profile`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res, bodyIn) => {
+          expect(err).to.be.null();
+          const body = JSON.parse(bodyIn);
+          expect(body, JSON.stringify(body)).to.have.property('name');
+          cb(null, token);
+        });
+      }
+    ], done);
+  });
+
   it('Join a Vendor', (done) => {
     let token;
     async.waterfall([

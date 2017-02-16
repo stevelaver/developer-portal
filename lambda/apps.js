@@ -10,7 +10,6 @@ const _ = require('lodash');
 const aws = require('aws-sdk');
 const joi = require('joi');
 const jwt = require('jsonwebtoken');
-const moment = require('moment');
 const requestLib = require('request-promise-lite');
 
 const db = require('../lib/db');
@@ -223,7 +222,6 @@ function icon(event, context, callback) {
       .then(() => identity.getUser(event.headers.Authorization))
       .then(user => app.getIconLink(
         s3,
-        moment,
         event.pathParameters.app,
         event.pathParameters.vendor,
         user,

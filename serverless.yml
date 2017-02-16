@@ -209,6 +209,10 @@ functions:
           path: "auth/login"
       -
         http:
+          method: get
+          path: "auth/token"
+      -
+        http:
           method: post
           path: "auth/forgot/{email}"
       -

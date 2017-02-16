@@ -12,7 +12,6 @@ const requestLib = require('request-promise-lite');
 
 const aws = require('aws-sdk');
 const jwt = require('jsonwebtoken');
-const moment = require('moment');
 
 const db = require('../../lib/db');
 const error = require('../../lib/error');
@@ -46,7 +45,20 @@ function login(event, context, callback) {
 
   const body = JSON.parse(event.body);
   return request.responseAuthPromise(
-    app.login(moment, body.email, body.password),
+    app.login(body.email, body.password),
+    event,
+    context,
+    callback
+  );
+}
+
+function refreshToken(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+  });
+
+  return request.responseAuthPromise(
+    app.refreshToken(event.headers.Authorization),
     event,
     context,
     callback
@@ -148,6 +160,8 @@ module.exports.login = (event, context, callback) => request.errorHandler(() => 
   switch (event.resource) {
     case '/auth/login':
       return login(event, context, callback);
+    case '/auth/token':
+      return refreshToken(event, context, callback);
     case '/auth/forgot/{email}':
       return forgot(event, context, callback);
     case '/auth/forgot/{email}/confirm':

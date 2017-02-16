@@ -23,7 +23,7 @@ class Login {
     }).promise();
   }
 
-  login(moment, email, password) {
+  login(email, password) {
     return this.cognito.adminInitiateAuth({
       AuthFlow: 'ADMIN_NO_SRP_AUTH',
       ClientId: this.env.COGNITO_CLIENT_ID,
@@ -35,8 +35,24 @@ class Login {
     }).promise()
       .then(data => ({
         token: data.AuthenticationResult.IdToken,
-        expires: moment().add(data.AuthenticationResult.ExpiresIn, 's').utc()
-          .format(),
+        refreshToken: data.AuthenticationResult.RefreshToken,
+        expiresIn: data.AuthenticationResult.ExpiresIn,
+      }));
+  }
+
+  refreshToken(token) {
+    return this.cognito.adminInitiateAuth({
+      AuthFlow: 'REFRESH_TOKEN',
+      ClientId: this.env.COGNITO_CLIENT_ID,
+      UserPoolId: this.env.COGNITO_POOL_ID,
+      AuthParameters: {
+        USERNAME: 'keboola.dev.portal.test@gmail.com',
+        REFRESH_TOKEN: token,
+      },
+    }).promise()
+      .then(data => ({
+        token: data.AuthenticationResult.IdToken,
+        expiresIn: data.AuthenticationResult.ExpiresIn,
       }));
   }
 }

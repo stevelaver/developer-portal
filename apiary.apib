@@ -8,7 +8,8 @@ HOST: https://apps.keboola.com
 
 User auth is handled by jwt tokens. Token is returned on login call and needs
 to be passed in HTTP header `Authorization: {your token}`. Token has limited
-validity of 1 hour.
+validity of 1 hour. Login call also returns refresh token which can be exchanged
+for fresh auth token.
 
 ### Create account [POST /auth/signup]
 
@@ -79,9 +80,28 @@ Account needs to be confirmed by code from confirmation email sent on his email 
 
             {
                 "token": "{your token}",
-                "expires": "2016-08-12T09:25:56Z"
+                "refreshToken": "{refresh token}"
+                "expiresIn": 3600
             }
 
+### Refresh token [GET /auth/token]
+
+Returns fresh auth token in exchange for refresh token recieved on login.
+
++ Request
+
+    + Headers
+
+            Authorization: {refresh_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "token": "{your token}",
+                "expiresIn": 3600
+            }
 
 ### Get user profile [GET /auth/profile]
 
