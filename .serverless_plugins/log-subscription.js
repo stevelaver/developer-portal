@@ -28,6 +28,7 @@ class logSubscription {
     }
 
     const loggerFunctionData = this.serverless.service.getFunction(loggerFunction);
+    const loggerLogicalId = this.provider.naming.getLambdaLogicalId(loggerFunction);
     _.merge(
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
       {
@@ -38,13 +39,13 @@ class logSubscription {
             Action: 'lambda:InvokeFunction',
             Principal: `logs.${env.REGION}.amazonaws.com`,
             SourceArn: `arn:aws:logs:${env.REGION}:${env.ACCOUNT_ID}:log-group:/aws/lambda/*`
-          }
+          },
+          DependsOn: [loggerLogicalId]
         }
       }
     );
 
     const functions = this.serverless.service.getAllFunctions();
-    const loggerLogicalId = this.provider.naming.getLambdaLogicalId(loggerFunction);
     functions.forEach((functionName) => {
       if (functionName !== loggerFunction) {
         const functionData = this.serverless.service.getFunction(functionName);
@@ -58,7 +59,8 @@ class logSubscription {
                 DestinationArn: { 'Fn::GetAtt': [loggerLogicalId, "Arn"] },
                 FilterPattern: '',
                 LogGroupName: `/aws/lambda/${functionData.name}`,
-              }
+              },
+              DependsOn: ['LambdaPermissionForSubscription']
             }
           }
         );
