@@ -186,6 +186,22 @@ describe('Apps', () => {
         });
       },
       (cb) => {
+        // Update to isPublic should fail
+        request.patch({
+          url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            isPublic: true,
+          },
+        }, (err, res) => {
+          expect(res.body, JSON.stringify(res.body)).to.have.property('errorMessage');
+          cb();
+        });
+      },
+      (cb) => {
         // Update app
         request.patch({
           url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
@@ -218,8 +234,8 @@ describe('Apps', () => {
             Authorization: token,
           },
         }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
           expect(err).to.be.null();
+          const body = JSON.parse(bodyRaw);
           expect(body, JSON.stringify(body)).to.have.property('errorMessage');
           expect(body.errorMessage).to.include('App icon');
           cb();
@@ -278,7 +294,7 @@ describe('Apps', () => {
       (cb) => {
         // Manual approval
         rds.query(
-          'UPDATE apps SET isApproved=1 WHERE id=?',
+          'UPDATE apps SET isApproved=1, isPublic=1 WHERE id=?',
           appId1,
           err => cb(err)
         );
