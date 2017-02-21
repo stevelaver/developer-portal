@@ -86,8 +86,8 @@ functions:
           method: patch
           path: "{anything}"
 
-  adminApps:
-    handler: admin-apps.apps
+  admin:
+    handler: admin.admin
     events:
       -
         http:
@@ -109,10 +109,6 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: patch
           path: "admin/apps/{id}"
-
-  adminUsers:
-    handler: admin-users.users
-    events:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
@@ -134,7 +130,6 @@ functions:
           method: post
           path: "admin/users/{email}/enable"
 
-  # Apps management
   apps:
     handler: apps.apps
     events:
@@ -210,10 +205,10 @@ functions:
 #          path: "vendors/{vendor}/apps/{app}/repository"
 
   authEmailTrigger:
-    handler: auth-email.emailTrigger
+    handler: authEmails.emails
 
-  authLogin:
-    handler: auth-login.login
+  auth:
+    handler: auth.auth
     events:
       -
         http:
@@ -241,10 +236,6 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "auth/vendors/{vendor}"
-
-  authSignup:
-    handler: auth-signup.signup
-    events:
       -
         http:
           method: post
