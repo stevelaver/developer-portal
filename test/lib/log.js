@@ -12,7 +12,6 @@ describe('log', () => {
   it('init logger', () => {
     const log = new Log(papertrail, winston);
     const logger = log.get('logs.papertrailapp.com', 1111, 'test');
-    expect(logger, 'to have key', 'log');
     expect(logger, 'to have key', 'transports');
     expect(logger.transports, 'to have key', 'Papertrail');
   });
