@@ -5,15 +5,11 @@ import Identity from '../../lib/identity';
 require('dotenv').config({ path: '.env-test', silent: true });
 const async = require('async');
 const aws = require('aws-sdk');
-const env = require('../../lib/env').load();
+const expect = require('unexpected');
 const mysql = require('mysql');
 const request = require('request');
 
-const chai = require('chai');
-const dirtyChai = require('dirty-chai');
-
-const expect = chai.expect;
-chai.use(dirtyChai);
+const env = require('../../lib/env').load();
 
 const rds = mysql.createConnection({
   host: env.RDS_HOST,
@@ -65,10 +61,8 @@ describe('Auth', () => {
             name: 'Test',
             vendor: `T.vendor.${Date.now()}`,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('errorType');
-          expect(body.errorType, JSON.stringify(body)).to.equal('BadRequest');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 400);
           cb();
         });
       },
@@ -83,9 +77,8 @@ describe('Auth', () => {
             name: 'Test',
             vendor,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -98,10 +91,10 @@ describe('Auth', () => {
             email: userEmail,
             password: userPassword1,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('errorType');
-          expect(body.errorType).to.equal('UserNotConfirmedException');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 401);
+          expect(res.body, 'to have key', 'errorType');
+          expect(res.body.errorType, 'to be', 'UserNotConfirmedException');
           cb();
         });
       },
@@ -114,9 +107,8 @@ describe('Auth', () => {
             email: userEmail,
             password: userPassword1,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -126,12 +118,11 @@ describe('Auth', () => {
         // function works and confirm user manually
         request.post({
           url: `${env.API_ENDPOINT}/auth/confirm/${process.env.FUNC_USER_EMAIL}/000`,
-        }, (err, res, bodyIn) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyIn);
-          expect(body, JSON.stringify(body)).to.have.property('errorType');
-          expect(body.errorType).to.be
-            .oneOf(['CodeMismatchException', 'ExpiredCodeException']);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 404);
+          expect(res.body, 'to have key', 'errorType');
+          expect(res.body.errorType, 'to be one of', ['CodeMismatchException', 'ExpiredCodeException']);
           cb();
         });
       },
@@ -150,10 +141,10 @@ describe('Auth', () => {
             email: userEmail,
             password: userPassword1,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('token');
-          cb(null, body.token);
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          cb(null, res.body.token);
         });
       },
       (token, cb) => {
@@ -163,11 +154,11 @@ describe('Auth', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyIn) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyIn);
-          expect(body, JSON.stringify(body)).to.have.property('vendors');
-          expect(body.vendors).to.include(vendor);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'vendors');
+          expect(res.body.vendors, 'to contain', vendor);
           cb(null, token);
         });
       },
@@ -179,9 +170,8 @@ describe('Auth', () => {
       (cb) => {
         request.post({
           url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -195,11 +185,10 @@ describe('Auth', () => {
             password: userPassword1,
             code: '000000',
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('errorType');
-          expect(body.errorType).to.be
-            .oneOf(['CodeMismatchException', 'ExpiredCodeException']);
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 404);
+          expect(res.body, 'to have key', 'errorType');
+          expect(res.body.errorType, 'to be one of', ['CodeMismatchException', 'ExpiredCodeException']);
           cb();
         });
       },
@@ -216,10 +205,10 @@ describe('Auth', () => {
             email: process.env.FUNC_USER_EMAIL,
             password: process.env.FUNC_USER_PASSWORD,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('refreshToken');
-          cb(null, body.refreshToken);
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'refreshToken');
+          cb(null, res.body.refreshToken);
         });
       },
       (token, cb) => {
@@ -228,11 +217,11 @@ describe('Auth', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyIn) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyIn);
-          expect(body, JSON.stringify(body)).to.have.property('token');
-          cb(null, body.token);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          cb(null, res.body.token);
         });
       },
       (token, cb) => {
@@ -241,13 +230,13 @@ describe('Auth', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyIn) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyIn);
-          expect(body, JSON.stringify(body)).to.have.property('name');
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'name');
           cb(null, token);
         });
-      }
+      },
     ], done);
   });
 
@@ -274,10 +263,10 @@ describe('Auth', () => {
             email: process.env.FUNC_USER_EMAIL,
             password: process.env.FUNC_USER_PASSWORD,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('token');
-          token = body.token;
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          token = res.body.token;
           cb();
         });
       },
@@ -288,9 +277,8 @@ describe('Auth', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -301,8 +289,8 @@ describe('Auth', () => {
         }).promise()
           .then(data => Identity.formatUser(data))
           .then((user) => {
-            expect(user).to.have.property('vendors');
-            expect(user.vendors).to.include(otherVendor);
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'to contain', otherVendor);
           })
           .then(() => cb())
           .catch(err => cb(err)),

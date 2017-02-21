@@ -4,16 +4,12 @@ require('dotenv').config({ path: '.env-test', silent: true });
 const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
-const env = require('../../lib/env').load();
+const expect = require('unexpected');
 const fs = require('fs');
 const mysql = require('mysql');
 const request = require('request');
 
-const chai = require('chai');
-const dirtyChai = require('dirty-chai');
-
-const expect = chai.expect;
-chai.use(dirtyChai);
+const env = require('../../lib/env').load();
 
 const rds = mysql.createConnection({
   host: env.RDS_HOST,
@@ -42,10 +38,10 @@ describe('Apps', () => {
             email: process.env.FUNC_USER_EMAIL,
             password: process.env.FUNC_USER_PASSWORD,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('token');
-          token = body.token;
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          token = res.body.token;
           cb();
         });
       },
@@ -82,10 +78,10 @@ describe('Apps', () => {
             type: 'extractor',
             isApproved: true,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('errorType');
-          expect(body.errorType).to.be.equal('UnprocessableEntity');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 422);
+          expect(res.body, 'to have key', 'errorType');
+          expect(res.body.errorType, 'to be', 'UnprocessableEntity');
           cb();
         });
       },
@@ -102,9 +98,8 @@ describe('Apps', () => {
             name: appName1,
             type: 'extractor',
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },
@@ -121,9 +116,8 @@ describe('Apps', () => {
             name: appName2,
             type: 'extractor',
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },
@@ -134,11 +128,11 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, bodyRaw).to.have.property('id');
-          expect(body.id).to.be.equal(appId1);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'id');
+          expect(res.body.id, 'to be', appId1);
           cb();
         });
       },
@@ -149,14 +143,17 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.lengthOf(2);
-          expect(body[0]).to.have.property('id');
-          expect(body[0].id).to.be.oneOf([`${vendor}.${appName1}`, `${vendor}.${appName2}`]);
-          expect(body[1]).to.have.property('id');
-          expect(body[1].id).to.be.oneOf([`${vendor}.${appName1}`, `${vendor}.${appName2}`]);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have an item satisfying', (item) => {
+            expect(item, 'to have key', 'id');
+            expect(item.id, 'to be', `${vendor}.${appName1}`);
+          });
+          expect(res.body, 'to have an item satisfying', (item) => {
+            expect(item, 'to have key', 'id');
+            expect(item.id, 'to be', `${vendor}.${appName2}`);
+          });
           cb();
         });
       },
@@ -164,10 +161,8 @@ describe('Apps', () => {
         // Public app profile should not exist
         request.get({
           url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body).to.have.property('errorMessage');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 404);
           cb();
         });
       },
@@ -178,10 +173,8 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('errorMessage');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 400);
           cb();
         });
       },
@@ -197,7 +190,7 @@ describe('Apps', () => {
             isPublic: true,
           },
         }, (err, res) => {
-          expect(res.body, JSON.stringify(res.body)).to.have.property('errorMessage');
+          expect(res.statusCode, 'to be', 400);
           cb();
         });
       },
@@ -220,9 +213,8 @@ describe('Apps', () => {
             licenseUrl: 'https://github.com/keboola/test-extractor/blob/master/LICENSE',
             documentationUrl: 'https://github.com/keboola/test-extractor/blob/master/README.md',
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -233,11 +225,11 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, JSON.stringify(body)).to.have.property('errorMessage');
-          expect(body.errorMessage).to.include('App icon');
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 400);
+          expect(res.body, 'to have key', 'errorMessage');
+          expect(res.body.errorMessage, 'to contain', 'App icon');
           cb();
         });
       },
@@ -248,25 +240,23 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body, JSON.stringify(body)).to.have.property('link');
-          cb(null, body);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'link');
+          cb(null, res.body);
         });
       },
-      (icons, cb) => {
+      (prevRes, cb) => {
         // Upload icon
         const stats = fs.statSync(`${__dirname}/icon.png`);
         fs.createReadStream(`${__dirname}/icon.png`).pipe(request.put({
-          url: icons.link,
+          url: prevRes.link,
           headers: {
             'Content-Length': stats.size,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
           cb();
         }));
       },
@@ -284,9 +274,8 @@ describe('Apps', () => {
             headers: {
               Authorization: token,
             },
-          }, (err, res, body) => {
-            expect(err).to.be.null();
-            expect(body).to.be.empty();
+          }, (err, res) => {
+            expect(res.statusCode, 'to be', 202);
             cb();
           });
         }, 5000);
@@ -303,11 +292,10 @@ describe('Apps', () => {
         // Public app profile should exist now
         request.get({
           url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'id');
           cb();
         });
       },
@@ -318,11 +306,9 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body).to.not.have.property('errorMessage');
-          expect(body).to.have.length.above(1);
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body.length, 'to be positive');
           cb();
         });
       },
@@ -333,11 +319,10 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, JSON.stringify(body)).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'id');
           cb();
         });
       },
@@ -345,12 +330,9 @@ describe('Apps', () => {
         // Public apps list should have at least one result
         request.get({
           url: `${env.API_ENDPOINT}/apps`,
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body).to.not.have.property('errorMessage');
-          expect(body).to.have.length.above(0);
-          expect(body[0]).to.have.property('id');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body.length, 'to be positive');
           cb();
         });
       },
@@ -381,9 +363,8 @@ describe('Apps', () => {
             ],
             isPublic: false,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('errorMessage');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 422);
           cb();
         });
       },
@@ -414,9 +395,8 @@ describe('Apps', () => {
             ],
             isPublic: false,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('errorMessage');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 422);
           cb();
         });
       },
@@ -426,6 +406,16 @@ describe('Apps', () => {
           'stack',
           err => cb(err)
         );
+      },
+      (cb) => {
+        // List stacks
+        request.get({
+          url: `${env.API_ENDPOINT}/stacks`,
+          json: true,
+        }, (err, res) => {
+          expect(res.body, 'to contain', 'stack');
+          cb();
+        });
       },
       (cb) => {
         // Create app
@@ -447,9 +437,8 @@ describe('Apps', () => {
             ],
             isPublic: false,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },
@@ -469,9 +458,8 @@ describe('Apps', () => {
               },
             ],
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -482,16 +470,17 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, bodyRaw).to.have.property('id');
-          expect(body, bodyRaw).to.have.property('permissions');
-          expect(body.permissions, bodyRaw).to.have.length(1);
-          expect(body.permissions[0], bodyRaw).to.have.property('stack');
-          expect(body.permissions[0].stack).to.equal('stack');
-          expect(body.permissions[0].projects).to.deep.equal([2, 3]);
-          expect(body.id).to.be.equal(appId3);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'id');
+          expect(res.body.id, 'to be', appId3);
+          expect(res.body, 'to have key', 'permissions');
+          expect(res.body.permissions, 'to have length', 1);
+          expect(res.body.permissions[0], 'to have key', 'stack');
+          expect(res.body.permissions[0].stack, 'to be', 'stack');
+          expect(res.body.permissions[0], 'to have key', 'projects');
+          expect(res.body.permissions[0].projects, 'to equal', [2, 3]);
           cb();
         });
       },
@@ -507,11 +496,8 @@ describe('Apps', () => {
         // Public app profile should not exist
         request.get({
           url: `${env.API_ENDPOINT}/apps/${vendor}/${appId3}`,
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('errorType');
-          expect(body.errorType).to.be.equal('NotFound');
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 404);
           cb();
         });
       },
@@ -519,11 +505,10 @@ describe('Apps', () => {
         // Public apps list should not contain the app
         request.get({
           url: `${env.API_ENDPOINT}/apps`,
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body).to.not.have.property('errorMessage');
-          expect(_.map(body, app => app.id)).to.not.include(appId3);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(_.map(res.body, app => app.id), 'not to contain', appId3);
           cb();
         });
       },
@@ -548,9 +533,8 @@ describe('Apps', () => {
             name: appName4,
             type: 'extractor',
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },
@@ -565,9 +549,8 @@ describe('Apps', () => {
           body: {
             name: newAppName4,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -578,12 +561,12 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, bodyRaw).to.have.property('name');
-          expect(body.name).to.equal(newAppName4);
-          expect(body, bodyRaw).to.have.property('version');
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'name');
+          expect(res.body.name, 'to be', newAppName4);
+          expect(res.body, 'to have key', 'version');
           cb();
         });
       },
@@ -594,13 +577,8 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-          json: true,
-          body: {
-            name: newAppName4,
-          },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -611,13 +589,13 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          const body = JSON.parse(bodyRaw);
-          expect(err).to.be.null();
-          expect(body, bodyRaw).to.have.property('name');
-          expect(body.name).to.equal(appName4);
-          expect(body, bodyRaw).to.have.property('version');
-          cb(null, body.version);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'name');
+          expect(res.body.name, 'to be', appName4);
+          expect(res.body, 'to have key', 'version');
+          cb();
         });
       },
     ], done);
@@ -645,15 +623,14 @@ describe('Apps', () => {
         // Public list all
         request.get({
           url: `${env.API_ENDPOINT}/apps`,
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.length.of.at.least(2);
-          expect(body[0]).to.have.property('name');
-          testApp1 = body[0].name;
-          expect(body[1]).to.have.property('name');
-          testApp2 = body[1].name;
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body.length, 'to be greater than or equal to', 2);
+          expect(res.body[0], 'to have key', 'name');
+          testApp1 = res.body[0].name;
+          expect(res.body[1], 'to have key', 'name');
+          testApp2 = res.body[1].name;
           cb();
         });
       },
@@ -661,13 +638,12 @@ describe('Apps', () => {
         // Public list limit
         request.get({
           url: `${env.API_ENDPOINT}/apps?offset=0&limit=1`,
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.lengthOf(1);
-          expect(body[0]).to.have.property('name');
-          expect(body[0].name).to.be.equal(testApp1);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have length', 1);
+          expect(res.body[0], 'to have key', 'name');
+          expect(res.body[0].name, 'to be', testApp1);
           cb();
         });
       },
@@ -675,13 +651,12 @@ describe('Apps', () => {
         // Public list limit
         request.get({
           url: `${env.API_ENDPOINT}/apps?offset=1&limit=1`,
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.lengthOf(1);
-          expect(body[0]).to.have.property('name');
-          expect(body[0].name).to.be.equal(testApp2);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have length', 1);
+          expect(res.body[0], 'to have key', 'name');
+          expect(res.body[0].name, 'to be', testApp2);
           cb();
         });
       },
@@ -713,15 +688,14 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.length.of.at.least(2);
-          expect(body[0]).to.have.property('name');
-          testApp1 = body[0].name;
-          expect(body[1]).to.have.property('name');
-          testApp2 = body[1].name;
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body.length, 'to be greater than or equal to', 2);
+          expect(res.body[0], 'to have key', 'name');
+          testApp1 = res.body[0].name;
+          expect(res.body[1], 'to have key', 'name');
+          testApp2 = res.body[1].name;
           cb();
         });
       },
@@ -732,13 +706,12 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.lengthOf(1);
-          expect(body[0]).to.have.property('name');
-          expect(body[0].name).to.be.equal(testApp1);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have length', 1);
+          expect(res.body[0], 'to have key', 'name');
+          expect(res.body[0].name, 'to be', testApp1);
           cb();
         });
       },
@@ -749,13 +722,12 @@ describe('Apps', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.lengthOf(1);
-          expect(body[0]).to.have.property('name');
-          expect(body[0].name).to.be.equal(testApp2);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have length', 1);
+          expect(res.body[0], 'to have key', 'name');
+          expect(res.body[0].name, 'to be', testApp2);
           cb();
         });
       },

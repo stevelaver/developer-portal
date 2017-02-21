@@ -6,15 +6,11 @@ require('dotenv').config({ path: '.env-test', silent: true });
 const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
-const env = require('../../lib/env').load();
+const expect = require('unexpected');
 const mysql = require('mysql');
 const request = require('request');
 
-const chai = require('chai');
-const dirtyChai = require('dirty-chai');
-
-const expect = chai.expect;
-chai.use(dirtyChai);
+const env = require('../../lib/env').load();
 
 const rds = mysql.createConnection({
   host: env.RDS_HOST,
@@ -46,10 +42,10 @@ describe('Admin', () => {
             email: process.env.FUNC_USER_EMAIL,
             password: process.env.FUNC_USER_PASSWORD,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.have.property('token');
-          token = body.token;
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          token = res.body.token;
           cb();
         });
       },
@@ -117,9 +113,8 @@ describe('Admin', () => {
             name: 'test',
             type: 'extractor',
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },
@@ -130,12 +125,11 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.property('forwardToken');
-          expect(body.forwardToken).to.be.equal(false);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'forwardToken');
+          expect(res.body.forwardToken, 'to be false');
           cb();
         });
       },
@@ -150,9 +144,8 @@ describe('Admin', () => {
           body: {
             forwardToken: true,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -163,12 +156,11 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.property('forwardToken');
-          expect(body.forwardToken).to.be.equal(true);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'forwardToken');
+          expect(res.body.forwardToken, 'to be true');
           cb();
         });
       },
@@ -191,12 +183,11 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.not.have.property('errorMessage');
-          expect(body).to.have.property('id');
-          expect(body.id).to.be.equal(appId);
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'id');
+          expect(res.body.id, 'to be', appId);
           cb();
         });
       },
@@ -207,16 +198,10 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          let appFound = false;
-          _.each(body, (item) => {
-            if (item.id === appId) {
-              appFound = true;
-            }
-          });
-          expect(appFound).to.be.true();
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(_.map(res.body, app => app.id), 'to contain', appId);
           cb();
         });
       },
@@ -227,9 +212,9 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -240,16 +225,10 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          let appFound = false;
-          _.each(body, (item) => {
-            if (item.id === appId) {
-              appFound = true;
-            }
-          });
-          expect(appFound).to.be.false();
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(_.map(res.body, app => app.id), 'not to contain', appId);
           cb();
         });
       },
@@ -271,16 +250,10 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          let userFound = false;
-          _.each(body, (item) => {
-            if (item.email === userEmail) {
-              userFound = true;
-            }
-          });
-          expect(userFound).to.be.true();
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(_.map(res.body, item => item.email), 'to contain', userEmail);
           cb();
         });
       },
@@ -291,9 +264,8 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -304,16 +276,9 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          let userFound = false;
-          _.each(body, (item) => {
-            if (item.email === userEmail) {
-              userFound = true;
-            }
-          });
-          expect(userFound).to.be.true();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(_.map(res.body, item => item.email), 'to contain', userEmail);
           cb();
         });
       },
@@ -328,7 +293,7 @@ describe('Admin', () => {
           Username: userEmail,
         }, cb);
       },
-      function (user, cb) {
+      (user, cb) => {
         let userIsAdmin = false;
         _.each(user.UserAttributes, (item) => {
           if (item.Name === 'custom:isAdmin') {
@@ -337,7 +302,7 @@ describe('Admin', () => {
             }
           }
         });
-        expect(userIsAdmin).to.be.false();
+        expect(userIsAdmin, 'to be false');
         cb();
       },
       (cb) => {
@@ -347,9 +312,8 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -368,7 +332,7 @@ describe('Admin', () => {
             }
           }
         });
-        expect(userIsAdmin).to.be.true();
+        expect(userIsAdmin, 'to be true');
         cb();
       },
     ], done);
@@ -383,8 +347,8 @@ describe('Admin', () => {
         }).promise()
           .then(data => Identity.formatUser(data))
           .then((user) => {
-            expect(user).to.have.property('vendors');
-            expect(user.vendors).to.not.include(otherVendor);
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'not to contain', otherVendor);
           })
           .then(() => cb())
           .catch(err => cb(err)),
@@ -395,9 +359,8 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
           cb();
         });
       },
@@ -408,8 +371,8 @@ describe('Admin', () => {
         }).promise()
           .then(data => Identity.formatUser(data))
           .then((user) => {
-            expect(user).to.have.property('vendors');
-            expect(user.vendors).to.include(otherVendor);
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'to contain', otherVendor);
           })
           .then(() => cb()),
     ], done);
@@ -431,9 +394,8 @@ describe('Admin', () => {
             address: 'test',
             email: process.env.FUNC_USER_EMAIL,
           },
-        }, (err, res, body) => {
-          expect(err).to.be.null();
-          expect(body, JSON.stringify(body)).to.be.empty();
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },
@@ -443,11 +405,10 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
-        }, (err, res, bodyRaw) => {
-          expect(err).to.be.null();
-          const body = JSON.parse(bodyRaw);
-          expect(body, bodyRaw).to.have.property('name');
-          expect(body.name).to.be.equal(aVendor);
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'name');
+          expect(res.body.name, 'to be', aVendor);
           cb();
         });
       },
