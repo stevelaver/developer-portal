@@ -54,6 +54,18 @@ functions:
           method: get
           path: "/"
       -
+        http:
+          method: get
+          path: "apps/{vendor}/{app}"
+      -
+        http:
+          method: get
+          path: "apps"
+      -
+        http:
+          method: get
+          path: "stacks"
+      -
         schedule:
           rate: rate(15 minutes)
           enabled: ${file(./env.yml):WARMUP_ENABLED}
@@ -250,22 +262,6 @@ functions:
           method: post
           path: "auth/confirm"
 
-  appsPublic:
-    handler: public-apps.apps
-    events:
-      -
-        http:
-          method: get
-          path: "apps/{vendor}/{app}"
-      -
-        http:
-          method: get
-          path: "apps"
-      -
-        schedule:
-          rate: rate(15 minutes)
-          enabled: ${file(./env.yml):WARMUP_ENABLED}
-
   vendors:
     handler: vendors.vendors
     events:
@@ -282,14 +278,6 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/vendors"
-
-  stacks:
-    handler: public.stacksList
-    events:
-      -
-        http:
-          method: get
-          path: "stacks"
 
 resources:
   Resources:
