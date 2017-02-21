@@ -4,6 +4,7 @@ import Identity from '../lib/identity';
 import Vendor from '../app/vendor';
 import Validation from '../lib/validation';
 
+require('longjohn');
 require('babel-polyfill');
 const _ = require('lodash');
 const joi = require('joi');

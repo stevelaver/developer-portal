@@ -3,6 +3,7 @@
 import App from '../lib/app';
 import Identity from '../lib/identity';
 
+require('longjohn');
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');

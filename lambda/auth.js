@@ -6,6 +6,7 @@ import Notification from '../lib/notification';
 import Validation from '../lib/validation';
 import Vendor from '../app/vendor';
 
+require('longjohn');
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');

@@ -1,17 +1,18 @@
 'use strict';
 
-import Identity from '../../../lib/identity';
-import Repository from '../../../lib/repository';
-import Validation from '../../../lib/validation';
+import Identity from '../lib/identity';
+import Repository from '../lib/repository';
+import Validation from '../lib/validation';
 
+require('longjohn');
 require('babel-polyfill');
 const aws = require('aws-sdk');
-const db = require('../../../lib/db');
-const error = require('../../../lib/error');
+const db = require('../lib/db');
+const error = require('../lib/error');
 const joi = require('joi');
 const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
-const request = require('../../../lib/request');
+const request = require('../lib/request');
 
 aws.config.setPromisesDependency(Promise);
 const ecr = new aws.ECR({ region: process.env.REGION });

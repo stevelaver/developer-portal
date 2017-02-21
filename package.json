@@ -19,6 +19,7 @@
     "jsonwebtoken": "7.0.0",
     "jwk-to-pem": "^1.2.5",
     "lodash": "^4.17.4",
+    "longjohn": "^0.2.12",
     "mysql": "^2.11.1",
     "request-promise-lite": "^0.8.1",
     "winston": "*",

@@ -1,5 +1,6 @@
 'use strict';
 
+require('longjohn');
 require('babel-polyfill');
 // const template = require('../../views/email.html');
 
