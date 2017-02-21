@@ -65,7 +65,7 @@ function createVendor(event, context, callback) {
     event,
     context,
     callback,
-    204
+    201
   );
 }
 

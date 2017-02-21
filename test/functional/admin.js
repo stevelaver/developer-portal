@@ -276,6 +276,7 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
+          json: true,
         }, (err, res) => {
           expect(res.statusCode, 'to be', 200);
           expect(_.map(res.body, item => item.email), 'to contain', userEmail);
@@ -405,6 +406,7 @@ describe('Admin', () => {
           headers: {
             Authorization: token,
           },
+          json: true,
         }, (err, res) => {
           expect(res.statusCode, 'to be', 200);
           expect(res.body, 'to have key', 'name');
