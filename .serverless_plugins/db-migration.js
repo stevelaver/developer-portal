@@ -20,16 +20,28 @@ class DbMigration {
 
   afterDeploy() {
     if (!process.env.DB_MIGRATE_SKIP) {
-      if (!process.env.RDS_HOST && fs.existsSync(`${__dirname}/../env.yml`)) {
-        const env = yaml.load(`${__dirname}/../env.yml`);
-        process.env.RDS_HOST = env.RDS_HOST;
-        process.env.RDS_USER = env.RDS_USER;
-        process.env.RDS_PASSWORD = env.RDS_PASSWORD;
-        process.env.RDS_DATABASE = env.RDS_DATABASE;
-        process.env.RDS_PORT = env.RDS_PORT;
-      }
+      const env = yaml.load(`${__dirname}/../env.yml`),
+        config = {
+        "defaultEnv": "current",
+        "current": {
+          "driver": "mysql",
+          "user": env.RDS_USER,
+          "password": env.RDS_PASSWORD,
+          "host": env.RDS_HOST,
+          "database": env.RDS_DATABASE,
+          "port": env.RDS_PORT,
+          "ssl": "Amazon RDS",
+          "multipleStatements": true,
+          "tunnel": {
+            "host": env.BASTION_IP,
+            "username": "ec2-user"
+          }
+        }
+      };
       this.serverless.cli.log('Migrating database...');
-      const dbm = dbMigrate.getInstance(true);
+      const dbm = dbMigrate.getInstance(true, {
+        config: config
+      });
       return dbm.up();
     }
   }
