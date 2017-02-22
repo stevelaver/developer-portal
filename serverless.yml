@@ -39,7 +39,7 @@ provider:
       - ${file(./env.yml):VPC_SUBNET1}
       - ${file(./env.yml):VPC_SUBNET2}
   stackTags:
-    KeboolaStack: "developer-portal"
+    KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
 
 functions:
 
@@ -356,10 +356,10 @@ resources:
         MasterUsername: "${file(./env.yml):RDS_USER}"
         MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}"
         MultiAZ: "true"
-        PubliclyAccessible: "true"
+        PubliclyAccessible: "false"
         DBSubnetGroupName: "${file(./env.yml):RDS_SUBNET_GROUP}"
         VPCSecurityGroups:
-          - ${file(./env.yml):VPC_SECURITY_GROUP}
+          - ${file(./env.yml):RDS_SECURITY_GROUP}
     CloudFront:
       Type: AWS::CloudFront::Distribution
       Properties:

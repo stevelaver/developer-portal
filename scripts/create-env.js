@@ -34,6 +34,7 @@ fs.writeFile(
     ACCOUNT_ID: getEnvVar('ACCOUNT_ID', envPrefix),
     VPC_CF_STACK_ID: getEnvVar('VPC_CF_STACK_ID', envPrefix),
     VPC_SECURITY_GROUP: getEnvVar('VPC_SECURITY_GROUP', envPrefix),
+    RDS_SECURITY_GROUP: getEnvVar('RDS_SECURITY_GROUP', envPrefix),
     VPC_SUBNET1: getEnvVar('VPC_SUBNET1', envPrefix),
     VPC_SUBNET2: getEnvVar('VPC_SUBNET2', envPrefix),
     RDS_SUBNET_GROUP: getEnvVar('RDS_SUBNET_GROUP', envPrefix),

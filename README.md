@@ -25,11 +25,12 @@ The application can be installed only to AWS region supporting all required serv
 7. Setup Slack channel for notifications about users and apps approval requirements and create incoming webhook
 8. Either save AWS credentials to `~/.aws/credentials` (see http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles) or set env variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` prior to running following commands
 9. Verify email sender. Run `node scripts/setup.js register-email <region> <email>` and confirm link from the email you get
-10. Run setup script: `env SERVICE_NAME= REGION= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
+10. Run setup script: `env SERVICE_NAME= REGION= KEBOOLA_STACK= RDS_PASSWORD= RDS_INSTANCE_CLASS= SES_EMAIL_FROM= STAGE= LOG_HOST= LOG_PORT= SLACK_HOOK_URL= make install`
   - The script will put created identifiers to file `env.yml`
   - Required env variables:
     - `SERVICE_NAME` - Name of the Serverless service. It will be used as a prefix for created AWS services, it should be only alphanumeric with optional dashes
     - `REGION` - AWS region where the services should be created
+    - `KEBOOLA_STACK` - KeboolaStack identifier like `martin-developer-portal`
     - `RDS_PASSWORD` - Desired password for created database
     - `RDS_INSTANCE_CLASS` - Desired instance class of created RDS, see http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html but `db.t2.micro` should work fine
     - `SES_EMAIL_FROM` - Email address used as a sender for emails
@@ -86,6 +87,7 @@ SLACK_HOOK_URL: 'https://hooks.slack.com/services/...'
 ACCOUNT_ID: '061240556736'
 VPC_CF_STACK_ID: 'arn:aws:cloudformation:eu-west-1:061240556736:stack/dev-portal-vpc/...'
 VPC_SECURITY_GROUP: sg-d8b9d5be
+RDS_SECURITY_GROUP: sg-d8b9d5be
 VPC_SUBNET1: subnet-b05f7ac6
 VPC_SUBNET2: subnet-b84360dc
 RDS_SUBNET_GROUP: dev-portal-vpc-devportaldbsubnetgroup
