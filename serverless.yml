@@ -180,7 +180,7 @@ functions:
           path: "vendors/{vendor}/apps/{app}/icon"
 
   iconUpload:
-    handler: icon.upload
+    handler: iconUpload.upload
     events:
       -
         s3:
@@ -205,7 +205,7 @@ functions:
 #          path: "vendors/{vendor}/apps/{app}/repository"
 
   authEmailTrigger:
-    handler: authEmails.emails
+    handler: authEmail.emails
 
   auth:
     handler: auth.auth

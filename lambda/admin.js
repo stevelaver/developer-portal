@@ -240,6 +240,26 @@ function updateApp(event, context, callback) {
   );
 }
 
+function listAppChanges(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    // TODO pagination
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(event.headers.Authorization))
+      .then(() => app.listAppChanges(
+        // TODO pagination
+      )),
+    db,
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 
 module.exports.admin = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -260,6 +280,8 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
       return updateApp(event, context, callback);
     case '/admin/apps':
       return listApps(event, context, callback);
+    case '/admin/changes':
+      return listAppChanges(event, context, callback);
     default:
       throw error.notFound();
   }

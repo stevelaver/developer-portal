@@ -20,7 +20,7 @@ class DbMigration {
 
   afterDeploy() {
     if (!process.env.DB_MIGRATE_SKIP) {
-      if (!process.env.RDS_HOST && fs.existsSync('../env.yml')) {
+      if (!process.env.RDS_HOST && fs.existsSync(`${__dirname}/../env.yml`)) {
         const env = yaml.load(`${__dirname}/../env.yml`);
         process.env.RDS_HOST = env.RDS_HOST;
         process.env.RDS_USER = env.RDS_USER;
