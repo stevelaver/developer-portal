@@ -42,8 +42,12 @@ module.exports.upload = (event, context, callback) => request.errorHandler(() =>
     return callback();
   }
   console.log(JSON.stringify(event));
-  return db.connect(process.env)
-  .then(() => app.uploadIcon(s3, jimp, appId, bucket, key))
-  .then(() => db.endCallback(null, null, callback))
-  .catch(err => db.endCallback(err, null, callback));
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => app.uploadIcon(s3, jimp, appId, bucket, key)),
+    db,
+    event,
+    context,
+    callback
+  );
 }, event, context, (err, res) => db.endCallback(err, res, callback));
