@@ -209,7 +209,7 @@ class Setup {
           --lambda-config '{"CustomMessage": "arn:aws:lambda:${env.REGION}:${env.ACCOUNT_ID}:function:${env.SERVICE_NAME}-${env.STAGE}-authEmailTrigger"}'`, cb2);
       },
       (cb2) => {
-        exec(`aws lambda add-permission --profile ${env.PROFILE} --region ${env.REGION} \
+        exec(`aws lambda add-permission --region ${env.REGION} \
           --statement-id CSI_customMessage \
           --function-name ${env.SERVICE_NAME}-${env.STAGE}-authEmailTrigger \
           --principal 'cognito-idp.amazonaws.com' \

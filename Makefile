@@ -8,25 +8,17 @@ deploy-before-sls:
 	node scripts/setup.js create-cognito
 
 deploy-sls:
-	sls deploy
+	env DB_MIGRATE_SKIP=1 sls deploy
 
 deploy-after-sls:
 	node scripts/setup.js save-cloudformation-output
-	node scripts/setup.js init-database
 	node scripts/setup.js update-cognito
-	node scripts/setup.js subscribe-logs
 
 save-output:
 	node scripts/setup.js save-cloudformation-output
 
-init-database:
-	node scripts/setup.js init-database
-
 update-cognito:
 	node scripts/setup.js update-cognito
-
-subscribe-logs:
-	node scripts/setup.js subscribe-logs
 
 finish-deploy-sls:
 	sls deploy

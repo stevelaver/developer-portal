@@ -42,6 +42,8 @@ each email or domain before you use it for account signup.
 
 ### Initialization
 
+You should create at least one vendor manually in database table `vendors` before creating users.
+
 You can set created user as admin using command: `node scripts/setup-admin.js <email> enable`
 
 
@@ -97,8 +99,8 @@ WARMUP_ENABLED: true
 
 ### Lambda Warm Up
 
-If you change variable `WARMUP_ENABLED` in `env.yml` to `true`, a CloudWatch schedule will be enabled to keep lambda functions for public apps list and landing page warmed up using 15 minutes ping. 
+If you change variable `WARMUP_ENABLED` in `env.yml` to `true`, a CloudWatch schedule will be enabled to keep lambda functions for public resources warmed up using 15 minutes ping. 
 
 ### CI and deployment
 
-CI is configured on Travis, see https://travis-ci.org/keboola/developer-portal. Deployment is run automatically after releasing a version on Github. Travis uses special AWS IAM user with restricted rights in production account. See `iam-user-template.json` for details.  
+CI is configured on Travis, see https://travis-ci.org/keboola/developer-portal. Deployment is run automatically after releasing a version on GitHub. Travis uses special AWS IAM user with restricted rights in production account. See `iam-user-template.json` for details.  
