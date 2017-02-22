@@ -20,6 +20,7 @@ fs.writeFile(
   args[0],
   yaml.stringify({
     SERVICE_NAME: getEnvVar('SERVICE_NAME', envPrefix),
+    KEBOOLA_STACK: getEnvVar('KEBOOLA_STACK', envPrefix),
     REGION: getEnvVar('REGION', envPrefix),
     STAGE: getEnvVar('STAGE', envPrefix),
     SES_EMAIL_FROM: getEnvVar('SES_EMAIL_FROM', envPrefix),
@@ -44,6 +45,7 @@ fs.writeFile(
     RDS_PORT: getEnvVar('RDS_PORT', envPrefix),
     CLOUDFRONT_URI: getEnvVar('CLOUDFRONT_URI', envPrefix),
     API_ENDPOINT: getEnvVar('API_ENDPOINT', envPrefix),
+    BASTION_IP: getEnvVar('BASTION_IP', envPrefix)
   }),
   (err) => {
     if (err) {
