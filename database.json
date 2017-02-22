@@ -8,6 +8,10 @@
     "database": { "ENV": "RDS_DATABASE" },
     "port": { "ENV": "RDS_PORT" },
     "ssl": "Amazon RDS",
-    "multipleStatements": true
+    "multipleStatements": true,
+    "tunnel": {
+      "host": "BASTION_IP",
+      "username": "ec2-user"
+    }
   }
 }

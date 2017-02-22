@@ -73,6 +73,7 @@ You can set created user as admin using command: `node scripts/setup-admin.js <e
 Whole configuration is held in `env.yml` which contains these parameters:
 ```
 SERVICE_NAME: dev-portal
+KEBOOLA_STACK: dev-portal
 REGION: eu-west-1
 STAGE: dev
 SES_EMAIL_FROM: dev-portal@test.com
