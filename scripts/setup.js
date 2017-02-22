@@ -101,7 +101,7 @@ class Setup {
         cf.createStack({
           StackName: `${env.SERVICE_NAME}-vpc`,
           TemplateBody: fs.readFileSync(`${__dirname}/cf-vpc.json`, 'utf8'),
-          Tags: [{ KeboolaStack: 'developer-portal' }],
+          Tags: [{ Key: 'KeboolaStack', Value: 'developer-portal' }],
         }, (err, res) => {
           if (err) {
             cb(err);
