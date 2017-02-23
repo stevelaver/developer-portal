@@ -3,6 +3,7 @@
 import App from '../lib/app';
 import Identity from '../lib/identity';
 import Validation from '../lib/validation';
+import Vendor from '../app/vendor';
 
 require('longjohn');
 require('babel-polyfill');
@@ -16,6 +17,7 @@ const request = require('../lib/request');
 
 const app = new App(db, Identity, process.env, error);
 const validation = new Validation(joi, error);
+const vendorApp = new Vendor(db, process.env, error);
 
 
 function landing(event, context, callback) {
@@ -80,6 +82,39 @@ function stacks(event, context, callback) {
   );
 }
 
+function getVendorsList(event, context, callback) {
+  validation.validate(event, {
+    pagination: true,
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => vendorApp.list(
+        _.get(event, 'queryStringParameters.offset', null),
+        _.get(event, 'queryStringParameters.limit', null),
+      )),
+    db,
+    event,
+    context,
+    callback
+  );
+}
+
+function getVendor(event, context, callback) {
+  validation.validate(event, {
+    path: ['vendor'],
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => vendorApp.get(event.pathParameters.vendor)),
+    db,
+    event,
+    context,
+    callback
+  );
+}
+
 
 module.exports.public = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -91,6 +126,10 @@ module.exports.public = (event, context, callback) => request.errorHandler(() =>
       return detail(event, context, callback);
     case '/stacks':
       return stacks(event, context, callback);
+    case '/vendors':
+      return getVendorsList(event, context, callback);
+    case '/vendors/{vendor}':
+      return getVendor(event, context, callback);
     default:
       throw error.notFound();
   }
