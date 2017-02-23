@@ -46,6 +46,7 @@ each email or domain before you use it for account signup.
 ### Initialization
 
 You should create at least one vendor manually in database table `vendors` before creating users.
+You can connect to database using SSH tunel, use `BASTION_IP` from `env.yml` as SSH host and `ec2-user` as SSH user.
 
 You can set created user as admin using command: `node scripts/setup-admin.js <email> enable`
 
