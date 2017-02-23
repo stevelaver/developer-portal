@@ -1139,3 +1139,57 @@ Allows to update apps across vendors
             }
 
 + Response 201
+
+
+### List app changes [GET /admin/changes?since={since}&until={until}]
+
+Returns list of last changes across all apps.
+
++ Parameters
+    + since (optional) - Date in YYYY-MM-DD format, default is `-24 hours`
+    + until (optional) - Date in YYYY-MM-DD format, default is `now`
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "test.test-app",
+                    "createdOn": "2017-02-22T15:59:22.000Z",
+                    "createdBy": "upload",
+                    "changes": [
+                        {
+                            "attribute": "icon32",
+                            "oldValue": null,
+                            "newValue": "test.test-app/32/2.png",
+                            "description": "Attribute icon32 changed"
+                        },
+                        {
+                            "attribute": "icon64",
+                            "oldValue": null,
+                            "newValue": "test.test-app/64/2.png",
+                            "description": "Attribute icon64 changed"
+                        }
+                    ]
+                },
+                {
+                    "id": "test.test-app",
+                    "createdOn": "2017-02-22T15:50:30.000Z",
+                    "createdBy": "keboola.dev.portal.test@gmail.com",
+                    "changes": [
+                        {
+                            "attribute": "id",
+                            "oldValue": null,
+                            "newValue": "test.test-app",
+                            "description": "App test.test-app created"
+                        }
+                    ]
+                }
+            ]

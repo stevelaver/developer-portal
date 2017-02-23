@@ -7,6 +7,7 @@ const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
 const expect = require('unexpected');
+const moment = require('moment');
 const mysql = require('mysql');
 const request = require('request');
 
@@ -161,6 +162,23 @@ describe('Admin', () => {
           expect(res.statusCode, 'to be', 200);
           expect(res.body, 'to have key', 'forwardToken');
           expect(res.body.forwardToken, 'to be true');
+          cb();
+        });
+      },
+      (cb) => {
+        // Get apps changes
+        request.get({
+          url: `${env.API_ENDPOINT}/admin/changes?since=${moment().subtract(5, 'minutes').format('YYYY-MM-DD')}`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body.length, 'to be greater than or equal to', 2);
+          expect(res.body, 'to have an item satisfying', (item) => {
+            expect(item.id, 'to be', appId2);
+          });
           cb();
         });
       },

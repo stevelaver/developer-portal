@@ -129,6 +129,11 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/users/{email}/enable"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: get
+          path: "admin/changes"
 
   apps:
     handler: apps.apps

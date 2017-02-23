@@ -9,7 +9,9 @@ require('longjohn');
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
-const joi = require('joi');
+const diff = require('deep-diff').diff;
+const joiBase = require('joi');
+const joiExtension = require('joi-date-extensions');
 const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
 
@@ -28,6 +30,7 @@ const email = new Email(
   process.env.SES_EMAIL_FROM
 );
 const identity = new Identity(jwt, error);
+const joi = joiBase.extend(joiExtension);
 const validation = new Validation(joi, error);
 
 
@@ -243,20 +246,26 @@ function updateApp(event, context, callback) {
 function listAppChanges(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    // TODO pagination
+    query: {
+      since: joi.date().format('YYYY-MM-DD')
+        .error(Error('Parameter since must be a date in format YYYY-MM-DD')),
+      until: joi.date().format('YYYY-MM-DD')
+        .error(Error('Parameter until must be a date format YYYY-MM-DD')),
+    },
   });
 
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
       .then(() => app.listAppChanges(
-        // TODO pagination
+        diff,
+        _.get(event, 'queryStringParameters.since', null),
+        _.get(event, 'queryStringParameters.until', null)
       )),
     db,
     event,
     context,
-    callback,
-    204
+    callback
   );
 }
 

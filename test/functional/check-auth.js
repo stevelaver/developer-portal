@@ -120,7 +120,7 @@ describe('Check if all endpoints have auth required', () => {
         );
       },
       (cb) => {
-        // Add vendor
+        // Create vendor
         request.post(
           { url: `${env.API_ENDPOINT}/admin/users/test@test.com/vendors/keboola` },
           (err, res) => checkAuth(err, res, cb)
@@ -141,9 +141,37 @@ describe('Check if all endpoints have auth required', () => {
         );
       },
       (cb) => {
+        // Get app
+        request.get(
+          { url: `${env.API_ENDPOINT}/admin/apps/app` },
+          (err, res) => checkAuth(err, res, cb)
+        );
+      },
+      (cb) => {
+        // Update app
+        request.patch(
+          { url: `${env.API_ENDPOINT}/admin/apps/appId` },
+          (err, res) => checkAuth(err, res, cb)
+        );
+      },
+      (cb) => {
         // Approve app
         request.post(
           { url: `${env.API_ENDPOINT}/admin/apps/appId/approve` },
+          (err, res) => checkAuth(err, res, cb)
+        );
+      },
+      (cb) => {
+        // List changes
+        request.get(
+          { url: `${env.API_ENDPOINT}/admin/changes` },
+          (err, res) => checkAuth(err, res, cb)
+        );
+      },
+      (cb) => {
+        // Join vendor
+        request.post(
+          { url: `${env.API_ENDPOINT}/admin/vendors` },
           (err, res) => checkAuth(err, res, cb)
         );
       },
