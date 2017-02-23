@@ -27,7 +27,7 @@ provider:
   stage: ${file(./env.yml):STAGE}
   profile: ${file(./env.yml):PROFILE}
   runtime: nodejs4.3
-  memory: 256
+  memorySize: 256
   timeout: 30
   versionFunctions: false
   environment: ${file(./env.yml)}
@@ -45,6 +45,10 @@ functions:
 
   logger:
       handler: logger.handler
+
+  dbMigration:
+      timeout: 300
+      handler: dbMigration.handler
 
   public:
     handler: public.public

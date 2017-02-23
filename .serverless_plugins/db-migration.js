@@ -1,7 +1,10 @@
 'use strict';
+
 const dbMigrate = require('db-migrate');
 const fs = require('fs');
 const yaml = require('yamljs');
+
+//const exec = require('node-exec-promise').exec;
 
 class DbMigration {
   constructor(serverless) {
@@ -31,6 +34,11 @@ class DbMigration {
       this.serverless.cli.log('Migrating database...');
       const dbm = dbMigrate.getInstance(true);
       return dbm.up();
+
+      /*return exec('sls invoke -f dbMigration')
+        .then((stdout) => {
+          console.log(stdout);
+        });*/
     }
   }
 }

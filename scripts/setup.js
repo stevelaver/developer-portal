@@ -4,9 +4,7 @@ const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');
 const exec = require('child_process').exec;
-const execsql = require('../lib/execsql');
 const fs = require('fs');
-const mysql = require('mysql');
 const yaml = require('yamljs');
 
 let env = {};
@@ -272,88 +270,6 @@ class Setup {
     });
   }
 
-  static initDatabase() {
-    execsql.execFile(mysql.createConnection({
-      host: env.RDS_HOST,
-      port: env.RDS_PORT,
-      user: env.RDS_USER,
-      password: env.RDS_PASSWORD,
-      database: env.RDS_DATABASE,
-      ssl: 'Amazon RDS',
-      multipleStatements: true,
-    }), `${__dirname}/../rds-model.sql`, err => done(err));
-  }
-
-  static subscribeLogs() {
-    async.each(_.keys(yaml.load(`${__dirname}/../serverless.yml`).functions), (item, cb2) => {
-      if (item !== 'logger') {
-        async.waterfall([
-          cb3 => setTimeout(cb3, _.random(500, 5000)),
-          (cb3) => {
-            exec(`aws logs create-log-group --region ${env.REGION} \
-              --log-group-name /aws/lambda/${env.SERVICE_NAME}-${env.STAGE}-${item} \
-              --tags KeboolaStack=developer-portal`, (err) => {
-              if (err && !_.includes(err.message, 'ResourceAlreadyExistsException')) {
-                cb3(err);
-              } else {
-                cb3();
-              }
-            });
-          },
-          (cb3) => {
-            exec(`aws lambda add-permission --region ${env.REGION} \
-              --function-name ${env.SERVICE_NAME}-${env.STAGE}-logger \
-              --statement-id ${env.SERVICE_NAME}-${env.STAGE}-${item} \
-              --action lambda:InvokeFunction \
-              --principal logs.${env.REGION}.amazonaws.com`, (err) => {
-              if (err && !_.includes(err.message, 'ResourceConflictException')) {
-                console.warn(`- Add function ${item} permission error: ${err}`);
-              }
-              cb3();
-            });
-          },
-          (cb3) => {
-            exec(`aws logs put-subscription-filter --region ${env.REGION} \
-              --filter-pattern '' \
-              --filter-name LambdaToPapertrail-${env.SERVICE_NAME}-${env.STAGE} \
-              --log-group-name /aws/lambda/${env.SERVICE_NAME}-${env.STAGE}-${item} \
-              --destination-arn arn:aws:lambda:${env.REGION}:${env.ACCOUNT_ID}:function:${env.SERVICE_NAME}-${env.STAGE}-logger`, (err) => {
-              if (err) {
-                console.warn(`- Put subscription filter ${item} error: ${err}`);
-              }
-              cb3(err);
-            });
-          },
-          (cb3) => {
-            console.info(`- subscribed to log of function ${item}`);
-            cb3();
-          },
-        ], cb2);
-      } else {
-        cb2();
-      }
-    }, (err) => {
-      if (err) {
-        console.error(`Subscribe logs error: ${err}`);
-      }
-      console.info('-- Logs subscribed');
-      return done();
-    });
-  }
-
-  static deleteLogs() {
-    async.each(_.keys(yaml.load(`${__dirname}/../serverless.yml`).functions), (item, cb) => {
-      exec(
-        `aws logs delete-log-group --region ${env.REGION} \
-        --log-group-name /aws/lambda/${env.SERVICE_NAME}-${env.STAGE}-${item}`,
-        () => cb()
-      );
-    }, () => {
-      console.info('- Logs deleted');
-      return done();
-    });
-  }
-
   static truncateBucket() {
     exec(`aws s3 rm s3://${env.S3_BUCKET}/* --recursive`, (err) => {
       if (err) {
@@ -408,18 +324,6 @@ switch (args[0]) {
 
   case 'save-cloudformation-output':
     Setup.saveCloudformationOutput();
-    break;
-
-  case 'init-database':
-    Setup.initDatabase();
-    break;
-
-  case 'subscribe-logs':
-    Setup.subscribeLogs();
-    break;
-
-  case 'delete-logs':
-    Setup.deleteLogs();
     break;
 
   case 'empty-bucket':
