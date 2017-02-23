@@ -13,7 +13,6 @@ deploy-sls:
 deploy-after-sls:
 	node scripts/setup.js save-cloudformation-output
 	node scripts/setup.js update-cognito
-	sls deploy # run with migrations now
 
 save-output:
 	node scripts/setup.js save-cloudformation-output
