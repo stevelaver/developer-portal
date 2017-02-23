@@ -40,6 +40,20 @@ provider:
       - ${file(./env.yml):VPC_SUBNET2}
   stackTags:
     KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+  stackPolicy: # Optional CF stack policy. The example below allows updates to all resources except deleting/replacing EC2 instances (use with caution!)
+    - Effect: Allow
+      Principal: "*"
+      Action: "Update:*"
+      Resource: "*"
+    - Effect: Deny
+      Principal: "*"
+      Action:
+        - Update:Replace
+        - Update:Delete
+      Condition:
+        StringEquals:
+          ResourceType:
+            - AWS::RDS::DBInstance
 
 functions:
 
