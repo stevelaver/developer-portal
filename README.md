@@ -14,6 +14,8 @@ Cloudfront distribution, Lambda functions and API Gateway. All resources are
 prefixed with `SERVICE_NAME` variable. Please ensure that the prefix is unique,
 if resources with same identifiers already exist, the installation will fail.
 
+The application can be installed only to AWS region supporting all required services. You should be safe to install in regions: Northern Virginia, Oregon and Ireland.
+
 1. Install Serverless: `npm install -g serverless/serverless`
 2. Install AWS CLI (e.g. `pip install awscli` on Mac)
 3. Install Yarn (see https://yarnpkg.com/en/docs/install)
