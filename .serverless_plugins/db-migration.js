@@ -22,6 +22,7 @@ class DbMigration {
 
   afterDeploy() {
     if (!process.env.DB_MIGRATE_SKIP) {
+      this.serverless.cli.log('Migrating database...');
       const functionData = this.serverless.service.getFunction('dbMigration');
       return this.provider
         .request('Lambda', 'invoke', {
