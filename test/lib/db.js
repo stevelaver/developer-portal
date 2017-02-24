@@ -2,7 +2,6 @@
 
 require('dotenv').config({ path: '.env-test', silent: true });
 const db = require('../../lib/db');
-const execsql = require('../../lib/execsql');
 const expect = require('chai').expect;
 const mysql = require('mysql');
 

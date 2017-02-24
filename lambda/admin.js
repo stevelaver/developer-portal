@@ -4,6 +4,7 @@ import App from '../lib/app';
 import Email from '../lib/email';
 import Identity from '../lib/identity';
 import Validation from '../lib/validation';
+import Vendor from '../app/vendor';
 
 require('longjohn');
 require('babel-polyfill');
@@ -32,6 +33,7 @@ const email = new Email(
 const identity = new Identity(jwt, error);
 const joi = joiBase.extend(joiExtension);
 const validation = new Validation(joi, error);
+const vendorApp = new Vendor(db, process.env, error);
 
 
 function listUsers(event, context, callback) {
@@ -269,6 +271,24 @@ function listAppChanges(event, context, callback) {
   );
 }
 
+function createVendor(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    body: validation.adminCreateVendor(),
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(event.headers.Authorization))
+      .then(() => vendorApp.create(JSON.parse(event.body))),
+    db,
+    event,
+    context,
+    callback,
+    201
+  );
+}
+
 
 module.exports.admin = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -291,6 +311,8 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
       return listApps(event, context, callback);
     case '/admin/changes':
       return listAppChanges(event, context, callback);
+    case '/admin/vendors':
+      return createVendor(event, context, callback);
     default:
       throw error.notFound();
   }
