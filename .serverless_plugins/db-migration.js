@@ -1,14 +1,13 @@
 'use strict';
 
-const dbMigrate = require('db-migrate');
-const fs = require('fs');
 const yaml = require('yamljs');
 
-//const exec = require('node-exec-promise').exec;
+const env = yaml.load(`${__dirname}/../env.yml`);
 
 class DbMigration {
   constructor(serverless) {
     this.serverless = serverless;
+    this.provider = this.serverless.getProvider('aws');
     this.commands = {
       deploy: {
         lifecycleEvents: [
@@ -23,22 +22,14 @@ class DbMigration {
 
   afterDeploy() {
     if (!process.env.DB_MIGRATE_SKIP) {
-      if (!process.env.RDS_HOST && fs.existsSync(`${__dirname}/../env.yml`)) {
-        const env = yaml.load(`${__dirname}/../env.yml`);
-        process.env.RDS_HOST = env.RDS_HOST;
-        process.env.RDS_USER = env.RDS_USER;
-        process.env.RDS_PASSWORD = env.RDS_PASSWORD;
-        process.env.RDS_DATABASE = env.RDS_DATABASE;
-        process.env.RDS_PORT = env.RDS_PORT;
-      }
-      this.serverless.cli.log('Migrating database...');
-      const dbm = dbMigrate.getInstance(true);
-      return dbm.up();
-
-      /*return exec('sls invoke -f dbMigration')
-        .then((stdout) => {
-          console.log(stdout);
-        });*/
+      const functionData = this.serverless.service.getFunction('dbMigration');
+      return this.provider
+        .request('Lambda', 'invoke', {
+          FunctionName: functionData.name,
+          InvocationType: 'RequestResponse',
+          LogType: 'Tail',
+          Payload: null,
+        }, env.STAGE, env.REGION);
     }
   }
 }
