@@ -38,6 +38,7 @@ class Setup {
       LOG_PORT: process.env.LOG_PORT,
       SLACK_HOOK_URL: process.env.SLACK_HOOK_URL,
       WARMUP_ENABLED: false,
+      KEBOOLA_STACK: process.env.KEBOOLA_STACK
     };
     fs.writeFile(
       `${__dirname}/../env.yml`,
@@ -99,7 +100,13 @@ class Setup {
         cf.createStack({
           StackName: `${env.SERVICE_NAME}-vpc`,
           TemplateBody: fs.readFileSync(`${__dirname}/cf-vpc.json`, 'utf8'),
-          Tags: [{ Key: 'KeboolaStack', Value: 'developer-portal' }],
+          Tags: [{ Key: 'KeboolaStack', Value: env.KEBOOLA_STACK }],
+          Parameters: [
+            {
+              ParameterKey: 'KeboolaStack',
+              ParameterValue: env.KEBOOLA_STACK
+            }
+          ]
         }, (err, res) => {
           if (err) {
             cb(err);
@@ -119,9 +126,11 @@ class Setup {
       },
       (output, cb) => {
         env.VPC_SECURITY_GROUP = output.vpcSecurityGroup.OutputValue;
+        env.RDS_SECURITY_GROUP = output.rdsSecurityGroup.OutputValue;
         env.VPC_SUBNET1 = output.vpcSubnet1.OutputValue;
         env.VPC_SUBNET2 = output.vpcSubnet2.OutputValue;
         env.RDS_SUBNET_GROUP = output.rdsSubnetGroup.OutputValue;
+        env.BASTION_IP = output.bastionIP.OutputValue;
         fs.writeFile(
           `${__dirname}/../env.yml`,
           yaml.stringify(env),

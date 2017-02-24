@@ -1,6 +1,41 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "VPC for Developer Portal",
+  "Parameters": {
+    "KeboolaStack": {
+      "Type": "String",
+      "Description": "All resource will be tagged by this value. Use for example dev-portal-martin. Use same value for all related stacks."
+    },
+    "SSHAuthorizedKeysUrl": {
+      "Type": "String",
+      "Description": "Location of public keys for SSH access",
+      "Default": "https://s3.amazonaws.com/keboola-configs/servers/devel_ssh_public_keys.txt"
+    },
+    "BastionInstanceType": {
+      "Description": "Bastion EC2 instance type",
+      "Type": "String",
+      "Default": "t2.nano",
+      "AllowedValues": [
+        "t2.nano",
+        "t2.micro",
+        "t2.small"
+      ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    }
+  },
+  "Mappings": {
+    "AWSRegionArch2AMI": {
+      "us-east-1": {
+        "PV64": "ami-0b33d91d"
+      },
+      "eu-west-1": {
+        "PV64": "ami-70edb016"
+      },
+      "eu-central-1": {
+        "PV64": "ami-af0fc0c0"
+      }
+    }
+  },
   "Resources": {
     "DevPortalVPC": {
       "Type": "AWS::EC2::VPC",
@@ -8,7 +43,20 @@
         "CidrBlock": "10.0.0.0/16",
         "EnableDnsSupport": "true",
         "EnableDnsHostnames": "true",
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "DevPortalPublicSubnet": {
@@ -28,7 +76,28 @@
             }
           ]
         },
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Public A"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "DevPortalLambdaSubnet1": {
@@ -48,7 +117,28 @@
             }
           ]
         },
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Private Lambda A"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "DevPortalLambdaSubnet2": {
@@ -60,7 +150,7 @@
         "CidrBlock": "10.0.2.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
-            "2",
+            "1",
             {
               "Fn::GetAZs": {
                 "Ref": "AWS::Region"
@@ -68,7 +158,28 @@
             }
           ]
         },
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Private Lambda B"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "DevPortalRdsSubnet1": {
@@ -88,7 +199,28 @@
             }
           ]
         },
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Private RDS A"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "DevPortalRdsSubnet2": {
@@ -100,7 +232,7 @@
         "CidrBlock": "10.0.5.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
-            "2",
+            "1",
             {
               "Fn::GetAZs": {
                 "Ref": "AWS::Region"
@@ -108,59 +240,167 @@
             }
           ]
         },
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Private RDS B"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "NatGateway": {
-      "Type" : "AWS::EC2::NatGateway",
-      "Properties" : {
-        "AllocationId" :{ "Fn::GetAtt" : ["NatGatewayEIP", "AllocationId"]},
-        "SubnetId" : {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "NatGatewayEIP",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
           "Ref": "DevPortalPublicSubnet"
         }
       }
     },
-    "NatGatewayEIP" : {
-      "Type" : "AWS::EC2::EIP",
-      "Properties" : {
-        "Domain" : "vpc"
+    "NatGatewayEIP": {
+      "Type": "AWS::EC2::EIP",
+      "DependsOn" : "DevPortalAttachGateway",
+      "Properties": {
+        "Domain": "vpc"
       }
     },
-    "DevPortalSecurityGroup": {
+    "LambdaSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "Developer Portal",
+        "GroupDescription": "Developer Portal Lambda",
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Lambda"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
+      }
+    },
+    "RdsSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Developer Portal RDS",
         "VpcId": {
           "Ref": "DevPortalVPC"
         },
         "SecurityGroupIngress": [
           {
-            "IpProtocol" : "tcp",
-            "FromPort" : "3306",
-            "ToPort" : "3306",
-            "CidrIp" : "0.0.0.0/0"
-          }
-        ],
-        "SecurityGroupEgress": [
+            "IpProtocol": "tcp",
+            "FromPort": "3306",
+            "ToPort": "3306",
+            "SourceSecurityGroupId": {
+              "Ref": "LambdaSecurityGroup"
+            }
+          },
           {
-            "IpProtocol": "-1",
-            "CidrIp": "0.0.0.0/0"
+            "IpProtocol": "tcp",
+            "FromPort": "3306",
+            "ToPort": "3306",
+            "SourceSecurityGroupId": {
+              "Ref": "BastionSecurityGroup"
+            }
           }
         ],
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Lambda"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "DevPortalVPCGateway": {
-      "Type" : "AWS::EC2::InternetGateway",
-      "Properties" : {
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Main Gateway"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
-    "DevPortalAttachGateway" : {
-      "Type" : "AWS::EC2::VPCGatewayAttachment",
-      "Properties" : {
-        "VpcId" : { "Ref" : "DevPortalVPC" },
-        "InternetGatewayId" : { "Ref" : "DevPortalVPCGateway" }
+    "DevPortalAttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "DevPortalVPCGateway"
+        }
       }
     },
     "DevPortalRouteViaIgw": {
@@ -169,7 +409,28 @@
         "VpcId": {
           "Ref": "DevPortalVPC"
         },
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Internet Gateway"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "DevPortalPublicRouteViaIgw": {
@@ -191,18 +452,40 @@
         "VpcId": {
           "Ref": "DevPortalVPC"
         },
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "NAT Gateway"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     },
     "DevPortalRouteViaNAT": {
       "Type": "AWS::EC2::Route",
-      "DependsOn": "DevPortalAttachGateway",
       "Properties": {
         "RouteTableId": {
           "Ref": "DevPortalRouteTableViaNAT"
         },
         "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId" : { "Ref" : "NatGateway" }
+        "NatGatewayId": {
+          "Ref": "NatGateway"
+        }
       }
     },
     "DevPortalSubnet1RouteTableAssociation": {
@@ -227,6 +510,28 @@
         }
       }
     },
+    "DevPortalRdsSubnet1RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalRdsSubnet1"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteTableViaNAT"
+        }
+      }
+    },
+    "DevPortalRdsSubnet2RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalRdsSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteTableViaNAT"
+        }
+      }
+    },
     "DevPortalPublicSubnetRouteTableAssociation": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
@@ -238,56 +543,243 @@
         }
       }
     },
-    "DevPortalRdsSubnet1RouteTableAssociation": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "DevPortalRdsSubnet1"
-        },
-        "RouteTableId": {
-          "Ref": "DevPortalRouteViaIgw"
-        }
-      }
-    },
-    "DevPortalRdsSubnet2RouteTableAssociation": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "DevPortalRdsSubnet2"
-        },
-        "RouteTableId": {
-          "Ref": "DevPortalRouteViaIgw"
-        }
-      }
-    },
     "DevPortalDbSubnetGroup": {
-      "Type" : "AWS::RDS::DBSubnetGroup",
-      "Properties" : {
-        "DBSubnetGroupDescription" : "Subnet for Developer Portal rds",
-        "SubnetIds" : [
-          { "Ref": "DevPortalRdsSubnet1" },
-          { "Ref": "DevPortalRdsSubnet2" }
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnet for Developer Portal rds",
+        "SubnetIds": [
+          {
+            "Ref": "DevPortalRdsSubnet1"
+          },
+          {
+            "Ref": "DevPortalRdsSubnet2"
+          }
         ],
-        "Tags": [{ "Key": "KeboolaStack", "Value": "developer-portal" }]
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Private RDS"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
+      }
+    },
+    "BastionSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Bastion Instance Allowed Ports",
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "bastion instance"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
+      }
+    },
+    "BastionHost": {
+      "Type": "AWS::EC2::Instance",
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT10M"
+        }
+      },
+      "DependsOn" : "DevPortalAttachGateway",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "commands": {
+              "01_instance_name": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "#!/bin/bash\n",
+                      "hostname ",
+                      {
+                        "Ref": "KeboolaStack"
+                      },
+                      "-bastion",
+                      "\n"
+                    ]
+                  ]
+                }
+              }
+            },
+            "files": {
+              "/home/ec2-user/.ssh/authorized_keys": {
+                "source": {
+                  "Ref": "SSHAuthorizedKeysUrl"
+                },
+                "group": "ec2-user",
+                "owner": "ec2-user",
+                "mode": "000600"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "InstanceType": {
+          "Ref": "BastionInstanceType"
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            "PV64"
+          ]
+        },
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "GroupSet": [
+              {
+                "Ref": "BastionSecurityGroup"
+              }
+            ],
+            "SubnetId": {
+              "Ref": "DevPortalPublicSubnet"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "yum install -y aws-cfn-bootstrap\n",
+                "/opt/aws/bin/cfn-init -v ",
+                "         --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "         --resource BastionHost ",
+                "         --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "/opt/aws/bin/cfn-signal -e $? ",
+                "         --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "         --resource BastionHost ",
+                "         --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "-",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "bastion"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
       }
     }
   },
   "Outputs": {
     "vpcSubnet1": {
       "Description": "Id of the Subnet",
-      "Value" : { "Ref" : "DevPortalLambdaSubnet1" }
+      "Value": {
+        "Ref": "DevPortalLambdaSubnet1"
+      }
     },
     "vpcSubnet2": {
       "Description": "Id of the Subnet",
-      "Value" : { "Ref" : "DevPortalLambdaSubnet2" }
+      "Value": {
+        "Ref": "DevPortalLambdaSubnet2"
+      }
     },
     "vpcSecurityGroup": {
-      "Description": "Id of the SecurityGroup",
-      "Value" : { "Ref" : "DevPortalSecurityGroup" }
+      "Description": "Id of the Lambda SecurityGroup",
+      "Value": {
+        "Ref": "LambdaSecurityGroup"
+      }
+    },
+    "rdsSecurityGroup": {
+      "Description": "Id of RDS SecurityGroup",
+      "Value": {
+        "Ref": "RdsSecurityGroup"
+      }
     },
     "rdsSubnetGroup": {
       "Description": "Id of RDS Subnet Group",
-      "Value" : { "Ref" : "DevPortalDbSubnetGroup" }
+      "Value": {
+        "Ref": "DevPortalDbSubnetGroup"
+      }
+    },
+    "bastionIP": {
+      "Value": {
+        "Fn::GetAtt": ["BastionHost", "PublicIp"]
+      }
     }
   }
 }

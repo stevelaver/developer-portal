@@ -20,6 +20,7 @@ fs.writeFile(
   args[0],
   yaml.stringify({
     SERVICE_NAME: getEnvVar('SERVICE_NAME', envPrefix),
+    KEBOOLA_STACK: getEnvVar('KEBOOLA_STACK', envPrefix),
     REGION: getEnvVar('REGION', envPrefix),
     STAGE: getEnvVar('STAGE', envPrefix),
     SES_EMAIL_FROM: getEnvVar('SES_EMAIL_FROM', envPrefix),
@@ -34,6 +35,7 @@ fs.writeFile(
     ACCOUNT_ID: getEnvVar('ACCOUNT_ID', envPrefix),
     VPC_CF_STACK_ID: getEnvVar('VPC_CF_STACK_ID', envPrefix),
     VPC_SECURITY_GROUP: getEnvVar('VPC_SECURITY_GROUP', envPrefix),
+    RDS_SECURITY_GROUP: getEnvVar('RDS_SECURITY_GROUP', envPrefix),
     VPC_SUBNET1: getEnvVar('VPC_SUBNET1', envPrefix),
     VPC_SUBNET2: getEnvVar('VPC_SUBNET2', envPrefix),
     RDS_SUBNET_GROUP: getEnvVar('RDS_SUBNET_GROUP', envPrefix),
@@ -43,6 +45,7 @@ fs.writeFile(
     RDS_PORT: getEnvVar('RDS_PORT', envPrefix),
     CLOUDFRONT_URI: getEnvVar('CLOUDFRONT_URI', envPrefix),
     API_ENDPOINT: getEnvVar('API_ENDPOINT', envPrefix),
+    BASTION_IP: getEnvVar('BASTION_IP', envPrefix)
   }),
   (err) => {
     if (err) {
