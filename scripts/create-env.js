@@ -45,7 +45,7 @@ fs.writeFile(
     RDS_PORT: getEnvVar('RDS_PORT', envPrefix),
     CLOUDFRONT_URI: getEnvVar('CLOUDFRONT_URI', envPrefix),
     API_ENDPOINT: getEnvVar('API_ENDPOINT', envPrefix),
-    BASTION_IP: getEnvVar('BASTION_IP', envPrefix)
+    BASTION_IP: getEnvVar('BASTION_IP', envPrefix),
   }),
   (err) => {
     if (err) {

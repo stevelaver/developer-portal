@@ -38,7 +38,7 @@ class Setup {
       LOG_PORT: process.env.LOG_PORT,
       SLACK_HOOK_URL: process.env.SLACK_HOOK_URL,
       WARMUP_ENABLED: false,
-      KEBOOLA_STACK: process.env.KEBOOLA_STACK
+      KEBOOLA_STACK: process.env.KEBOOLA_STACK,
     };
     fs.writeFile(
       `${__dirname}/../env.yml`,
@@ -104,9 +104,9 @@ class Setup {
           Parameters: [
             {
               ParameterKey: 'KeboolaStack',
-              ParameterValue: env.KEBOOLA_STACK
-            }
-          ]
+              ParameterValue: env.KEBOOLA_STACK,
+            },
+          ],
         }, (err, res) => {
           if (err) {
             cb(err);

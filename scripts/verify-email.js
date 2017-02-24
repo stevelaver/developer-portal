@@ -1,6 +1,6 @@
 'use strict';
 
-const awsSetup = require('./aws-setup');
+const awsSetup = require('./setup');
 
 const args = process.argv.slice(2);
 if (args.length !== 2) {

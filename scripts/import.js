@@ -128,28 +128,26 @@ const getData = function (callbackMain) {
         } else {
           app.vendor = '-unknown-';
         }
+      } else if (_.startsWith(app.id, 'keboola.') || _.startsWith(app.id, 'ex-') || _.startsWith(app.id, 'wr-') || _.startsWith(app.id, 'ag-')
+        || _.startsWith(app.id, 'orchestrator') || _.startsWith(app.id, 'pigeon') || _.startsWith(app.id, 'transformation')
+        || _.startsWith(app.id, 'docker') || _.startsWith(app.id, 'dca') || _.startsWith(app.id, 'rcp')
+        || _.startsWith(app.id, 'kbc-') || _.startsWith(app.id, 'lg-') || _.startsWith(app.id, 'rt-')
+        || _.includes(['gooddata-writer', 'provisioning', 'queue', 'restbox', 'shiny', 'table-importer', 'tde-exporter'], app.id)) {
+        app.vendor = 'keboola';
+      } else if (_.startsWith(app.id, 'bcit.')) {
+        app.vendor = 'bcit';
+      } else if (_.startsWith(app.id, 'geneea-')) {
+        app.vendor = 'geneea';
+      } else if (_.startsWith(app.id, 'geneea.')) {
+        app.vendor = 'geneea';
+      } else if (_.startsWith(app.id, 'vokurka.')) {
+        app.vendor = 'vokurka';
+      } else if (_.startsWith(app.id, 'bcit.')) {
+        app.vendor = 'bcit';
+      } else if (_.startsWith(app.id, 'trologic.')) {
+        app.vendor = 'trologic';
       } else {
-        if (_.startsWith(app.id, 'keboola.') || _.startsWith(app.id, 'ex-') || _.startsWith(app.id, 'wr-') || _.startsWith(app.id, 'ag-')
-          || _.startsWith(app.id, 'orchestrator') || _.startsWith(app.id, 'pigeon') || _.startsWith(app.id, 'transformation')
-          || _.startsWith(app.id, 'docker') || _.startsWith(app.id, 'dca') || _.startsWith(app.id, 'rcp')
-          || _.startsWith(app.id, 'kbc-') || _.startsWith(app.id, 'lg-') || _.startsWith(app.id, 'rt-')
-          || _.includes(['gooddata-writer', 'provisioning', 'queue', 'restbox', 'shiny', 'table-importer', 'tde-exporter'], app.id)) {
-          app.vendor = 'keboola';
-        } else if (_.startsWith(app.id, 'bcit.')) {
-          app.vendor = 'bcit';
-        } else if (_.startsWith(app.id, 'geneea-')) {
-          app.vendor = 'geneea';
-        } else if (_.startsWith(app.id, 'geneea.')) {
-          app.vendor = 'geneea';
-        } else if (_.startsWith(app.id, 'vokurka.')) {
-          app.vendor = 'vokurka';
-        } else if (_.startsWith(app.id, 'bcit.')) {
-          app.vendor = 'bcit';
-        } else if (_.startsWith(app.id, 'trologic.')) {
-          app.vendor = 'trologic';
-        } else {
-          app.vendor = '-unknown-';
-        }
+        app.vendor = '-unknown-';
       }
 
       if (_.get(app, 'hasUI')) {
@@ -310,8 +308,8 @@ const saveData = function (data, callbackMain) {
 };
 
 const addNewData = function (data, callbackMain) {
-  async.each(data, (resApp, callback) => {
-    return db.checkAppNotExists(resApp.id)
+  async.each(data, (resApp, callback) =>
+    db.checkAppNotExists(resApp.id)
       .then(() => {
         console.log(`- Importing ${resApp.id}`);
         return db.insertApp(resApp);
@@ -319,8 +317,8 @@ const addNewData = function (data, callbackMain) {
       .catch(() => {
         // exists, skip
       })
-      .then(() => callback);
-  }, callbackMain);
+      .then(() => callback)
+  , callbackMain);
 };
 
 if (args[0] === 'data') {

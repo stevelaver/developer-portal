@@ -136,9 +136,11 @@ describe('db', () => {
     });
 
     it('app exists', (done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
+        (err1) => {
           if (err1) throw err1;
           db.connect(dbConnectParams);
           db.checkAppNotExists(appId, (err2) => {
@@ -155,9 +157,11 @@ describe('db', () => {
     const vendor = `v-checkAppAccess-${Date.now()}`;
 
     before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], () => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
+        () => {
           db.connect(dbConnectParams);
           done();
         });
@@ -185,7 +189,8 @@ describe('db', () => {
       const appId = `a-insertApp-${Date.now()}`;
       const vendor = `v-insertApp-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, () => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, () => {
         db.connect(dbConnectParams);
         db.insertApp({ id: appId, vendor, name: 'test', type: 'extractor' }, () => {
           rds.query('SELECT * FROM `apps` WHERE id=?', appId, (err, res) => {
@@ -204,9 +209,11 @@ describe('db', () => {
       const appId = `a-alreadyExists-${Date.now()}`;
       const vendor = `v-alreadyExists-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
+        (err1) => {
           if (err1) throw err1;
           db.connect(dbConnectParams);
           db.insertApp({ id: appId, vendor, name: 'test', type: 'extractor' }, (err2) => {
@@ -223,18 +230,22 @@ describe('db', () => {
       const appId = `a-updateApp-${Date.now()}`;
       const vendor = `v-updateApp-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
+        (err1) => {
           if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], (err2) => {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'],
+          (err2) => {
             if (err) throw err2;
             db.connect(dbConnectParams);
             db.updateApp({ name: 'New name' }, appId, 'user', () => {
               rds.query('SELECT * FROM `apps` WHERE id=? AND version=2', appId, (err3, res) => {
                 if (err3) throw err3;
                 expect(res).to.have.length(1);
-                rds.query('SELECT * FROM `appVersions` WHERE id=? AND version=2', appId, (err4, res4) => {
+                rds.query('SELECT * FROM `appVersions` WHERE id=? AND version=2', appId,
+                (err4, res4) => {
                   if (err4) throw err4;
                   expect(res4).to.have.length(1);
                   expect(res4[0].name).to.equal('New name');
@@ -253,11 +264,14 @@ describe('db', () => {
       const appId = `a-addAppIcon-${Date.now()}`;
       const vendor = `v-addAppIcon-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
+        (err1) => {
           if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], (err2) => {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'],
+          (err2) => {
             if (err2) throw err2;
             db.connect(dbConnectParams);
             const size = 32;
@@ -266,7 +280,8 @@ describe('db', () => {
                 if (err3) throw err3;
                 expect(res).to.have.length(1);
                 expect(res[0].icon32).to.equal(`${appId}/${size}/2.png`);
-                rds.query('SELECT * FROM appVersions WHERE id=? AND version=2', appId, (err4, res4) => {
+                rds.query('SELECT * FROM appVersions WHERE id=? AND version=2', appId,
+                (err4, res4) => {
                   if (err4) throw err4;
                   expect(res4).to.have.length(1);
                   expect(res4[0].icon32).to.equal(`${appId}/${size}/2.png`);
@@ -296,9 +311,11 @@ describe('db', () => {
     });
 
     it('get existing app', (done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+       vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
+        (err1) => {
           if (err1) throw err1;
           db.getApp(appId, null, (err2, res) => {
             expect(err2).to.be.null;
@@ -314,11 +331,14 @@ describe('db', () => {
       const appId1 = `a-getAppVersion-${Date.now()}`;
       const vendor1 = `v-getAppVersion-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor1, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId1, vendor1, 'test'], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId1, vendor1, 'test'],
+        (err1) => {
           if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=?, name=?;', [appId1, 2, 'test'], (err2) => {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=?, name=?;', [appId1, 2, 'test'],
+          (err2) => {
             if (err2) throw err2;
             db.connect(dbConnectParams);
             db.getApp(appId1, 2, (err3, res) => {
@@ -339,15 +359,20 @@ describe('db', () => {
     const vendor2 = `v2-listAppsForVendor-${Date.now()}`;
 
     before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId, vendor], (err2) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";',
+        [appId, vendor], (err2) => {
           if (err2) throw err2;
-          rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2, (err3) => {
+          rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+          vendor2, (err3) => {
             if (err3) throw err3;
-            rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [`ex-${Date.now()}`, vendor2], (err4) => {
+            rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";',
+            [`ex-${Date.now()}`, vendor2], (err4) => {
               if (err4) throw err4;
-              rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [`${appId}1`, vendor], (err5) => {
+              rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";',
+              [`${appId}1`, vendor], (err5) => {
                 if (err5) throw err;
                 db.connect(dbConnectParams);
                 done();
@@ -382,15 +407,20 @@ describe('db', () => {
     const vendor = `v-listVersions-${Date.now()}`;
 
     before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";', [appId, vendor], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";',
+        [appId, vendor], (err1) => {
           if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'], (err2) => {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?',
+          [appId, 'test v1'], (err2) => {
             if (err2) throw err2;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test v2'], (err3) => {
+            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?',
+            [appId, 'test v2'], (err3) => {
               if (err3) throw err3;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?', [appId, 'test v3'], (err4) => {
+              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?',
+              [appId, 'test v3'], (err4) => {
                 if (err4) throw err4;
                 db.connect(dbConnectParams);
                 done();
@@ -425,15 +455,20 @@ describe('db', () => {
     const vendor = `v-getPublishedApp-${Date.now()}`;
 
     before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor", isApproved=1;', [appId, vendor], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor",
+        isApproved=1;', [appId, vendor], (err1) => {
           if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'], (err2) => {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'],
+          (err2) => {
             if (err2) throw err2;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test v2'], (err3) => {
+            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test v2'],
+            (err3) => {
               if (err3) throw err3;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?', [appId, 'test v3'], (err4) => {
+              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?', [appId, 'test v3'],
+              (err4) => {
                 if (err4) throw err4;
                 db.connect(dbConnectParams);
                 done();
@@ -464,7 +499,8 @@ describe('db', () => {
 
     it('do not show unpublished app', (done) => {
       const appId2 = `app2-${Date.now()}`;
-      rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor", isApproved=0;', [appId2, vendor], (err) => {
+      rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor",
+      isApproved=0;', [appId2, vendor], (err) => {
         if (err) throw err;
         db.getPublishedApp(appId2, null, (err1) => {
           expect(err1).to.not.be.null;
@@ -480,15 +516,20 @@ describe('db', () => {
     const vendor = `v-listPublishedApps-${Date.now()}`;
 
     before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId1, vendor], (err1) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test",
+        type="extractor", isApproved=1;', [appId1, vendor], (err1) => {
           if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId1, 'test'], (err2) => {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?',
+          [appId1, 'test'], (err2) => {
             if (err2) throw err2;
-            rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId2, vendor], (err3) => {
+            rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test",
+            type="extractor", isApproved=1;', [appId2, vendor], (err3) => {
               if (err3) throw err3;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId2, 'test'], (err4) => {
+              rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?',
+              [appId2, 'test'], (err4) => {
                 if (err4) throw err4;
                 db.connect(dbConnectParams);
                 done();
@@ -521,13 +562,17 @@ describe('db', () => {
     const vendor = `v-listPublishedAppVersions-${Date.now()}`;
 
     before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor, (err1) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor, (err1) => {
         if (err1) throw err1;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor", isApproved=1;', [appId, vendor], (err2) => {
+        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor",
+        isApproved=1;', [appId, vendor], (err2) => {
           if (err2) throw err2;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'], (err3) => {
+          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'],
+          (err3) => {
             if (err3) throw err3;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test2'], (err4) => {
+            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test2'],
+            (err4) => {
               if (err4) throw err4;
               db.connect(dbConnectParams);
               done();
@@ -562,9 +607,11 @@ describe('db', () => {
     const vendor2 = `v2-listVendors-${Date.now()}`;
 
     before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor1, (err) => {
         if (err) throw err;
-        rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2, (err1) => {
+        rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+        vendor2, (err1) => {
           if (err1) throw err1;
           db.connect(dbConnectParams);
           done();
@@ -593,7 +640,8 @@ describe('db', () => {
     const vendor1 = `v1-getVendor-${Date.now()}`;
 
     before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1, (err) => {
+      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
+      vendor1, (err) => {
         if (err) throw err;
         db.connect(dbConnectParams);
         done();
