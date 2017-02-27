@@ -43,7 +43,8 @@ before_script:
     -e BASTION_IP=$TEST_BASTION_IP
     keboola/developer-portal
   - echo $TEST_BASTION_SSH_KEY | base64 --decode > bastion_ssh.key
-  - ssh -f $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT -N
+  - chmod 400 bastion_ssh.key
+  - ssh -f $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no host key -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT -N
 
 script:
   - ./node_modules/.bin/eslint .
