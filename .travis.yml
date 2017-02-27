@@ -42,12 +42,16 @@ before_script:
     -e WARMUP_ENABLED=$TEST_WARMUP_ENABLED
     -e BASTION_IP=$TEST_BASTION_IP
     keboola/developer-portal
+  - echo $TEST_BASTION_SSH_KEY | base64 --decode > bastion_ssh.key
+  - ssh -f $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT -N
 
 script:
   - ./node_modules/.bin/eslint .
   - node ./scripts/create-env.js ./env.yml TEST
   - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
+    FUNC_RDS_HOST=127.0.0.1
+    FUNC_RDS_PORT=33060
     mocha --timeout 0 --compilers js:babel-core/register test/functional
   - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY

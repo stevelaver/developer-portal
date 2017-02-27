@@ -12,8 +12,8 @@ const request = require('request');
 const env = require('../../lib/env').load();
 
 const rds = mysql.createConnection({
-  host: env.RDS_HOST,
-  port: env.RDS_PORT,
+  host: process.env.FUNC_RDS_HOST ? process.env.FUNC_RDS_HOST : env.RDS_HOST,
+  port: process.env.FUNC_RDS_PORT ? process.env.FUNC_RDS_PORT : env.RDS_PORT,
   user: env.RDS_USER,
   password: env.RDS_PASSWORD,
   database: env.RDS_DATABASE,
