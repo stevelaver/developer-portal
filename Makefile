@@ -31,4 +31,3 @@ remove:
 	sls remove
 	node scripts/setup.js delete-cognito
 	node scripts/setup.js delete-vpc
-	node scripts/setup.js delete-logs
