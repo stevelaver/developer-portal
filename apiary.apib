@@ -241,11 +241,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `tableOutput`
             + `fileInput`
             + `fileOutput`
-    + imageParameters (optional) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
-    + testConfiguration (optional) - JSON configuration to test the application
-    + configurationSchema (optional) - JSON schema describing the configuration
+    + imageParameters (optional, object) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
+    + testConfiguration (optional, object) - JSON configuration to test the application
+    + configurationSchema (optional, object) - JSON schema describing the configuration
     + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
-    + emptyConfiguration (optional) - Default configuration
+    + emptyConfiguration (optional, object) - Default configuration
     + actions (optional, array) - List of supported sync actions
         + Default: `run`
     + fees (optional, boolean) - Using the component in KBC implies additional fees
@@ -256,7 +256,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `standard`
             + `gelf`
         + Default: `standard`
-    + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + loggerConfiguration (optional, object) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
     + stagingStorageInput (optional, enum[string])
         + Members
             + `local`
@@ -333,11 +333,11 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `tableOutput`
             + `fileInput`
             + `fileOutput`
-    + imageParameters (optional) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
-    + testConfiguration (optional) - JSON configuration to test the application
-    + configurationSchema (optional) - JSON schema describing the configuration
+    + imageParameters (optional, object) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
+    + testConfiguration (optional, object) - JSON configuration to test the application
+    + configurationSchema (optional, object) - JSON schema describing the configuration
     + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
-    + emptyConfiguration (optional) - Default configuration
+    + emptyConfiguration (optional, object) - Default configuration
     + actions (optional, array) - List of supported sync actions
         + Default: `run`
     + fees (optional, boolean) - Using the component in KBC implies additional fees
@@ -348,7 +348,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + `standard`
             + `gelf`
         + Default: `standard`
-    + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + loggerConfiguration (optional, object) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
     + stagingStorageInput (optional, enum[string])
        + Members
            + `local`
@@ -578,16 +578,16 @@ Request will be sent only if the app has an icon uploaded and all these attribut
                     "cpuShares": 1024,
                     "uiOptions": [],
                     "imageParameters": {},
-                    "testConfiguration": null,
-                    "configurationSchema": null,
+                    "testConfiguration": {},
+                    "configurationSchema": {},
                     "configurationDescription": null,
                     "configurationFormat": "json",
-                    "emptyConfiguration": null,
+                    "emptyConfiguration": {},
                     "actions": [],
                     "fees": false,
                     "limits": null,
                     "logger": "standard",
-                    "loggerConfiguration": null,
+                    "loggerConfiguration": {},
                     "stagingStorageInput": "local"
                 }
             ]
@@ -636,16 +636,16 @@ Request will be sent only if the app has an icon uploaded and all these attribut
                 "cpuShares": 1024,
                 "uiOptions": [],
                 "imageParameters": {},
-                "testConfiguration": null,
-                "configurationSchema": null,
+                "testConfiguration": {},
+                "configurationSchema": {},
                 "configurationDescription": null,
                 "configurationFormat": "json",
-                "emptyConfiguration": null,
+                "emptyConfiguration": {},
                 "actions": [],
                 "fees": false,
                 "limits": null,
                 "logger": "standard",
-                "loggerConfiguration": null,
+                "loggerConfiguration": {},
                 "stagingStorageInput": "local"
             }
 
@@ -751,16 +751,16 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                     "genericDockerUI-authorization"
                 ],
                 "imageParameters": {},
-                "testConfiguration": null,
-                "configurationSchema": null,
+                "testConfiguration": {},
+                "configurationSchema": {},
                 "configurationDescription": null,
                 "configurationFormat": "json",
-                "emptyConfiguration": null,
+                "emptyConfiguration": {},
                 "actions": [],
                 "fees": false,
                 "limits": null,
                 "logger": "standard",
-                "loggerConfiguration": null,
+                "loggerConfiguration": {},
                 "stagingStorageInput": "local",
                 "isApproved": true
             }
@@ -976,16 +976,16 @@ It will send email confirmation to a user.
                     "genericDockerUI-authorization"
                 ],
                 "imageParameters": {},
-                "testConfiguration": null,
-                "configurationSchema": null,
+                "testConfiguration": {},
+                "configurationSchema": {},
                 "configurationDescription": null,
                 "configurationFormat": "json",
-                "emptyConfiguration": null,
+                "emptyConfiguration": {},
                 "actions": [],
                 "fees": false,
                 "limits": null,
                 "logger": "standard",
-                "loggerConfiguration": null,
+                "loggerConfiguration": {},
                 "stagingStorageInput": "local",
                 "isApproved": true,
                 "createdOn": "2016-09-09T09:26:15.000Z",
@@ -1047,11 +1047,11 @@ Allows to update apps across vendors
             + `tableOutput`
             + `fileInput`
             + `fileOutput`
-    + imageParameters (optional) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
-    + testConfiguration (optional) - JSON configuration to test the application
-    + configurationSchema (optional) - JSON schema describing the configuration
+    + imageParameters (optional, object) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
+    + testConfiguration (optional, object) - JSON configuration to test the application
+    + configurationSchema (optional, object) - JSON schema describing the configuration
     + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
-    + emptyConfiguration (optional) - Default configuration
+    + emptyConfiguration (optional, object) - Default configuration
     + actions (optional, array) - List of supported actions
         + Default: `run`
     + fees (optional, boolean) - Using the component in KBC implies additional fees
@@ -1062,7 +1062,7 @@ Allows to update apps across vendors
             + `standard`
             + `gelf`
         + Default: `standard`
-    + loggerConfiguration (optional) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + loggerConfiguration (optional, object) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
     + stagingStorageInput (optional, enum[string])
        + Members
            + `local`
