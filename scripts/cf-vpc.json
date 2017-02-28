@@ -34,6 +34,54 @@
       "eu-central-1": {
         "PV64": "ami-af0fc0c0"
       }
+    },
+    "RegionSettings": {
+      "us-east-1": {
+        "NumberOfAppZones": "4"
+      },
+      "eu-west-1": {
+        "NumberOfAppZones": "3"
+      },
+      "eu-central-1": {
+        "NumberOfAppZones": "2"
+      }
+    }
+  },
+  "Conditions": {
+    "RegionHasFourthZone": {
+      "Fn::Equals": [
+        {
+          "Fn::FindInMap": [
+            "RegionSettings",
+            {
+              "Ref": "AWS::Region"
+            },
+            "NumberOfAppZones"
+          ]
+        },
+        "4"
+      ]
+    },
+    "RegionHasThirdZone": {
+      "Fn::Or": [
+        {
+          "Condition": "RegionHasFourthZone"
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::FindInMap": [
+                "RegionSettings",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "NumberOfAppZones"
+              ]
+            },
+            "3"
+          ]
+        }
+      ]
     }
   },
   "Resources": {
@@ -251,6 +299,90 @@
                     "Ref": "KeboolaStack"
                   },
                   "Private RDS B"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
+      }
+    },
+    "DevPortalRdsSubnet3": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "RegionHasThirdZone",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "CidrBlock": "10.0.6.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "2",
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Private RDS C"
+                ]
+              ]
+            }
+          },
+          {
+            "Key": "KeboolaStack",
+            "Value": {
+              "Ref": "KeboolaStack"
+            }
+          }
+        ]
+      }
+    },
+    "DevPortalRdsSubnet4": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "RegionHasFourthZone",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DevPortalVPC"
+        },
+        "CidrBlock": "10.0.7.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "3",
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " - ",
+                [
+                  {
+                    "Ref": "KeboolaStack"
+                  },
+                  "Private RDS D"
                 ]
               ]
             }
@@ -532,6 +664,30 @@
         }
       }
     },
+    "DevPortalRdsSubnet3RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "RegionHasThirdZone",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalRdsSubnet3"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteTableViaNAT"
+        }
+      }
+    },
+    "DevPortalRdsSubnet4RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "RegionHasFourthZone",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalRdsSubnet4"
+        },
+        "RouteTableId": {
+          "Ref": "DevPortalRouteTableViaNAT"
+        }
+      }
+    },
     "DevPortalPublicSubnetRouteTableAssociation": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
@@ -553,6 +709,28 @@
           },
           {
             "Ref": "DevPortalRdsSubnet2"
+          },
+          {
+            "Fn::If": [
+              "RegionHasThirdZone",
+              {
+                "Ref": "DevPortalRdsSubnet3"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "RegionHasFourthZone",
+              {
+                "Ref": "DevPortalRdsSubnet4"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
           }
         ],
         "Tags": [
