@@ -82,6 +82,14 @@
           ]
         }
       ]
+    },
+    "IsUsEast1": {
+      "Fn::Equals": [
+        {
+          "Ref": "AWS::Region"
+        },
+        "us-east-1"
+      ]
     }
   },
   "Resources": {
@@ -198,7 +206,13 @@
         "CidrBlock": "10.0.2.0/24",
         "AvailabilityZone": {
           "Fn::Select": [
-            "1",
+            {
+              "Fn::If": [
+                "IsUsEast1",
+                "2",
+                "1"
+              ]
+            },
             {
               "Fn::GetAZs": {
                 "Ref": "AWS::Region"
