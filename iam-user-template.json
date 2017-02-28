@@ -11,7 +11,8 @@
         "cloudformation:DescribeStackResource",
         "cloudformation:DescribeStackResources",
         "cloudformation:UpdateStack",
-        "cloudformation:DescribeStacks"
+        "cloudformation:DescribeStacks",
+        "cloudformation:SetStackPolicy"
       ],
       "Resource":[
         "arn:aws:cloudformation:${REGION}:${ACCOUNT_ID}:stack/${SERVICE_NAME}-${STAGE}/*"
@@ -45,6 +46,15 @@
       ],
       "Resource":[
         "arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE_NAME}-${STAGE}-*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "rds:*"
+      ],
+      "Resource": [
+        "arn:aws:rds:${REGION}:${ACCOUNT_ID}:db:developer-portal-*"
       ]
     },
     {
@@ -92,6 +102,7 @@
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeSubnets",
         "ec2:DescribeVpcs",
+        "ec2:DescribeAccountAttributes",
         "iam:GetUser"
       ],
       "Resource":[
