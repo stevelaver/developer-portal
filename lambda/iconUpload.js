@@ -1,6 +1,6 @@
 'use strict';
 
-import App from '../lib/app';
+import Icon from '../app/icon';
 import Identity from '../lib/identity';
 
 require('longjohn');
@@ -16,7 +16,7 @@ const request = require('../lib/request');
 aws.config.setPromisesDependency(Promise);
 const s3 = new aws.S3();
 
-const app = new App(db, Identity, process.env, error);
+const app = new Icon(s3, db, process.env, error);
 
 
 module.exports.upload = (event, context, callback) => request.errorHandler(() => {
@@ -44,7 +44,7 @@ module.exports.upload = (event, context, callback) => request.errorHandler(() =>
   console.log(JSON.stringify(event));
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => app.uploadIcon(s3, jimp, appId, bucket, key)),
+      .then(() => app.upload(jimp, appId, bucket, key)),
     db,
     event,
     context,

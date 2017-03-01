@@ -1,6 +1,7 @@
 'use strict';
 
 import App from '../lib/app';
+import Icon from '../app/icon';
 import Identity from '../lib/identity';
 import Notification from '../lib/notification';
 import Validation from '../lib/validation';
@@ -21,6 +22,7 @@ aws.config.setPromisesDependency(Promise);
 const s3 = new aws.S3();
 
 const app = new App(db, Identity, process.env, error);
+const iconApp = new Icon(s3, db, process.env, error);
 const identity = new Identity(jwt, error);
 const notification = new Notification(
   requestLib,
@@ -221,8 +223,8 @@ function icon(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.getIconLink(
-        s3,
+      .then(user => iconApp.getUploadLink(
+        Identity,
         event.pathParameters.app,
         event.pathParameters.vendor,
         user,
