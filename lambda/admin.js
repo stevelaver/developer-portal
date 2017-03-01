@@ -10,7 +10,6 @@ require('longjohn');
 require('babel-polyfill');
 const _ = require('lodash');
 const aws = require('aws-sdk');
-const diff = require('deep-diff').diff;
 const joiBase = require('joi');
 const joiExtension = require('joi-date-extensions');
 const jwt = require('jsonwebtoken');
@@ -260,7 +259,6 @@ function listAppChanges(event, context, callback) {
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
       .then(() => app.listAppChanges(
-        diff,
         _.get(event, 'queryStringParameters.since', null),
         _.get(event, 'queryStringParameters.until', null)
       )),
