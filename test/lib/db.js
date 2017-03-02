@@ -47,6 +47,14 @@ describe('db', () => {
       .then(() => db.init(rds));
   });
 
+  beforeEach(() =>
+    rds.queryAsync('SET FOREIGN_KEY_CHECKS=0;')
+    .then(() => rds.queryAsync('TRUNCATE TABLE `appVersions`;'))
+    .then(() => rds.queryAsync('TRUNCATE TABLE `apps`;'))
+    .then(() => rds.queryAsync('TRUNCATE TABLE `vendors`;'))
+    .then(() => rds.queryAsync('SET FOREIGN_KEY_CHECKS=1;'))
+  );
+
   describe('format', () => {
     it('formatAppInput', () => {
       const input = {
@@ -139,7 +147,7 @@ describe('db', () => {
     const appId = `acaa-${Date.now()}`;
     const vendor = `vcaa-${Date.now()}`;
 
-    before(() =>
+    beforeEach(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
         .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
     );
@@ -155,7 +163,7 @@ describe('db', () => {
 
   describe('checkVendorExists', () => {
     const vendor = `vcve-${Date.now()}`;
-    before(() =>
+    beforeEach(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
     );
 
@@ -172,7 +180,7 @@ describe('db', () => {
     const vendor = `vcacbp-${Date.now()}`;
     const app1 = `cacbp1-${Date.now()}`;
     const app2 = `cacbp2-${Date.now()}`;
-    before(() =>
+    beforeEach(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
         .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app1, vendor, 'test', 1]))
         .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app2, vendor, 'test', 0]))
@@ -226,7 +234,7 @@ describe('db', () => {
         })
         .then(() => rds.queryAsync(
           'INSERT INTO `apps` SET id=?, vendor=?, name=?, repoOptions=?',
-          [appId, vendor, 'test', JSON.stringify({ test: 'ok'})]
+          [appId, vendor, 'test', JSON.stringify({ test: 'ok' })]
         ))
         .then(() => expect(db.copyAppToVersion(appId, 'user'), 'to be fulfilled'))
         .then(() => rds.queryAsync('SELECT * FROM `appVersions` WHERE id=?', appId))
@@ -234,7 +242,7 @@ describe('db', () => {
           expect(data, 'to have length', 1);
           expect(data[0].version, 'to be', 1);
           expect(data[0].name, 'to be', 'test');
-          expect(JSON.parse(data[0].repoOptions), 'to equal', { test: 'ok'});
+          expect(JSON.parse(data[0].repoOptions), 'to equal', { test: 'ok' });
         });
     });
   });
@@ -284,6 +292,152 @@ describe('db', () => {
     );
   });
 
+  describe('getAppVersion', () => {
+    const appId = `agav-${Date.now()}`;
+    const vendor = `vgav-${Date.now()}`;
+
+    it('Get app version', () =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 2, 'test']))
+        .then(() => db.getAppVersion(appId, 2))
+        .then((data) => {
+          expect(data, 'not to be null');
+          expect(data, 'to have key', 'id');
+          expect(data.id, 'to be', appId);
+          expect(data, 'to have key', 'name');
+          expect(data.name, 'to be', 'test');
+        })
+    );
+  });
+
+  describe('listApps', () => {
+    const appId = `alaa-${Date.now()}`;
+    const appId2 = `alaa2-${Date.now()}`;
+    const vendor = `vlaa-${Date.now()}`;
+    const vendor2 = `vlaa2-${Date.now()}`;
+
+    beforeEach(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor2]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [appId, vendor, 'test', 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [`alafv2-${Date.now()}`, vendor2, 'test', 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [appId2, vendor, 'test', 0]))
+    );
+
+    it('List all', () =>
+      db.listApps()
+        .then((data) => {
+          expect(data, 'to have length', 3);
+          expect(data[0], 'to have key', 'id');
+          expect(data[1], 'to have key', 'id');
+          expect([data[0].id, data[1].id], 'to contain', appId);
+          expect([data[0].id, data[1].id], 'to contain', appId2);
+        })
+    );
+
+    it('List filtered', () =>
+      db.listApps('unapproved')
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'id');
+          expect(data[0].id, 'to be', appId2);
+        })
+    );
+
+    it('List limited', () =>
+      db.listApps(null, 0, 1)
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'id');
+          expect(data[0].id, 'to contain', appId);
+        })
+        .then(() => db.listApps(null, 1, 2))
+        .then((data) => {
+          expect(data, 'to have length', 2);
+          expect(data[0], 'to have key', 'id');
+          expect(data[1], 'to have key', 'id');
+          expect([data[0].id, data[1].id], 'not to contain', appId);
+          expect([data[0].id, data[1].id], 'to contain', appId2);
+        })
+    );
+  });
+
+  describe('listAppsForVendor', () => {
+    const appId = `alafv-${Date.now()}`;
+    const appId2 = `alafv2-${Date.now()}`;
+    const vendor = `vlafv-${Date.now()}`;
+    const vendor2 = `vlafv2-${Date.now()}`;
+
+    beforeEach(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor2]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [`alafv2-${Date.now()}`, vendor2, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId2, vendor, 'test']))
+    );
+
+    it('List all', () =>
+      db.listAppsForVendor(vendor)
+        .then((data) => {
+          expect(data, 'to have length', 2);
+          expect(data[0], 'to have key', 'id');
+          expect([data[0].id, data[1].id], 'to contain', appId);
+          expect([data[0].id, data[1].id], 'to contain', appId2);
+        })
+    );
+
+    it('List limited', () =>
+      db.listAppsForVendor(vendor, 0, 1)
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'id');
+          expect(data[0].id, 'to contain', appId);
+        })
+        .then(() => db.listAppsForVendor(vendor, 1, 1))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'id');
+          expect(data[0].id, 'to contain', appId2);
+        })
+    );
+  });
+
+  describe('listVersions', () => {
+    const appId = `alv-${Date.now()}`;
+    const vendor = `vlv-${Date.now()}`;
+
+    beforeEach(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 1, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 2, 'test2']))
+        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 3, 'test3']))
+    );
+
+    it('List all', () =>
+      db.listVersions(appId)
+        .then((data) => {
+          expect(data, 'to have length', 3);
+          expect(data[0], 'to have key', 'id');
+          expect(data[1], 'to have key', 'id');
+          expect(data[2], 'to have key', 'id');
+          expect(data[0].id, 'to be', appId);
+          expect(data[1].id, 'to be', appId);
+          expect(data[2].id, 'to be', appId);
+        })
+    );
+
+    it('List limited', () =>
+      db.listVersions(appId, 1, 1)
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'id');
+          expect(data[0].version, 'to be', 2);
+        })
+    );
+  });
+
   /*
   describe('addAppIcon', () => {
     it('add app icon', (done) => {
@@ -321,136 +475,11 @@ describe('db', () => {
     });
   });
 
-
-
-    it('get app version', (done) => {
-      const appId1 = `a-getAppVersion-${Date.now()}`;
-      const vendor1 = `v-getAppVersion-${Date.now()}`;
-
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor1, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId1, vendor1, 'test'],
-        (err1) => {
-          if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=?, name=?;', [appId1, 2, 'test'],
-          (err2) => {
-            if (err2) throw err2;
-            db.connect(dbConnectParams);
-            db.getApp(appId1, 2, (err3, res) => {
-              expect(err3).to.be.null;
-              expect(res, 'to have key', 'id');
-              expect(res.id).to.be.equal(appId1);
-              done();
-            });
-          });
-        });
-      });
-    });
-  });
-
-  describe('listAppsForVendor', () => {
-    const appId = `a-listAppsForVendor-${Date.now()}`;
-    const vendor = `v-listAppsForVendor-${Date.now()}`;
-    const vendor2 = `v2-listAppsForVendor-${Date.now()}`;
-
-    before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";',
-        [appId, vendor], (err2) => {
-          if (err2) throw err2;
-          rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-          vendor2, (err3) => {
-            if (err3) throw err3;
-            rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";',
-            [`ex-${Date.now()}`, vendor2], (err4) => {
-              if (err4) throw err4;
-              rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";',
-              [`${appId}1`, vendor], (err5) => {
-                if (err5) throw err;
-                db.connect(dbConnectParams);
-                done();
-              });
-            });
-          });
-        });
-      });
-    });
-
-    it('list all', (done) => {
-      db.listAppsForVendor(vendor, null, null, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.length(2);
-        expect(res[0].id).to.be.equal(appId);
-        done();
-      });
-    });
-
-    it('list limited', (done) => {
-      db.listAppsForVendor(vendor, 1, 1, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.length(1);
-        expect(res[0].id).to.be.equal(`${appId}1`);
-        done();
-      });
-    });
-  });
-
-  describe('listVersions', () => {
-    const appId = `a-listVersions-${Date.now()}`;
-    const vendor = `v-listVersions-${Date.now()}`;
-
-    before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name="test", type="extractor";',
-        [appId, vendor], (err1) => {
-          if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?',
-          [appId, 'test v1'], (err2) => {
-            if (err2) throw err2;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?',
-            [appId, 'test v2'], (err3) => {
-              if (err3) throw err3;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?',
-              [appId, 'test v3'], (err4) => {
-                if (err4) throw err4;
-                db.connect(dbConnectParams);
-                done();
-              });
-            });
-          });
-        });
-      });
-    });
-
-    it('list all versions', (done) => {
-      db.listVersions(appId, null, null, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.length(3);
-        expect(res[2].name).to.be.equal('test v3');
-        done();
-      });
-    });
-
-    it('list limited versions', (done) => {
-      db.listVersions(appId, 1, 1, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.length(1);
-        expect(res[0].name).to.be.equal('test v2');
-        done();
-      });
-    });
-  });
-
   describe('getPublishedApp', () => {
     const appId = `a-getPublishedApp-${Date.now()}`;
     const vendor = `v-getPublishedApp-${Date.now()}`;
 
-    before((done) => {
+   beforeEach((done) => {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
       vendor, (err) => {
         if (err) throw err;
@@ -511,7 +540,7 @@ describe('db', () => {
     const appId2 = `a2-listPublishedApps-${Date.now()}`;
     const vendor = `v-listPublishedApps-${Date.now()}`;
 
-    before((done) => {
+   beforeEach((done) => {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
       vendor, (err) => {
         if (err) throw err;
@@ -557,7 +586,7 @@ describe('db', () => {
     const appId = `a-listPublishedAppVersions-${Date.now()}`;
     const vendor = `v-listPublishedAppVersions-${Date.now()}`;
 
-    before((done) => {
+   beforeEach((done) => {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
       vendor, (err1) => {
         if (err1) throw err1;
@@ -602,7 +631,7 @@ describe('db', () => {
     const vendor1 = `v1-listVendors-${Date.now()}`;
     const vendor2 = `v2-listVendors-${Date.now()}`;
 
-    before((done) => {
+   beforeEach((done) => {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
       vendor1, (err) => {
         if (err) throw err;
@@ -635,7 +664,7 @@ describe('db', () => {
   describe('getVendor', () => {
     const vendor1 = `v1-getVendor-${Date.now()}`;
 
-    before((done) => {
+   beforeEach((done) => {
       rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
       vendor1, (err) => {
         if (err) throw err;
