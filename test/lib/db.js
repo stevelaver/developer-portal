@@ -1,52 +1,74 @@
-/* 'use strict';
+'use strict';
 
-require('dotenv').config({ path: '.env-test', silent: true });
 const db = require('../../lib/db');
-const expect = require('chai').expect;
+const dbMigrate = require('db-migrate');
+require('db-migrate-mysql');
+const expect = require('unexpected');
 const mysql = require('mysql');
+const Promise = require('bluebird');
+
+Promise.promisifyAll(mysql);
+Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 let rds;
 
 const dbConnectParams = {
-  host: process.env.TEST_RDS_HOST,
-  port: process.env.TEST_RDS_PORT,
-  user: process.env.TEST_RDS_USER,
-  password: process.env.TEST_RDS_PASSWORD,
-  database: process.env.TEST_RDS_DATABASE,
-  ssl: process.env.TEST_RDS_SSL,
+  host: process.env.UNIT_RDS_HOST,
+  port: process.env.UNIT_RDS_PORT,
+  user: process.env.UNIT_RDS_USER,
+  password: process.env.UNIT_RDS_PASSWORD,
+  database: process.env.UNIT_RDS_DATABASE,
+  ssl: process.env.UNIT_RDS_SSL,
   multipleStatements: true,
 };
 
 describe('db', () => {
-  before((done) => {
-    rds = mysql.createConnection(dbConnectParams);
-    execsql.execFile(rds, `${__dirname}/../../rds-model.sql`, (err) => {
-      if (err) throw err;
-      done();
+  before(() => {
+    const dbm = dbMigrate.getInstance(true, {
+      config: {
+        defaultEnv: 'current',
+        current: {
+          driver: 'mysql',
+          user: process.env.UNIT_RDS_USER,
+          password: process.env.UNIT_RDS_PASSWORD,
+          host: process.env.UNIT_RDS_HOST,
+          database: process.env.UNIT_RDS_DATABASE,
+          port: process.env.UNIT_RDS_PORT,
+          ssl: process.env.UNIT_RDS_SSL,
+          multipleStatements: true,
+        },
+      },
     });
+
+    return dbm.up()
+      .then(() => {
+        rds = mysql.createConnection(dbConnectParams);
+      })
+      .then(() => db.init(rds));
   });
 
   describe('format', () => {
-    it('format app input', (done) => {
+    it('formatAppInput', () => {
       const input = {
         uiOptions: ['1', '2'],
         testConfiguration: { one: 'two' },
         configurationSchema: { three: 'four' },
         actions: ['action'],
       };
-      const res = db.formatAppInput(input);
-      expect(res).to.have.property('uiOptions');
-      expect(res).to.have.property('testConfiguration');
-      expect(res).to.have.property('configurationSchema');
-      expect(res).to.have.property('actions');
-      expect(res.uiOptions).to.equal('["1","2"]');
-      expect(res.testConfiguration).to.equal('{"one":"two"}');
-      expect(res.configurationSchema).to.equal('{"three":"four"}');
-      expect(res.actions).to.equal('["action"]');
-      done();
+      return db.formatAppInput(input)
+        .then((res) => {
+          expect(res, 'to have key', 'uiOptions');
+          expect(res, 'to have key', 'testConfiguration');
+          expect(res, 'to have key', 'configurationSchema');
+          expect(res, 'to have key', 'actions');
+          expect(res.uiOptions, 'to be', '["1","2"]');
+          expect(res.testConfiguration, 'to be', '{"one":"two"}');
+          expect(res.configurationSchema, 'to be', '{"three":"four"}');
+          expect(res.actions, 'to be', '["action"]');
+        });
     });
 
-    it('format app output', (done) => {
+    it('formatAppOutput', (done) => {
       const input = {
         encryption: 1,
         defaultBucket: 0,
@@ -63,127 +85,109 @@ describe('db', () => {
         vendorEmail: 'test@test.com',
       };
       const res = db.formatAppOutput(input);
-      expect(res).to.have.property('encryption');
-      expect(res).to.have.property('defaultBucket');
-      expect(res).to.have.property('forwardToken');
-      expect(res).to.have.property('uiOptions');
-      expect(res).to.have.property('testConfiguration');
-      expect(res).to.have.property('configurationSchema');
-      expect(res).to.have.property('actions');
-      expect(res).to.have.property('fees');
-      expect(res).to.have.property('isApproved');
-      expect(res).to.have.property('vendor');
-      expect(res.vendor).to.have.property('id');
-      expect(res.vendor).to.have.property('name');
-      expect(res.vendor).to.have.property('address');
-      expect(res.vendor).to.have.property('email');
-      expect(res).to.not.have.property('vendorId');
-      expect(res).to.not.have.property('vendorName');
-      expect(res).to.not.have.property('vendorAddress');
-      expect(res).to.not.have.property('vendorEmail');
-      expect(res.encryption).to.equal(true);
-      expect(res.defaultBucket).to.equal(false);
-      expect(res.forwardToken).to.equal(true);
-      expect(res.uiOptions).to.eql(['1', '2']);
-      expect(res.testConfiguration).to.eql({ one: 'two' });
-      expect(res.configurationSchema).to.eql({ three: 'four' });
-      expect(res.actions).to.eql([]);
-      expect(res.fees).to.equal(false);
-      expect(res.isApproved).to.equal(true);
-      expect(res.vendor.id).to.equal('keboola');
-      expect(res.vendor.name).to.equal('Keboola');
-      expect(res.vendor.address).to.equal('Křižíkova 115, Praha');
-      expect(res.vendor.email).to.equal('test@test.com');
+      expect(res, 'to have key', 'encryption');
+      expect(res, 'to have key', 'defaultBucket');
+      expect(res, 'to have key', 'forwardToken');
+      expect(res, 'to have key', 'uiOptions');
+      expect(res, 'to have key', 'testConfiguration');
+      expect(res, 'to have key', 'configurationSchema');
+      expect(res, 'to have key', 'actions');
+      expect(res, 'to have key', 'fees');
+      expect(res, 'to have key', 'isApproved');
+      expect(res, 'to have key', 'vendor');
+      expect(res.vendor, 'to have key', 'id');
+      expect(res.vendor, 'to have key', 'name');
+      expect(res.vendor, 'to have key', 'address');
+      expect(res.vendor, 'to have key', 'email');
+      expect(res, 'not to have key', 'vendorId');
+      expect(res, 'not to have key', 'vendorName');
+      expect(res, 'not to have key', 'vendorAddress');
+      expect(res, 'not to have key', 'vendorEmail');
+      expect(res.encryption, 'to be', true);
+      expect(res.defaultBucket, 'to be', false);
+      expect(res.forwardToken, 'to be', true);
+      expect(res.uiOptions, 'to equal', ['1', '2']);
+      expect(res.testConfiguration, 'to equal', { one: 'two' });
+      expect(res.configurationSchema, 'to equal', { three: 'four' });
+      expect(res.actions, 'to equal', []);
+      expect(res.fees, 'to be', false);
+      expect(res.isApproved, 'to be', true);
+      expect(res.vendor.id, 'to be', 'keboola');
+      expect(res.vendor.name, 'to be', 'Keboola');
+      expect(res.vendor.address, 'to be', 'Křižíkova 115, Praha');
+      expect(res.vendor.email, 'to be', 'test@test.com');
       done();
-    });
-  });
-
-  describe('init', () => {
-    it('db not connected', (done) => {
-      expect(db.db()).to.be.undefined;
-      done();
-    });
-
-    it('db is connected', (done) => {
-      db.connect(dbConnectParams);
-      expect(db.db()).to.be.a('object');
-      done();
-    });
-
-    it('db is disconnected', (done) => {
-      db.connect(dbConnectParams);
-      db.db().query('SELECT 1', (err) => {
-        if (err) throw err;
-
-        expect(db.db().state).to.equal('authenticated');
-        db.end();
-        expect(db.db().state).to.equal('disconnected');
-        done();
-      });
     });
   });
 
   describe('checkAppNotExists', () => {
-    const appId = `a-checkAppNotExists-${Date.now()}`;
-    const vendor = `v-checkAppNotExists-${Date.now()}`;
+    const appId = `acane-${Date.now()}`;
+    const vendor = `vcane-${Date.now()}`;
 
-    it('app does not exist', (done) => {
-      db.connect(dbConnectParams);
-      db.checkAppNotExists(appId, (err) => {
-        expect(err).to.be.undefined;
-        done();
-      });
+    it('App does not exist', () => {
+      return expect(db.checkAppNotExists(appId), 'to be fulfilled');
     });
 
-    it('app exists', (done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
-        (err1) => {
-          if (err1) throw err1;
-          db.connect(dbConnectParams);
-          db.checkAppNotExists(appId, (err2) => {
-            expect(err2).to.not.be.empty;
-            done();
-          });
-        });
-      });
+    it('App exists', () => {
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => expect(db.checkAppNotExists(appId), 'to be rejected'))
     });
   });
 
   describe('checkAppAccess', () => {
-    const appId = `a-checkAppAccess-${Date.now()}`;
-    const vendor = `v-checkAppAccess-${Date.now()}`;
+    const appId = `acaa-${Date.now()}`;
+    const vendor = `vcaa-${Date.now()}`;
 
-    before((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
-        () => {
-          db.connect(dbConnectParams);
-          done();
-        });
-      });
-    });
+    before(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+    );
 
-    it('has access', (done) => {
-      db.checkAppAccess(appId, vendor, (err) => {
-        expect(err).to.be.empty;
-        done();
-      });
-    });
+    it('Has access', () =>
+      expect(db.checkAppAccess(appId, vendor), 'to be fulfilled')
+    );
 
-    it('does not have access', (done) => {
-      const vendor2 = `v2-${Date.now()}`;
-      db.checkAppAccess(appId, vendor2, (err) => {
-        expect(err).to.not.be.empty;
-        done();
-      });
-    });
+    it('Does not have access', () =>
+      expect(db.checkAppAccess(appId, `v2-${Date.now()}`), 'to be rejected')
+    );
   });
 
+  describe('checkVendorExists', () => {
+    const vendor = `vcve-${Date.now()}`;
+    before(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+    );
+
+    it('Exists', () =>
+      expect(db.checkVendorExists(vendor), 'to be fulfilled')
+    );
+
+    it('Does not exist', () =>
+      expect(db.checkVendorExists(`vx-${Date.now()}`), 'to be rejected')
+    );
+  });
+
+  describe('checkAppCanBePublished', () => {
+    const vendor = `vcacbp-${Date.now()}`;
+    const app1 = `cacbp1-${Date.now()}`;
+    const app2 = `cacbp2-${Date.now()}`;
+    before(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app1, vendor, 'test', 1]))
+        .then(() => rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app2, vendor, 'test', 0]))
+    );
+
+    it('Can be published', () =>
+      expect(db.checkAppCanBePublished(app1), 'to be fulfilled')
+    );
+
+    it('Cannot be published', () =>
+      expect(db.checkAppCanBePublished(app2), 'to be rejected')
+    );
+  });
+
+  /*
   describe('insertApp', () => {
     it('insert new app', (done) => {
       const appId = `a-insertApp-${Date.now()}`;
@@ -197,7 +201,7 @@ describe('db', () => {
             expect(res).to.have.length(1);
             rds.query('SELECT * FROM `appVersions` WHERE id=?', appId, (err1, res1) => {
               expect(res1).to.have.length(1);
-              expect(res1[0].version).to.equal(1);
+              expect(res1[0].version, 'to be', 1);
               done();
             });
           });
@@ -248,7 +252,7 @@ describe('db', () => {
                 (err4, res4) => {
                   if (err4) throw err4;
                   expect(res4).to.have.length(1);
-                  expect(res4[0].name).to.equal('New name');
+                  expect(res4[0].name, 'to be', 'New name');
                   done();
                 });
               });
@@ -279,12 +283,12 @@ describe('db', () => {
               rds.query('SELECT * FROM `apps` WHERE id=? AND version=2', appId, (err3, res) => {
                 if (err3) throw err3;
                 expect(res).to.have.length(1);
-                expect(res[0].icon32).to.equal(`${appId}/${size}/2.png`);
+                expect(res[0].icon32, 'to be', `${appId}/${size}/2.png`);
                 rds.query('SELECT * FROM appVersions WHERE id=? AND version=2', appId,
                 (err4, res4) => {
                   if (err4) throw err4;
                   expect(res4).to.have.length(1);
-                  expect(res4[0].icon32).to.equal(`${appId}/${size}/2.png`);
+                  expect(res4[0].icon32, 'to be', `${appId}/${size}/2.png`);
                   done();
                 });
               });
@@ -319,7 +323,7 @@ describe('db', () => {
           if (err1) throw err1;
           db.getApp(appId, null, (err2, res) => {
             expect(err2).to.be.null;
-            expect(res).to.have.property('id');
+            expect(res, 'to have key', 'id');
             expect(res.id).to.be.equal(appId);
             done();
           });
@@ -343,7 +347,7 @@ describe('db', () => {
             db.connect(dbConnectParams);
             db.getApp(appId1, 2, (err3, res) => {
               expect(err3).to.be.null;
-              expect(res).to.have.property('id');
+              expect(res, 'to have key', 'id');
               expect(res.id).to.be.equal(appId1);
               done();
             });
@@ -482,7 +486,7 @@ describe('db', () => {
     it('get last version', (done) => {
       db.getPublishedApp(appId, null, (err, res) => {
         expect(err).to.be.null;
-        expect(res).to.have.property('version');
+        expect(res, 'to have key', 'version');
         expect(res.version).to.be.equal(3);
         done();
       });
@@ -491,7 +495,7 @@ describe('db', () => {
     it('get specific version', (done) => {
       db.getPublishedApp(appId, 1, (err, res) => {
         expect(err).to.be.null;
-        expect(res).to.have.property('version');
+        expect(res, 'to have key', 'version');
         expect(res.version).to.be.equal(1);
         done();
       });
@@ -586,8 +590,8 @@ describe('db', () => {
       db.listPublishedAppVersions(appId, null, null, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.lengthOf(2);
-        expect(res[0].name).to.equal('test');
-        expect(res[1].name).to.equal('test2');
+        expect(res[0].name, 'to be', 'test');
+        expect(res[1].name, 'to be', 'test2');
         done();
       });
     });
@@ -596,7 +600,7 @@ describe('db', () => {
       db.listPublishedAppVersions(appId, 1, 1, (err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.lengthOf(1);
-        expect(res[0].name).to.equal('test2');
+        expect(res[0].name, 'to be', 'test2');
         done();
       });
     });
@@ -651,13 +655,14 @@ describe('db', () => {
     it('get', (done) => {
       db.getVendor(vendor1, (err, res) => {
         expect(err).to.be.null;
-        expect(res).to.have.property('id');
-        expect(res).to.have.property('name');
-        expect(res).to.have.property('address');
-        expect(res).to.have.property('email');
-        expect(res.id).to.equal(vendor1);
+        expect(res, 'to have key', 'id');
+        expect(res, 'to have key', 'name');
+        expect(res, 'to have key', 'address');
+        expect(res, 'to have key', 'email');
+        expect(res.id, 'to be', vendor1);
         done();
       });
     });
   });
-});*/
+  */
+});

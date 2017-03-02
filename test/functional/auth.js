@@ -2,7 +2,6 @@
 
 import Identity from '../../lib/identity';
 
-require('dotenv').config({ path: '.env-test', silent: true });
 const async = require('async');
 const aws = require('aws-sdk');
 const expect = require('unexpected');

@@ -1,7 +1,6 @@
 'use strict';
 
 import Icon from '../app/icon';
-import Identity from '../lib/identity';
 
 require('longjohn');
 require('babel-polyfill');

@@ -1,6 +1,5 @@
 'use strict';
 
-require('dotenv').config({ path: '.env-test', silent: true });
 const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');

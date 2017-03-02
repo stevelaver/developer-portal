@@ -1,6 +1,5 @@
 'use strict';
 
-require('dotenv').config({ path: '.env-test', silent: true });
 const async = require('async');
 const expect = require('unexpected');
 const request = require('request');
