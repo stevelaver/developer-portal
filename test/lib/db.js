@@ -124,15 +124,15 @@ describe('db', () => {
     const appId = `acane-${Date.now()}`;
     const vendor = `vcane-${Date.now()}`;
 
-    it('App does not exist', () => {
-      return expect(db.checkAppNotExists(appId), 'to be fulfilled');
-    });
+    it('App does not exist', () =>
+      expect(db.checkAppNotExists(appId), 'to be fulfilled')
+    );
 
-    it('App exists', () => {
+    it('App exists', () =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
         .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
         .then(() => expect(db.checkAppNotExists(appId), 'to be rejected'))
-    });
+    );
   });
 
   describe('checkAppAccess', () => {
@@ -141,7 +141,7 @@ describe('db', () => {
 
     before(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
-        .then(() => rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
     );
 
     it('Has access', () =>
@@ -174,8 +174,8 @@ describe('db', () => {
     const app2 = `cacbp2-${Date.now()}`;
     before(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
-        .then(() => rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app1, vendor, 'test', 1]))
-        .then(() => rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app2, vendor, 'test', 0]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app1, vendor, 'test', 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app2, vendor, 'test', 0]))
     );
 
     it('Can be published', () =>
@@ -187,48 +187,34 @@ describe('db', () => {
     );
   });
 
-  /*
-  describe('insertApp', () => {
-    it('insert new app', (done) => {
-      const appId = `a-insertApp-${Date.now()}`;
-      const vendor = `v-insertApp-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, () => {
-        db.connect(dbConnectParams);
-        db.insertApp({ id: appId, vendor, name: 'test', type: 'extractor' }, () => {
-          rds.query('SELECT * FROM `apps` WHERE id=?', appId, (err, res) => {
-            expect(res).to.have.length(1);
-            rds.query('SELECT * FROM `appVersions` WHERE id=?', appId, (err1, res1) => {
-              expect(res1).to.have.length(1);
-              expect(res1[0].version, 'to be', 1);
-              done();
-            });
-          });
+  describe('insertApp', () => {
+    it('Insert new app', () => {
+      const appId = `aia-${Date.now()}`;
+      const vendor = `via-${Date.now()}`;
+
+      return rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => db.insertApp({ id: appId, vendor, name: 'test', type: 'extractor' }))
+        .then(() => rds.queryAsync('SELECT * FROM `apps` WHERE id=?', appId))
+        .then(data => expect(data, 'to have length', 1))
+        .then(() => rds.queryAsync('SELECT * FROM `appVersions` WHERE id=?', appId))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].version, 'to be', 1);
         });
-      });
     });
 
-    it('insert already existing app', (done) => {
-      const appId = `a-alreadyExists-${Date.now()}`;
-      const vendor = `v-alreadyExists-${Date.now()}`;
+    it('Insert already existing app', () => {
+      const appId = `aae-${Date.now()}`;
+      const vendor = `vae-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
-        (err1) => {
-          if (err1) throw err1;
-          db.connect(dbConnectParams);
-          db.insertApp({ id: appId, vendor, name: 'test', type: 'extractor' }, (err2) => {
-            expect(err2).to.not.be.empty;
-            done();
-          });
-        });
-      });
+      return rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor)
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => expect(db.insertApp({ id: appId, vendor, name: 'test', type: 'extractor' }), 'to be rejected'));
     });
   });
 
+  /*
   describe('updateApp', () => {
     it('update existing app', (done) => {
       const appId = `a-updateApp-${Date.now()}`;
