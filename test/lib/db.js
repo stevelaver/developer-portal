@@ -214,41 +214,77 @@ describe('db', () => {
     });
   });
 
-  /*
-  describe('updateApp', () => {
-    it('update existing app', (done) => {
-      const appId = `a-updateApp-${Date.now()}`;
-      const vendor = `v-updateApp-${Date.now()}`;
+  describe('copyAppToVersion', () => {
+    it('Copy app to version', () => {
+      const appId = `aia-${Date.now()}`;
+      const vendor = `via-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
-        (err1) => {
-          if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'],
-          (err2) => {
-            if (err) throw err2;
-            db.connect(dbConnectParams);
-            db.updateApp({ name: 'New name' }, appId, 'user', () => {
-              rds.query('SELECT * FROM `apps` WHERE id=? AND version=2', appId, (err3, res) => {
-                if (err3) throw err3;
-                expect(res).to.have.length(1);
-                rds.query('SELECT * FROM `appVersions` WHERE id=? AND version=2', appId,
-                (err4, res4) => {
-                  if (err4) throw err4;
-                  expect(res4).to.have.length(1);
-                  expect(res4[0].name, 'to be', 'New name');
-                  done();
-                });
-              });
-            });
-          });
+      return rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('SELECT * FROM `appVersions` WHERE id=?', appId))
+        .then((data) => {
+          expect(data, 'to have length', 0);
+        })
+        .then(() => rds.queryAsync(
+          'INSERT INTO `apps` SET id=?, vendor=?, name=?, repoOptions=?',
+          [appId, vendor, 'test', JSON.stringify({ test: 'ok'})]
+        ))
+        .then(() => expect(db.copyAppToVersion(appId, 'user'), 'to be fulfilled'))
+        .then(() => rds.queryAsync('SELECT * FROM `appVersions` WHERE id=?', appId))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].version, 'to be', 1);
+          expect(data[0].name, 'to be', 'test');
+          expect(JSON.parse(data[0].repoOptions), 'to equal', { test: 'ok'});
         });
-      });
     });
   });
 
+  describe('updateApp', () => {
+    it('Update existing app', () => {
+      const appId = `aua-${Date.now()}`;
+      const vendor = `vua-${Date.now()}`;
+
+      return rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 1, 'test']))
+        .then(() => expect(db.updateApp({ name: 'New name' }, appId), 'to be fulfilled'))
+        .then(() => rds.queryAsync('SELECT * FROM `apps` WHERE id=?', appId))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].version, 'to be', 2);
+          expect(data[0].name, 'to be', 'New name');
+        })
+        .then(() => rds.queryAsync('SELECT * FROM `appVersions` WHERE id=? AND version=?', [appId, 2]))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].name, 'to be', 'New name');
+        });
+    });
+  });
+
+  describe('getApp', () => {
+    const appId = `aga-${Date.now()}`;
+    const vendor = `vga-${Date.now()}`;
+
+    it('Get non-existing app', () =>
+      expect(db.getApp(appId), 'to be rejected')
+    );
+
+    it('Get existing app', () =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => db.getApp(appId))
+        .then((data) => {
+          expect(data, 'not to be null');
+          expect(data, 'to have key', 'id');
+          expect(data.id, 'to be', appId);
+          expect(data, 'to have key', 'name');
+          expect(data.name, 'to be', 'test');
+        })
+    );
+  });
+
+  /*
   describe('addAppIcon', () => {
     it('add app icon', (done) => {
       const appId = `a-addAppIcon-${Date.now()}`;
@@ -285,37 +321,7 @@ describe('db', () => {
     });
   });
 
-  describe('getApp', () => {
-    const appId = `a-getApp-${Date.now()}`;
-    const vendor = `v-getApp-${Date.now()}`;
-    before((done) => {
-      db.connect(dbConnectParams);
-      done();
-    });
 
-    it('get non-existing app', (done) => {
-      db.getApp(appId, null, (err) => {
-        expect(err).to.not.be.null;
-        done();
-      });
-    });
-
-    it('get existing app', (done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-       vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
-        (err1) => {
-          if (err1) throw err1;
-          db.getApp(appId, null, (err2, res) => {
-            expect(err2).to.be.null;
-            expect(res, 'to have key', 'id');
-            expect(res.id).to.be.equal(appId);
-            done();
-          });
-        });
-      });
-    });
 
     it('get app version', (done) => {
       const appId1 = `a-getAppVersion-${Date.now()}`;
