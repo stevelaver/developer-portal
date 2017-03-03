@@ -354,12 +354,12 @@ describe('Auth', () => {
           UserPoolId: env.COGNITO_POOL_ID,
           Username: process.env.FUNC_USER_EMAIL,
         }).promise()
-          .then(data => {
+          .then((data) => {
             expect(data, 'to have key', 'UserAttributes');
             expect(data.UserAttributes, 'to have an item satisfying', (item) => {
               expect(item.Name, 'to be', 'phone_number');
               expect(item.Value, 'to be', '+420777123456');
-            })
+            });
           })
           .then(() => cb())
           .catch(err => cb(err)),

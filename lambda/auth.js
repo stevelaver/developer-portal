@@ -254,7 +254,7 @@ function enableMfa(event, context, callback) {
 
   return request.responseAuthPromise(
     identity.getUser(event.headers.Authorization)
-      .then((user) => app.enableMfa(user.email, event.pathParameters.phone)),
+      .then(user => app.enableMfa(user.email, event.pathParameters.phone)),
     event,
     context,
     callback,
