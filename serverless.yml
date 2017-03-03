@@ -288,6 +288,10 @@ functions:
         http:
           method: post
           path: "auth/confirm"
+      -
+        http:
+          method: post
+          path: "auth/mfa/{phone}"
 
 
 resources:

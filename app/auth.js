@@ -124,6 +124,35 @@ class Auth {
         }
       });
   }
+
+  enableMfa(email, phone) {
+    return this.cognito.adminUpdateUserAttributes({
+      UserPoolId: this.env.COGNITO_POOL_ID,
+      Username: email,
+      UserAttributes: [
+        {
+          Name: 'phone_number',
+          Value: phone,
+        },
+      ],
+    }).promise()
+      .catch((err) => {
+        if (err.code === 'InvalidParameterException') {
+          throw this.err.unprocessable('Phone number must be in format +[country code][number]');
+        }
+        throw err;
+      })
+      .then(() => this.cognito.adminSetUserSettings({
+        UserPoolId: this.env.COGNITO_POOL_ID,
+        Username: email,
+        MFAOptions: [
+          {
+            AttributeName: 'phone_number',
+            DeliveryMedium: 'SMS',
+          },
+        ],
+      }).promise());
+  }
 }
 
 export default Auth;

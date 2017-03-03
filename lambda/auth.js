@@ -243,6 +243,25 @@ function resend(event, context, callback) {
   );
 }
 
+function enableMfa(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      phone: joi.string().required()
+        .error(Error('Parameter phone is required and must be a string')),
+    },
+  });
+
+  return request.responseAuthPromise(
+    identity.getUser(event.headers.Authorization)
+      .then((user) => app.enableMfa(user.email, event.pathParameters.phone)),
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 
 module.exports.auth = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -267,6 +286,8 @@ module.exports.auth = (event, context, callback) => request.errorHandler(() => {
       return confirm(event, context, callback);
     case '/auth/confirm':
       return resend(event, context, callback);
+    case '/auth/mfa/{phone}':
+      return enableMfa(event, context, callback);
     default:
       throw error.notFound();
   }
