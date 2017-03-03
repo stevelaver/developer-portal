@@ -31,6 +31,13 @@ describe('Check if all endpoints have auth required', () => {
           (err, res) => checkAuth(err, res, cb)
         );
       },
+      (cb) => {
+        // Enable MFA
+        request.post(
+          { url: `${env.API_ENDPOINT}/auth/mfa/phone` },
+          (err, res) => checkAuth(err, res, cb)
+        );
+      },
     ], done);
   });
 

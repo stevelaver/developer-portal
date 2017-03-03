@@ -138,7 +138,7 @@ class Auth {
     }).promise()
       .catch((err) => {
         if (err.code === 'InvalidParameterException') {
-          throw this.err.unprocessable('Phone number must be in format +[country code][number]');
+          throw this.err.unprocessable('Phone number must be valid and in format +[country code][number]');
         }
         throw err;
       })

@@ -296,6 +296,76 @@ describe('Auth', () => {
     ], done);
   });
 
+  it('MFA', (done) => {
+    let token;
+    async.waterfall([
+      (cb) => {
+        // 1) Signup
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/signup`,
+          json: true,
+          body: {
+            email: userEmail,
+            password: userPassword1,
+            name: 'Test',
+            vendor,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
+          cb();
+        });
+      },
+      (cb) => {
+        cognito.adminConfirmSignUp(
+          { UserPoolId: env.COGNITO_POOL_ID, Username: userEmail },
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        // 2) Login
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/login`,
+          json: true,
+          body: {
+            email: userEmail,
+            password: userPassword1,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          token = res.body.token;
+          cb();
+        });
+      },
+      (cb) => {
+        // 3) Enable MFA
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/mfa/+420777123456`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
+          cb();
+        });
+      },
+      cb =>
+        cognito.adminGetUser({
+          UserPoolId: env.COGNITO_POOL_ID,
+          Username: process.env.FUNC_USER_EMAIL,
+        }).promise()
+          .then(data => {
+            expect(data, 'to have key', 'UserAttributes');
+            expect(data.UserAttributes, 'to have an item satisfying', (item) => {
+              expect(item.Name, 'to be', 'phone_number');
+              expect(item.Value, 'to be', '+420777123456');
+            })
+          })
+          .then(() => cb())
+          .catch(err => cb(err)),
+    ], done);
+  });
+
   after((done) => {
     async.waterfall([
       (cb) => {
