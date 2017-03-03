@@ -195,7 +195,6 @@ describe('db', () => {
     );
   });
 
-
   describe('insertApp', () => {
     it('Insert new app', () => {
       const appId = `aia-${Date.now()}`;
@@ -266,6 +265,30 @@ describe('db', () => {
         .then((data) => {
           expect(data, 'to have length', 1);
           expect(data[0].name, 'to be', 'New name');
+        });
+    });
+  });
+
+  describe('addAppIcon', () => {
+    it('Add icon', () => {
+      const appId = `a-addAppIcon-${Date.now()}`;
+      const vendor = `v-addAppIcon-${Date.now()}`;
+
+      return rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 1, 'test']))
+        .then(() => db.addAppIcon(appId))
+        .then(() => rds.queryAsync('SELECT * FROM `apps` WHERE id=? AND version=2', appId))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].icon32, 'to be', `${appId}/32/2.png`);
+          expect(data[0].icon64, 'to be', `${appId}/64/2.png`);
+        })
+        .then(() => rds.queryAsync('SELECT * FROM `appVersions` WHERE id=? AND version=2', appId))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].icon32, 'to be', `${appId}/32/2.png`);
+          expect(data[0].icon64, 'to be', `${appId}/64/2.png`);
         });
     });
   });
@@ -363,6 +386,48 @@ describe('db', () => {
     );
   });
 
+  describe('listPublishedApps', () => {
+    const appId = `alaa-${Date.now()}`;
+    const appId2 = `alaa2-${Date.now()}`;
+    const vendor = `vlaa-${Date.now()}`;
+    const vendor2 = `vlaa2-${Date.now()}`;
+
+    beforeEach(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor2]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?, isPublic=?', [appId, vendor, 'test', 1, 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?, isPublic=?', [`alafv2-${Date.now()}`, vendor2, 'test', 1, 0]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?, isPublic=?', [`alafv3-${Date.now()}`, vendor, 'test', 0, 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?, isPublic=?', [appId2, vendor, 'test', 1, 1]))
+    );
+
+    it('List all', () =>
+      db.listPublishedApps()
+        .then((data) => {
+          expect(data, 'to have length', 2);
+          expect(data[0], 'to have key', 'id');
+          expect(data[1], 'to have key', 'id');
+          expect([data[0].id, data[1].id], 'to contain', appId);
+          expect([data[0].id, data[1].id], 'to contain', appId2);
+        })
+    );
+
+    it('List limited', () =>
+      db.listPublishedApps(0, 1)
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'id');
+          expect(data[0].id, 'to be', appId);
+        })
+        .then(() => db.listPublishedApps(1, 2))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'id');
+          expect(data[0].id, 'to be', appId2);
+        })
+    );
+  });
+
   describe('listAppsForVendor', () => {
     const appId = `alafv-${Date.now()}`;
     const appId2 = `alafv2-${Date.now()}`;
@@ -403,6 +468,60 @@ describe('db', () => {
     );
   });
 
+  describe('getAppWithVendor', () => {
+    const appId = `alafv-${Date.now()}`;
+    const vendor = `vlafv-${Date.now()}`;
+
+    beforeEach(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, version=?', [appId, vendor, 'test2', 2]))
+        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 1, 'test1']))
+        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 2, 'test2']))
+    );
+
+    it('Get last version', () =>
+      db.getAppWithVendor(appId, null, false, false)
+        .then((data) => {
+          expect(data, 'to have key', 'name');
+          expect(data.name, 'to be', 'test2');
+          expect(data, 'not to have key', 'permissions');
+          expect(data, 'to have key', 'vendor');
+          expect(data.vendor, 'to have key', 'name');
+          expect(data.vendor.name, 'to be', 'test');
+        })
+    );
+
+    it('Get version', () =>
+      db.getAppWithVendor(appId, 1, false, false)
+        .then((data) => {
+          expect(data, 'to have key', 'name');
+          expect(data.name, 'to be', 'test1');
+          expect(data, 'not to have key', 'permissions');
+          expect(data, 'to have key', 'vendor');
+          expect(data.vendor, 'to have key', 'name');
+          expect(data.vendor.name, 'to be', 'test');
+        })
+    );
+
+    it('Get public', () =>
+      expect(db.getAppWithVendor(appId, 1, true, false), 'to be rejected')
+        .then(() => rds.queryAsync('UPDATE `apps` SET isPublic=1, isApproved=1 WHERE id=?', [appId]))
+        .then(() => expect(db.getAppWithVendor(appId, 1, true, false), 'to be fulfilled'))
+    );
+
+    it('Get for admin', () =>
+      db.getAppWithVendor(appId, null, false, true)
+        .then((data) => {
+          expect(data, 'to have key', 'name');
+          expect(data.name, 'to be', 'test2');
+          expect(data, 'to have key', 'permissions');
+          expect(data, 'to have key', 'vendor');
+          expect(data.vendor, 'to have key', 'name');
+          expect(data.vendor.name, 'to be', 'test');
+        })
+    );
+  });
+
   describe('listVersions', () => {
     const appId = `alv-${Date.now()}`;
     const vendor = `vlv-${Date.now()}`;
@@ -438,252 +557,81 @@ describe('db', () => {
     );
   });
 
-  /*
-  describe('addAppIcon', () => {
-    it('add app icon', (done) => {
-      const appId = `a-addAppIcon-${Date.now()}`;
-      const vendor = `v-addAppIcon-${Date.now()}`;
+  describe('createVendor', () => {
+    it('Create', () => {
+      const vendor = `vcv-${Date.now()}`;
 
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test'],
-        (err1) => {
-          if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'],
-          (err2) => {
-            if (err2) throw err2;
-            db.connect(dbConnectParams);
-            const size = 32;
-            db.addAppIcon(appId, size, () => {
-              rds.query('SELECT * FROM `apps` WHERE id=? AND version=2', appId, (err3, res) => {
-                if (err3) throw err3;
-                expect(res).to.have.length(1);
-                expect(res[0].icon32, 'to be', `${appId}/${size}/2.png`);
-                rds.query('SELECT * FROM appVersions WHERE id=? AND version=2', appId,
-                (err4, res4) => {
-                  if (err4) throw err4;
-                  expect(res4).to.have.length(1);
-                  expect(res4[0].icon32, 'to be', `${appId}/${size}/2.png`);
-                  done();
-                });
-              });
-            });
-          });
+      return expect(db.createVendor({ id: vendor, name: 'v1', address: 'add1', email: 'email1' }), 'to be fulfilled')
+        .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE id=?', vendor))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].name, 'to be', 'v1');
+          expect(data[0].address, 'to be', 'add1');
+          expect(data[0].email, 'to be', 'email1');
         });
-      });
-    });
-  });
-
-  describe('getPublishedApp', () => {
-    const appId = `a-getPublishedApp-${Date.now()}`;
-    const vendor = `v-getPublishedApp-${Date.now()}`;
-
-   beforeEach((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor",
-        isApproved=1;', [appId, vendor], (err1) => {
-          if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test v1'],
-          (err2) => {
-            if (err2) throw err2;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test v2'],
-            (err3) => {
-              if (err3) throw err3;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=3, name=?', [appId, 'test v3'],
-              (err4) => {
-                if (err4) throw err4;
-                db.connect(dbConnectParams);
-                done();
-              });
-            });
-          });
-        });
-      });
-    });
-
-    it('get last version', (done) => {
-      db.getPublishedApp(appId, null, (err, res) => {
-        expect(err).to.be.null;
-        expect(res, 'to have key', 'version');
-        expect(res.version).to.be.equal(3);
-        done();
-      });
-    });
-
-    it('get specific version', (done) => {
-      db.getPublishedApp(appId, 1, (err, res) => {
-        expect(err).to.be.null;
-        expect(res, 'to have key', 'version');
-        expect(res.version).to.be.equal(1);
-        done();
-      });
-    });
-
-    it('do not show unpublished app', (done) => {
-      const appId2 = `app2-${Date.now()}`;
-      rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=3, name="test", type="extractor",
-      isApproved=0;', [appId2, vendor], (err) => {
-        if (err) throw err;
-        db.getPublishedApp(appId2, null, (err1) => {
-          expect(err1).to.not.be.null;
-          done();
-        });
-      });
-    });
-  });
-
-  describe('listPublishedApps', () => {
-    const appId1 = `a1-listPublishedApps-${Date.now()}`;
-    const appId2 = `a2-listPublishedApps-${Date.now()}`;
-    const vendor = `v-listPublishedApps-${Date.now()}`;
-
-   beforeEach((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test",
-        type="extractor", isApproved=1;', [appId1, vendor], (err1) => {
-          if (err1) throw err1;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?',
-          [appId1, 'test'], (err2) => {
-            if (err2) throw err2;
-            rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test",
-            type="extractor", isApproved=1;', [appId2, vendor], (err3) => {
-              if (err3) throw err3;
-              rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?',
-              [appId2, 'test'], (err4) => {
-                if (err4) throw err4;
-                db.connect(dbConnectParams);
-                done();
-              });
-            });
-          });
-        });
-      });
-    });
-
-    it('list all', (done) => {
-      db.listPublishedApps(null, null, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.length.at.least(2);
-        done();
-      });
-    });
-
-    it('list selected', (done) => {
-      db.listPublishedApps(1, 1, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.lengthOf(1);
-        done();
-      });
-    });
-  });
-
-  describe('listPublishedAppVersions', () => {
-    const appId = `a-listPublishedAppVersions-${Date.now()}`;
-    const vendor = `v-listPublishedAppVersions-${Date.now()}`;
-
-   beforeEach((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor, (err1) => {
-        if (err1) throw err1;
-        rds.query('INSERT INTO `apps` SET id=?, vendor=?, version=1, name="test", type="extractor",
-        isApproved=1;', [appId, vendor], (err2) => {
-          if (err2) throw err2;
-          rds.query('INSERT INTO `appVersions` SET id=?, version=1, name=?', [appId, 'test'],
-          (err3) => {
-            if (err3) throw err3;
-            rds.query('INSERT INTO `appVersions` SET id=?, version=2, name=?', [appId, 'test2'],
-            (err4) => {
-              if (err4) throw err4;
-              db.connect(dbConnectParams);
-              done();
-            });
-          });
-        });
-      });
-    });
-
-    it('list all', (done) => {
-      db.listPublishedAppVersions(appId, null, null, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.lengthOf(2);
-        expect(res[0].name, 'to be', 'test');
-        expect(res[1].name, 'to be', 'test2');
-        done();
-      });
-    });
-
-    it('list selected', (done) => {
-      db.listPublishedAppVersions(appId, 1, 1, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.lengthOf(1);
-        expect(res[0].name, 'to be', 'test2');
-        done();
-      });
-    });
-  });
-
-  describe('listVendors', () => {
-    const vendor1 = `v1-listVendors-${Date.now()}`;
-    const vendor2 = `v2-listVendors-${Date.now()}`;
-
-   beforeEach((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor1, (err) => {
-        if (err) throw err;
-        rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-        vendor2, (err1) => {
-          if (err1) throw err1;
-          db.connect(dbConnectParams);
-          done();
-        });
-      });
-    });
-
-    it('list all', (done) => {
-      db.listVendors(null, null, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.length.at.least(2);
-        done();
-      });
-    });
-
-    it('list selected', (done) => {
-      db.listVendors(1, 1, (err, res) => {
-        expect(err).to.be.null;
-        expect(res).to.have.lengthOf(1);
-        done();
-      });
     });
   });
 
   describe('getVendor', () => {
-    const vendor1 = `v1-getVendor-${Date.now()}`;
+    const vendor1 = `vgv-${Date.now()}`;
 
-   beforeEach((done) => {
-      rds.query('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";',
-      vendor1, (err) => {
-        if (err) throw err;
-        db.connect(dbConnectParams);
-        done();
-      });
-    });
+    beforeEach(() =>
+      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test1", address="test2", email="test3";', vendor1)
+    );
 
-    it('get', (done) => {
-      db.getVendor(vendor1, (err, res) => {
-        expect(err).to.be.null;
-        expect(res, 'to have key', 'id');
-        expect(res, 'to have key', 'name');
-        expect(res, 'to have key', 'address');
-        expect(res, 'to have key', 'email');
-        expect(res.id, 'to be', vendor1);
-        done();
-      });
-    });
+    it('Get', () =>
+      db.getVendor(vendor1)
+        .then((res) => {
+          expect(res, 'to have key', 'id');
+          expect(res, 'to have key', 'name');
+          expect(res, 'to have key', 'address');
+          expect(res, 'to have key', 'email');
+          expect(res.id, 'to be', vendor1);
+          expect(res.name, 'to be', 'test1');
+          expect(res.address, 'to be', 'test2');
+          expect(res.email, 'to be', 'test3');
+        })
+    );
   });
-  */
+
+  describe('listVendors', () => {
+    const vendor1 = `vlv1-${Date.now()}`;
+    const vendor2 = `vlv2-${Date.now()}`;
+
+   beforeEach(() =>
+     rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1)
+       .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2))
+   );
+    it('List all', () =>
+      db.listVendors()
+        .then((data) => {
+          expect(data, 'to have length', 2);
+        })
+    );
+
+    it('List limited', () =>
+      db.listVendors(1, 1)
+        .then((data) => {
+          expect(data, 'to have length', 1);
+        })
+      );
+  });
+
+  describe('listStacks', () => {
+    const stack1 = `sls1-${Date.now()}`;
+    const stack2 = `sls2-${Date.now()}`;
+
+    beforeEach(() =>
+      rds.queryAsync('INSERT INTO `stacks` SET name=?', stack1)
+        .then(() => rds.queryAsync('INSERT INTO `stacks` SET name=?', stack2))
+    );
+    it('List all', () =>
+      db.listStacks()
+        .then((data) => {
+          expect(data, 'to have length', 2);
+          expect(data, 'to contain', stack1);
+          expect(data, 'to contain', stack2);
+        })
+    );
+  });
 });
