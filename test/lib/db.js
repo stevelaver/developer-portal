@@ -598,10 +598,11 @@ describe('db', () => {
     const vendor1 = `vlv1-${Date.now()}`;
     const vendor2 = `vlv2-${Date.now()}`;
 
-   beforeEach(() =>
+    beforeEach(() =>
      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor1)
        .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', vendor2))
-   );
+    );
+
     it('List all', () =>
       db.listVendors()
         .then((data) => {
