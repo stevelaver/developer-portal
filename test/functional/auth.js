@@ -366,7 +366,7 @@ describe('Auth', () => {
     ], done);
   });
 
-  after((done) => {
+  afterEach((done) => {
     async.waterfall([
       (cb) => {
         cognito.adminDeleteUser(
