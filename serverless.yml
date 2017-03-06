@@ -343,6 +343,28 @@ resources:
                     - ecr:*
                     - sts:AssumeRole
                   Resource: "*"
+    SMSRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: "${file(./env.yml):SERVICE_NAME}-sms-role"
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: cognito-idp.amazonaws.com
+              Action: sts:AssumeRole
+              Condition:
+                StringEquals:
+                  sts:ExternalId: ${file(./env.yml):SERVICE_NAME}
+        Policies:
+          - PolicyName: "${file(./env.yml):SERVICE_NAME}-sms-policy"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: sns:publish
+                  Resource: "*"
     developerPortalEcrRole:
       Type: AWS::IAM::Role
       Properties:
@@ -416,3 +438,7 @@ resources:
       Description: "CloudFront Uri"
       Value:
         "Fn::GetAtt": ["CloudFront", "DomainName"]
+    SMSRoleArn:
+      Description: "SMS Role Arn"
+      Value:
+        "Fn::GetAtt": ["SMSRole", "Arn"]

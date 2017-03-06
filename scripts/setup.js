@@ -212,7 +212,12 @@ class Setup {
           --user-pool-id ${env.COGNITO_POOL_ID} \
           --policies '{"PasswordPolicy":{"MinimumLength":8,"RequireUppercase":true,"RequireLowercase":true,"RequireNumbers":true,"RequireSymbols":false}}' \
           --email-configuration SourceArn=arn:aws:ses:${env.REGION}:${env.ACCOUNT_ID}:identity/${env.SES_EMAIL_FROM} \
-          --auto-verified-attributes email \
+          --auto-verified-attributes email phone_number \
+          --sms-authentication-message "Your authentication code for Developer Portal is {####}." \
+          --sms-verification-message "Your verification code for Developer Portal is {####}." \
+          --mfa-configuration OPTIONAL \
+          --sms-configuration SnsCallerArn=arn:aws:iam::${env.ACCOUNT_ID}:role/${env.SERVICE_NAME}-sms-role,ExternalId=${env.SERVICE_NAME} \
+          --user-pool-tags KeboolaStack=${env.KEBOOLA_STACK} \
           --lambda-config '{"CustomMessage": "arn:aws:lambda:${env.REGION}:${env.ACCOUNT_ID}:function:${env.SERVICE_NAME}-${env.STAGE}-authEmailTrigger"}'`, cb2);
       },
       (cb2) => {
