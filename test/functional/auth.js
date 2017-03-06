@@ -352,7 +352,7 @@ describe('Auth', () => {
       cb =>
         cognito.adminGetUser({
           UserPoolId: env.COGNITO_POOL_ID,
-          Username: process.env.FUNC_USER_EMAIL,
+          Username: userEmail,
         }).promise()
           .then((data) => {
             expect(data, 'to have key', 'UserAttributes');
