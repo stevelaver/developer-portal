@@ -33,7 +33,7 @@ class Auth {
         PASSWORD: password,
       },
     }).promise()
-      .then(data => {
+      .then((data) => {
         if ('ChallengeName' in data && data.ChallengeName === 'SMS_MFA') {
           return {
             message: 'Verification code has been sent to your mobile phone',
@@ -50,7 +50,7 @@ class Auth {
   }
 
   loginWithCode(email, code, session) {
-    return this.cognito.RespondToAuthChallenge({
+    return this.cognito.respondToAuthChallenge({
       ChallengeName: 'SMS_MFA_CODE',
       Session: session,
       ClientId: this.env.COGNITO_CLIENT_ID,
@@ -59,15 +59,12 @@ class Auth {
         SMS_MFA_CODE: code,
       },
     }).promise()
-      .then(data => {
-        console.log(data);
-        return {
-          token: data.AuthenticationResult.IdToken,
-          accessToken: data.AuthenticationResult.AccessToken,
-          refreshToken: data.AuthenticationResult.RefreshToken,
-          expiresIn: data.AuthenticationResult.ExpiresIn,
-        };
-      });
+      .then(data => ({
+        token: data.AuthenticationResult.IdToken,
+        accessToken: data.AuthenticationResult.AccessToken,
+        refreshToken: data.AuthenticationResult.RefreshToken,
+        expiresIn: data.AuthenticationResult.ExpiresIn,
+      }));
   }
 
   refreshToken(token) {
