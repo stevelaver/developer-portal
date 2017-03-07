@@ -293,6 +293,10 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "auth/mfa/{phone}"
+      -
+        http:
+          method: post
+          path: "auth/mfa/confirm/{code}"
 
 
 resources:

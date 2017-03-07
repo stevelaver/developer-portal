@@ -37,16 +37,24 @@ function login(event, context, callback) {
   validation.validate(event, {
     body: {
       email: joi.string().email().required()
-        .error(Error('Parameter email is required and should have ' +
-          'format of email address')),
-      password: joi.string().required()
-        .error(Error('Parameter password is required')),
+        .error(Error('Parameter email is required and should have format of email address')),
+      password: joi.string().error(Error('Parameter password must be a string')),
+      code: joi.string().error(Error('Parameter code must be a string')),
+      session: joi.string().error(Error('Parameter code must be a string')),
     },
   });
 
   const body = JSON.parse(event.body);
+  let promise;
+  if (_.has(body, 'password')) {
+    promise = app.login(body.email, body.password);
+  } else if (_.has(body, 'code') && _.has(body, 'session')) {
+    promise = app.loginWithCode(body.email, body.code, body.session);
+  } else {
+    throw error.unprocessable('You have to pass either password or code and session');
+  }
   return request.responseAuthPromise(
-    app.login(body.email, body.password),
+    promise,
     event,
     context,
     callback
@@ -262,6 +270,23 @@ function enableMfa(event, context, callback) {
   );
 }
 
+function confirmMfa(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      code: joi.string().required()
+        .error(Error('Parameter code is required and must be a string')),
+    },
+  });
+  return request.responseAuthPromise(
+    app.confirmMfa(event.headers.Authorization, event.pathParameters.code),
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 
 module.exports.auth = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -288,6 +313,8 @@ module.exports.auth = (event, context, callback) => request.errorHandler(() => {
       return resend(event, context, callback);
     case '/auth/mfa/{phone}':
       return enableMfa(event, context, callback);
+    case '/auth/mfa/confirm/{code}':
+      return confirmMfa(event, context, callback);
     default:
       throw error.notFound();
   }
