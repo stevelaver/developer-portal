@@ -8,6 +8,7 @@ import Validation from '../lib/validation';
 
 require('longjohn');
 require('babel-polyfill');
+require('source-map-support').install();
 const _ = require('lodash');
 const aws = require('aws-sdk');
 const joi = require('joi');

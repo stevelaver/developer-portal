@@ -25,7 +25,7 @@ module.exports = {
     ]),
   ],
   target: 'node',
-  // devtool: 'source-map',
+  devtool: 'source-map',
   externals: [nodeExternals({
     modulesFromFile: true,
   })],

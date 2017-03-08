@@ -8,6 +8,7 @@ import Vendor from '../app/vendor';
 
 require('longjohn');
 require('babel-polyfill');
+require('source-map-support').install();
 const _ = require('lodash');
 const aws = require('aws-sdk');
 const joiBase = require('joi');

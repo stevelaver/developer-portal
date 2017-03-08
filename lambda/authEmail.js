@@ -2,6 +2,7 @@
 
 require('longjohn');
 require('babel-polyfill');
+require('source-map-support').install();
 // const template = require('../../views/email.html');
 
 module.exports.emails = (event, context, callback) => {

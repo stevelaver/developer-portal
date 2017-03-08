@@ -4,6 +4,7 @@ import Icon from '../app/icon';
 
 require('longjohn');
 require('babel-polyfill');
+require('source-map-support').install();
 const _ = require('lodash');
 const aws = require('aws-sdk');
 const db = require('../lib/db');
