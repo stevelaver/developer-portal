@@ -5,7 +5,7 @@ RUN apk add --update python py-pip git
 RUN pip install awscli
 
 # serverless
-RUN npm install -g serverless@1.7
+RUN npm install -g serverless@1.8
 
 # yarn
 ENV PATH /root/.yarn/bin:$PATH
