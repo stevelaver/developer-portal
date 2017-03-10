@@ -61,11 +61,22 @@ function update(event, context, callback) {
       app: joi.string().required(),
       vendor: joi.string().required(),
     },
-    body: validation.updateAppSchema(),
   });
 
   return request.responseDbPromise(
     db.connect(process.env)
+      .then(() => db.getApp(event.pathParameters.app))
+      .then((app) => {
+        if (app.isApproved) {
+          validation.validate(event, {
+            body: validation.updateApprovedAppSchema(),
+          });
+        } else {
+          validation.validate(event, {
+            body: validation.updateAppSchema(),
+          });
+        }
+      })
       .then(() => identity.getUser(event.headers.Authorization))
       .then(user => app.updateApp(
         event.pathParameters.app,

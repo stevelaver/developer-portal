@@ -189,7 +189,7 @@ describe('Apps', () => {
             isPublic: true,
           },
         }, (err, res) => {
-          expect(res.statusCode, 'to be', 400);
+          expect(res.statusCode, 'to be', 422);
           cb();
         });
       },
@@ -434,7 +434,6 @@ describe('Apps', () => {
                 projects: [2],
               },
             ],
-            isPublic: false,
           },
         }, (err, res) => {
           expect(res.statusCode, 'to be', 201);

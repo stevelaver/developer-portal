@@ -73,13 +73,13 @@
       "Action":[
         "iam:CreateRole",
         "iam:DeleteRole",
-        "iam:GetRole",
         "iam:PassRole",
         "iam:DeleteRolePolicy",
         "iam:PutRolePolicy"
       ],
       "Resource":[
-        "arn:aws:iam::${ACCOUNT_ID}:role/${SERVICE_NAME}-lambda-role"
+        "arn:aws:iam::${ACCOUNT_ID}:role/${SERVICE_NAME}-lambda-role",
+        "arn:aws:iam::${ACCOUNT_ID}:role/${SERVICE_NAME}-sms-role"
       ]
     },
     {
@@ -103,7 +103,8 @@
         "ec2:DescribeSubnets",
         "ec2:DescribeVpcs",
         "ec2:DescribeAccountAttributes",
-        "iam:GetUser"
+        "iam:GetUser",
+        "iam:GetRole"
       ],
       "Resource":[
         "*"

@@ -273,7 +273,7 @@ function listAppChanges(event, context, callback) {
 function createVendor(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    body: validation.adminCreateVendor(),
+    body: validation.adminCreateVendorSchema(),
   });
 
   return request.responseDbPromise(
