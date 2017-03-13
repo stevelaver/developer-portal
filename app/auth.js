@@ -112,6 +112,42 @@ class Auth {
       }).promise());
   }
 
+  signUpCreateVendor(vendorApp, email, password, name, vendor) {
+    const vendorId = `tv${Date.now()}${Math.random()}`.substr(0, 32);
+    return this.db.connect(this.env)
+      .then(() => vendorApp.create({
+        id: vendorId,
+        name: vendor.name,
+        address: vendor.address,
+        email: vendor.email,
+      }, false))
+      .then(() => this.db.end())
+      .catch((err) => {
+        this.db.end();
+        throw err;
+      })
+      .then(() => this.cognito.signUp({
+        ClientId: this.env.COGNITO_CLIENT_ID,
+        Username: email,
+        Password: password,
+        UserAttributes: [
+          {
+            Name: 'email',
+            Value: email,
+          },
+          {
+            Name: 'name',
+            Value: name,
+          },
+          {
+            Name: 'profile',
+            Value: vendorId,
+          },
+        ],
+      }).promise())
+      .then(() => vendorId);
+  }
+
   confirm(email, code) {
     return this.cognito.confirmSignUp({
       ClientId: this.env.COGNITO_CLIENT_ID,

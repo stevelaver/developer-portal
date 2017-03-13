@@ -164,6 +164,42 @@ describe('Auth', () => {
     ], done);
   });
 
+  it('Signup With New Vendor', (done) => {
+    const vendorName = `v${Date.now()}`;
+    async.waterfall([
+      (cb) => {
+        // 1) Signup
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/signup`,
+          json: true,
+          body: {
+            email: userEmail,
+            password: userPassword1,
+            name: 'Test',
+            vendor: {
+              name: 'Vendor',
+              address: 'Vendor Address',
+              email: 'vendor@email.com',
+            },
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
+          cb();
+        });
+      },
+      (cb) => {
+        // 2) Check database for the vendor
+        rds.query('SELECT * FROM `vendors` WHERE name=?', [vendorName], (err, res) => {
+          expect(res, 'to have length', 1);
+          expect(res[0].address, 'to be', 'Vendor Address');
+          expect(res[0].email, 'to be', 'vendor@email.com');
+          expect(res[0].isApproved, 'to be', false);
+          cb();
+        });
+      },
+    ], done);
+  });
+
   it('Forgot Password', (done) => {
     async.waterfall([
       (cb) => {

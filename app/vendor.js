@@ -15,8 +15,10 @@ class Vendor {
     return this.db.getVendor(id);
   }
 
-  create(body) {
-    return this.db.createVendor(body)
+  create(body, isApproved = true) {
+    const params = _.clone(body);
+    params.isApproved = isApproved;
+    return this.db.createVendor(params)
       .catch((err) => {
         if (_.startsWith('ER_DUP_ENTRY', err.message)) {
           throw this.err.badRequest('The vendor already exists');
