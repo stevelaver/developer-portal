@@ -107,6 +107,10 @@ WARMUP_ENABLED: true
 
 If you change variable `WARMUP_ENABLED` in `env.yml` to `true`, a CloudWatch schedule will be enabled to keep lambda functions for public resources warmed up using 15 minutes ping. 
 
+### Development
+
+Conform your code to included ESLint rules. You can use prepared pre-commit hook using command `ln -s pre-commit.sh .git/hooks/pre-commit`
+
 ### CI and deployment
 
 CI is configured on Travis, see https://travis-ci.org/keboola/developer-portal. Deployment is run automatically after releasing a version on GitHub. Travis uses special AWS IAM user with restricted rights in production account. See `iam-user-template.json` for details.  

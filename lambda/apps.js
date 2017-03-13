@@ -66,8 +66,8 @@ function update(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => db.getApp(event.pathParameters.app))
-      .then((app) => {
-        if (app.isApproved) {
+      .then((data) => {
+        if (data.isApproved) {
           validation.validate(event, {
             body: validation.updateApprovedAppSchema(),
           });

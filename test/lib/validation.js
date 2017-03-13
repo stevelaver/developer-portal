@@ -8,10 +8,10 @@ const error = require('../../lib/error');
 
 const validation = new Validation(joi, error);
 
-const expectOk = (res) =>
+const expectOk = res =>
   expect(res.error, 'to be null');
 
-const expectFail = (res) =>
+const expectFail = res =>
   expect(res.error, 'to be a', Error);
 
 const testOk = (rule, value) =>
@@ -20,7 +20,7 @@ const testOk = (rule, value) =>
 const testFail = (rule, value) =>
   expectFail(joi.validate({ test: value }, { test: rule }));
 
-const testMissingOk = (rule) =>
+const testMissingOk = rule =>
   expectOk(joi.validate({ }, { test: rule }));
 
 
@@ -30,13 +30,13 @@ describe('Validation', () => {
       const schema = validation.createAppSchema();
       // Missing required
       expectFail(joi.validate({
-        test: 'value'
+        test: 'value',
       }, schema));
       // Wrong type
       expectFail(joi.validate({
         id: 'id3',
         name: 'Test',
-        type: 'nonsense'
+        type: 'nonsense',
       }, schema));
       // Cannot set isPublic
       expectFail(joi.validate({
@@ -76,7 +76,7 @@ describe('Validation', () => {
       expectOk(joi.validate({
         id: 'id3',
         name: 'Test',
-        type: 'writer'
+        type: 'writer',
       }, schema));
     });
 
@@ -96,7 +96,7 @@ describe('Validation', () => {
       }, schema));
       expectOk(joi.validate({
         name: 'Test',
-        type: 'writer'
+        type: 'writer',
       }, schema));
       // Cannot set vendor
       expectFail(joi.validate({
@@ -132,7 +132,7 @@ describe('Validation', () => {
       }, schema));
       expectOk(joi.validate({
         name: 'Test',
-        type: 'writer'
+        type: 'writer',
       }, schema));
     });
 
@@ -192,7 +192,7 @@ describe('Validation', () => {
       }, schema));
       expectOk(joi.validate({
         name: 'Test',
-        type: 'writer'
+        type: 'writer',
       }, schema));
     });
 
@@ -223,22 +223,22 @@ describe('Validation', () => {
       // Repository type
       expectFail(joi.validate({
         repository: {
-          type: 'x'
+          type: 'x',
         },
       }, schema));
       expectOk(joi.validate({
         repository: {
-          type: 'ecr'
+          type: 'ecr',
         },
         permissions: [
           {
-            stack: 'xx'
+            stack: 'xx',
           },
           {
             projects: [1, 2],
-            stack: 'xy'
-          }
-        ]
+            stack: 'xy',
+          },
+        ],
       }, schema));
     });
 
