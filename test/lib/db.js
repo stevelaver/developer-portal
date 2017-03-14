@@ -1,5 +1,6 @@
 'use strict';
 
+require('longjohn');
 const db = require('../../lib/db');
 const dbMigrate = require('db-migrate');
 require('db-migrate-mysql');
@@ -49,10 +50,11 @@ describe('db', () => {
 
   beforeEach(() =>
     rds.queryAsync('SET FOREIGN_KEY_CHECKS=0;')
-    .then(() => rds.queryAsync('TRUNCATE TABLE `appVersions`;'))
-    .then(() => rds.queryAsync('TRUNCATE TABLE `apps`;'))
-    .then(() => rds.queryAsync('TRUNCATE TABLE `vendors`;'))
-    .then(() => rds.queryAsync('SET FOREIGN_KEY_CHECKS=1;'))
+      .then(() => rds.queryAsync('TRUNCATE TABLE `appVersions`;'))
+      .then(() => rds.queryAsync('TRUNCATE TABLE `apps`;'))
+      .then(() => rds.queryAsync('TRUNCATE TABLE `vendors`;'))
+      .then(() => rds.queryAsync('TRUNCATE TABLE `stacks`;'))
+      .then(() => rds.queryAsync('SET FOREIGN_KEY_CHECKS=1;'))
   );
 
   describe('format', () => {
