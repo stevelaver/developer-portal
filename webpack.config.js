@@ -22,6 +22,7 @@ module.exports = {
   plugins: [
     new CopyWebpackPlugin([
       { from: 'migrations', to: 'migrations' },
+      { from: 'scripts/migrate-sql.js', to: 'scripts/migrate-sql.js' },
     ]),
   ],
   target: 'node',

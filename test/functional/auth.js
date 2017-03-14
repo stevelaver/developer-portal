@@ -177,7 +177,7 @@ describe('Auth', () => {
             password: userPassword1,
             name: 'Test',
             vendor: {
-              name: 'Vendor',
+              name: vendorName,
               address: 'Vendor Address',
               email: 'vendor@email.com',
             },
@@ -193,7 +193,7 @@ describe('Auth', () => {
           expect(res, 'to have length', 1);
           expect(res[0].address, 'to be', 'Vendor Address');
           expect(res[0].email, 'to be', 'vendor@email.com');
-          expect(res[0].isApproved, 'to be', false);
+          expect(res[0].isApproved, 'to be', 0);
           cb();
         });
       },
