@@ -1,5 +1,6 @@
 'use strict';
 
+import AdminUser from '../app/adminUser';
 import App from '../lib/app';
 import Email from '../lib/email';
 import Identity from '../lib/identity';
@@ -40,27 +41,14 @@ function listUsers(event, context, callback) {
   validation.validate(event, {
     auth: true,
     pagination: true,
-    query: {
-      filter: joi.string(),
-    },
+    query: ['filter'],
   });
 
+  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.listUsers(
-        cognito,
-        _.has(event, 'queryStringParameters.filter')
-          ? event.queryStringParameters.filter : null
-      ))
-      .then(data => _.map(data.Users, item => ({
-        email: item.Username,
-        name: _.get(_.find(item.Attributes, o => (o.Name === 'name')), 'Value', ''),
-        vendors: _.get(_.find(item.Attributes, o => (o.Name === 'profile')), 'Value', '').split(','),
-        createdOn: item.UserCreateDate,
-        isEnabled: item.Enabled,
-        status: item.UserStatus,
-      }))),
+      .then(() => adminUser.list(_.get(event, 'queryStringParameters.filter', null))),
     db,
     event,
     context,
@@ -71,16 +59,14 @@ function listUsers(event, context, callback) {
 function makeUserAdmin(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: {
-      email: joi.string().email()
-        .error(Error('Parameter email must have format of email address')),
-    },
+    path: ['email'],
   });
 
+  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.makeUserAdmin(cognito, event.pathParameters.email))
+      .then(() => adminUser.makeAdmin(event.pathParameters.email))
       .then(() => null),
     db,
     event,
@@ -93,22 +79,14 @@ function makeUserAdmin(event, context, callback) {
 function addUserToVendor(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: {
-      email: joi.string().email()
-        .error(Error('Parameter email must have format of email address')),
-      vendor: joi.string()
-        .error(Error('Parameter vendor must be a string')),
-    },
+    path: ['email', 'vendor'],
   });
 
+  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.addUserToVendor(
-        cognito,
-        event.pathParameters.email,
-        event.pathParameters.vendor
-      ))
+      .then(() => adminUser.addToVendor(event.pathParameters.email, event.pathParameters.vendor))
       .then(() => null),
     db,
     event,
@@ -121,16 +99,14 @@ function addUserToVendor(event, context, callback) {
 function enableUser(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: {
-      email: joi.string().email()
-        .error(Error('Parameter email must have format of email address')),
-    },
+    path: ['email'],
   });
 
+  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.enableUser(cognito, event.pathParameters.email))
+      .then(() => adminUser.enable(event.pathParameters.email))
       .then(() => email.send(
         event.pathParameters.email,
         'Welcome to Keboola Developer Portal',
@@ -149,9 +125,7 @@ function enableUser(event, context, callback) {
 function approveApp(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: {
-      id: joi.string().required(),
-    },
+    path: ['id'],
   });
 
   return request.responseDbPromise(
@@ -176,9 +150,7 @@ function listApps(event, context, callback) {
   validation.validate(event, {
     auth: true,
     pagination: true,
-    query: {
-      filter: joi.string(),
-    },
+    query: ['filter'],
   });
 
   return request.responseDbPromise(
@@ -223,9 +195,7 @@ function detailApp(event, context, callback) {
 function updateApp(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: {
-      id: joi.string().required(),
-    },
+    path: ['id'],
     body: validation.adminAppSchema(),
   });
 
@@ -288,6 +258,36 @@ function createVendor(event, context, callback) {
   );
 }
 
+function approveVendor(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    body: {
+      newId: validation.validateStringMaxLength('id', 32),
+    },
+    path: ['vendor'],
+  });
+
+  const body = JSON.parse(event.body);
+  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(event.headers.Authorization))
+      .then(() => vendorApp.approve(event.pathParameters.vendor, _.get(body, 'newId', null)))
+      .then((user) => {
+        if (_.has(body, 'newId') && user) {
+          return adminUser.addToVendor(user, body.newId)
+            .then(() => adminUser.removeFromVendor(user, event.pathParameters.vendor));
+        }
+      })
+      .then(() => null),
+    db,
+    event,
+    context,
+    callback,
+    201
+  );
+}
+
 
 module.exports.admin = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -312,6 +312,8 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
       return listAppChanges(event, context, callback);
     case '/admin/vendors':
       return createVendor(event, context, callback);
+    case '/admin/vendors/{vendor}/approve':
+      return approveVendor(event, context, callback);
     default:
       throw error.notFound();
   }

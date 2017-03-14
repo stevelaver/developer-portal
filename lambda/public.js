@@ -108,7 +108,13 @@ function getVendor(event, context, callback) {
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => vendorApp.get(event.pathParameters.vendor)),
+      .then(() => vendorApp.get(event.pathParameters.vendor))
+      .then(data => ({
+        id: data.id,
+        name: data.name,
+        address: data.address,
+        email: data.email,
+      })),
     db,
     event,
     context,

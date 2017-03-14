@@ -574,6 +574,25 @@ describe('db', () => {
     });
   });
 
+  describe('updateVendor', () => {
+    it('Update', () => {
+      const vendor = `vcv-${Date.now()}`;
+
+      return rds.queryAsync('INSERT INTO `vendors` SET id=?, name="v1", address="a1", email="e1";', [vendor])
+        .then(() => expect(
+          db.updateVendor(vendor, { id: `${vendor}2`, name: 'v2', address: 'a2', email: 'e2' }),
+          'to be fulfilled')
+        )
+        .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE id=?', `${vendor}2`))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].name, 'to be', 'v2');
+          expect(data[0].address, 'to be', 'a2');
+          expect(data[0].email, 'to be', 'e2');
+        });
+    });
+  });
+
   describe('getVendor', () => {
     const vendor1 = `vgv-${Date.now()}`;
 

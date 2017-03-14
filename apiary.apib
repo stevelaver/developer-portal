@@ -1143,6 +1143,26 @@ Allows to update apps across vendors
 + Response 201
 
 
+### Approve vendor [POST /admin/vendors/{vendor}/approve]
+
++ Attributes
+    + newId (optional) - New vendor id, if you want to rename current temporary id assigned by the portal
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
+    + Body
+
+            {
+                "newId": "vendor"
+            }
+
++ Response 201
+
+
 ### List app changes [GET /admin/changes?since={since}&until={until}]
 
 Returns list of last changes across all apps.

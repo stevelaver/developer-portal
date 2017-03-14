@@ -27,6 +27,18 @@ class Vendor {
       .then(() => null);
   }
 
+  approve(id, newId = null) {
+    return this.db.getVendor(id)
+      .then((data) => {
+        if (!newId) {
+          return this.db.updateVendor(id, { isApproved: true });
+        }
+        return this.db.checkVendorNotExists(newId)
+          .then(() => this.db.updateVendor(id, { id: newId, isApproved: true }))
+          .then(() => data.createdBy);
+      });
+  }
+
   join(cognito, Identity, user, vendor) {
     return this.db.connect(this.env)
       .then(() => this.db.checkVendorExists(vendor))

@@ -163,6 +163,11 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "admin/vendors/{vendor}/approve"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "admin/changes"
 

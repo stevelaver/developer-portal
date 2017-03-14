@@ -1,5 +1,6 @@
 'use strict';
 
+import AdminUser from '../../app/adminUser';
 import Identity from '../../lib/identity';
 
 const _ = require('lodash');
@@ -9,6 +10,8 @@ const expect = require('unexpected');
 const moment = require('moment');
 const mysql = require('mysql');
 const request = require('request');
+const db = require('../../lib/db');
+const error = require('../../lib/error');
 
 const env = require('../../lib/env').load();
 
@@ -21,10 +24,12 @@ const rds = mysql.createConnection({
   ssl: 'Amazon RDS',
   multipleStatements: true,
 });
+db.init(rds);
 
 const cognito = new aws.CognitoIdentityServiceProvider({
   region: env.REGION,
 });
+const adminUser = new AdminUser(cognito, db, Identity, env, error);
 const vendor = process.env.FUNC_VENDOR;
 const otherVendor = `${vendor}o1`;
 const appId = `app_admin_${Date.now()}`;
@@ -435,6 +440,114 @@ describe('Admin', () => {
         rds.query(
           'DELETE FROM apps WHERE vendor=?',
           [aVendor],
+          err => cb(err)
+        );
+      },
+    ], done);
+  });
+
+  it('Approve vendor', (done) => {
+    const vendor1 = `${vendor}av1`;
+    async.waterfall([
+      (cb) => {
+        rds.query(
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?, isApproved=?',
+          [vendor1, 'test', 'test', process.env.FUNC_USER_EMAIL, 0, 0],
+          err => cb(err)
+        );
+      },
+      (cb) => {
+        request.post({
+          url: `${env.API_ENDPOINT}/admin/vendors/${vendor1}/approve`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 201);
+          cb();
+        });
+      },
+      (cb) => {
+        rds.query('SELECT * FROM `vendors` WHERE id=?', [vendor1], (err, res) => cb(err, res));
+      },
+      (data, cb) => {
+        expect(data, 'to have length', 1);
+        expect(data[0], 'to have key', 'id');
+        expect(data[0], 'to have key', 'isApproved');
+        expect(data[0].isApproved, 'to be', 1);
+        cb();
+      },
+      (cb) => {
+        rds.query(
+          'DELETE FROM apps WHERE vendor=?',
+          [vendor1],
+          err => cb(err)
+        );
+      },
+    ], done);
+  });
+
+  it('Approve vendor with new id', (done) => {
+    const vendor1 = `av1${Date.now()}`;
+    const vendor2 = `av2${Date.now()}`;
+    async.waterfall([
+      (cb) => {
+        rds.query(
+          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?, isApproved=?, createdBy=?',
+          [vendor1, 'test', 'test', process.env.FUNC_USER_EMAIL, 0, 0, userEmail],
+          err => cb(err)
+        );
+      },
+      cb => adminUser.addToVendor(userEmail, vendor1)
+        .then(() => cb()),
+      (cb) => {
+        request.post({
+          url: `${env.API_ENDPOINT}/admin/vendors/${vendor1}/approve`,
+          headers: {
+            Authorization: token,
+          },
+          body: {
+            newId: vendor2,
+          },
+          json: true,
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 201);
+          cb();
+        });
+      },
+      (cb) => {
+        rds.query('SELECT * FROM `vendors` WHERE id=?', [vendor1], (err, res) => cb(err, res));
+      },
+      (data, cb) => {
+        expect(data, 'to have length', 0);
+        cb();
+      },
+      (cb) => {
+        rds.query('SELECT * FROM `vendors` WHERE id=?', [vendor2], (err, res) => cb(err, res));
+      },
+      (data, cb) => {
+        expect(data, 'to have length', 1);
+        expect(data[0], 'to have key', 'id');
+        expect(data[0], 'to have key', 'isApproved');
+        expect(data[0].isApproved, 'to be', 1);
+        cb();
+      },
+      cb => cognito.adminGetUser({
+        UserPoolId: env.COGNITO_POOL_ID,
+        Username: userEmail,
+      }, cb),
+      (user, cb) => adminUser.get(userEmail)
+        .then((data) => {
+          expect(data.vendors, 'not to contain', vendor1);
+          expect(data.vendors, 'to contain', vendor2);
+          cb();
+        })
+        .catch(err => cb(err)),
+      (cb) => {
+        rds.query(
+          'DELETE FROM apps WHERE vendor=?',
+          [vendor2],
           err => cb(err)
         );
       },

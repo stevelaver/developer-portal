@@ -120,6 +120,7 @@ class Auth {
         name: vendor.name,
         address: vendor.address,
         email: vendor.email,
+        createdBy: email,
       }, false))
       .then(() => this.db.end())
       .catch((err) => {
