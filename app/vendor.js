@@ -1,8 +1,15 @@
+import DbInvitations from '../lib/db/invitations';
+import Email from '../lib/email';
+import UserPool from '../lib/UserPool';
+
 const _ = require('lodash');
+const aws = require('aws-sdk');
+
+const db = require('../lib/db');
 
 class Vendor {
-  constructor(db, env, err) {
-    this.db = db;
+  constructor(dbIn, env, err) {
+    this.db = dbIn;
     this.env = env;
     this.err = err;
   }
@@ -67,6 +74,48 @@ class Vendor {
             },
           ],
         }).promise();
+      });
+  }
+
+  invite(vendor, email, user) {
+    const emailLib = new Email(
+      new aws.SES({ apiVersion: '2010-12-01', region: this.env.REGION }),
+      this.env.SES_EMAIL_FROM
+    );
+    aws.config.setPromisesDependency(Promise);
+    const userPool = new UserPool(
+      new aws.CognitoIdentityServiceProvider({ region: this.env.REGION }),
+      this.env.COGNITO_POOL_ID,
+      this.env.COGNITO_CLIENT_ID,
+    );
+    if (user.vendors.indexOf(vendor) === -1) {
+      throw this.err.forbidden('You do not have access to the vendor');
+    }
+    return db.connect(this.env)
+      .then(() => db.checkVendorExists(vendor))
+      .then(() => userPool.getUser(email))
+      .then((data) => {
+        if (data.vendors.indexOf(vendor) !== -1) {
+          throw this.err.forbidden('The user already is member of the vendor');
+        }
+      })
+      .catch((err) => {
+        if (err.code !== 'UserNotFoundException') {
+          throw err;
+        }
+      })
+      .then(() => new DbInvitations(db.getConnection()))
+      .then(dbInvitations => dbInvitations.create(vendor, email, user.email))
+      .then(code => emailLib.send(
+        email,
+        `Invitation to vendor ${vendor}`,
+        'Keboola Developer Portal',
+        `You have been invited to join vendor ${vendor} by ${user.name}. <a href="${this.env.API_ENDPOINT}/vendors/${vendor}/invitations/${email}/${code}">Accept the invitation</a>`
+      ))
+      .then(() => db.end())
+      .catch((err) => {
+        db.end();
+        throw err;
       });
   }
 }

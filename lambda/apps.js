@@ -5,6 +5,7 @@ import Icon from '../app/icon';
 import Identity from '../lib/identity';
 import Notification from '../lib/notification';
 import Validation from '../lib/validation';
+import Vendor from '../app/vendor';
 
 require('longjohn');
 require('babel-polyfill');
@@ -24,6 +25,7 @@ const s3 = new aws.S3();
 
 const app = new App(db, Identity, process.env, error);
 const iconApp = new Icon(s3, db, process.env, error);
+const vendorApp = new Vendor(db, process.env, error);
 const identity = new Identity(jwt, error);
 const notification = new Notification(
   requestLib,
@@ -248,6 +250,34 @@ function icon(event, context, callback) {
   );
 }
 
+function sendInvitation(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['vendor', 'email'],
+  });
+
+  return request.responsePromise(
+    identity.getUser(event.headers.Authorization)
+      .then(user => vendorApp.invite(
+        event.pathParameters.vendor,
+        event.pathParameters.email,
+        user,
+      )),
+    event,
+    context,
+    callback
+  );
+}
+
+function acceptInvitation(event, context, callback) {
+  request.htmlResponse(error, {
+    header: 'Account confirmation',
+    content: 'Your account has been successfully confirmed. Now you have ' +
+    'to wait for approval from our staff. Your account is disabled ' +
+    'until then.',
+  }, event, context, callback);
+}
+
 
 module.exports.apps = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -271,6 +301,10 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
       return rollback(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/icon':
       return icon(event, context, callback);
+    case '/vendors/{vendor}/invitations/{email}':
+      return sendInvitation(event, context, callback);
+    case '/vendors/{vendor}/invitations/{email}/{code}':
+      return acceptInvitation(event, context, callback);
     default:
       throw error.notFound();
   }
