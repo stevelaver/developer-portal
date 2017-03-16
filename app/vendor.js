@@ -1,17 +1,25 @@
 import DbInvitations from '../lib/db/invitations';
-import Email from '../lib/email';
 import UserPool from '../lib/UserPool';
+import Identity from '../lib/identity';
 
 const _ = require('lodash');
 const aws = require('aws-sdk');
+const moment = require('moment');
+const Promise = require('bluebird');
 
 const db = require('../lib/db');
+
+aws.config.setPromisesDependency(Promise);
 
 class Vendor {
   constructor(dbIn, env, err) {
     this.db = dbIn;
     this.env = env;
     this.err = err;
+  }
+
+  setEmail(Email) {
+    this.Email = Email;
   }
 
   list(offset = 0, limit = 1000) {
@@ -78,15 +86,15 @@ class Vendor {
   }
 
   invite(vendor, email, user) {
-    const emailLib = new Email(
+    const emailLib = new this.Email(
       new aws.SES({ apiVersion: '2010-12-01', region: this.env.REGION }),
       this.env.SES_EMAIL_FROM
     );
-    aws.config.setPromisesDependency(Promise);
     const userPool = new UserPool(
       new aws.CognitoIdentityServiceProvider({ region: this.env.REGION }),
       this.env.COGNITO_POOL_ID,
       this.env.COGNITO_CLIENT_ID,
+      Identity,
     );
     if (user.vendors.indexOf(vendor) === -1) {
       throw this.err.forbidden('You do not have access to the vendor');
@@ -96,7 +104,7 @@ class Vendor {
       .then(() => userPool.getUser(email))
       .then((data) => {
         if (data.vendors.indexOf(vendor) !== -1) {
-          throw this.err.forbidden('The user already is member of the vendor');
+          throw this.err.forbidden('The user is already member of the vendor');
         }
       })
       .catch((err) => {
@@ -104,7 +112,7 @@ class Vendor {
           throw err;
         }
       })
-      .then(() => new DbInvitations(db.getConnection()))
+      .then(() => new DbInvitations(db.getConnection(), this.err))
       .then(dbInvitations => dbInvitations.create(vendor, email, user.email))
       .then(code => emailLib.send(
         email,
@@ -114,7 +122,42 @@ class Vendor {
       ))
       .then(() => db.end())
       .catch((err) => {
+        db.end()
+          .catch(() => null);
+        throw err;
+      });
+  }
+
+  acceptInvitation(vendor, email, code) {
+    const userPool = new UserPool(
+      new aws.CognitoIdentityServiceProvider({ region: this.env.REGION }),
+      this.env.COGNITO_POOL_ID,
+      this.env.COGNITO_CLIENT_ID,
+      Identity,
+    );
+    let dbInvitations;
+    return db.connect(this.env)
+      .then(() => {
+        dbInvitations = new DbInvitations(db.getConnection(), this.err);
+      })
+      .then(() => dbInvitations.get(code))
+      .then((data) => {
+        if (data.acceptedOn) {
+          throw this.err.badRequest('You have already accepted the invitation.');
+        }
+        const validLimit = moment().subtract(24, 'hours');
+        if (moment(data.createdOn).isBefore(validLimit)) {
+          throw this.err.badRequest('Your invitation expired. Please ask for a new one.');
+        }
+      })
+      .then(() => userPool.addVendorToUser(email, vendor))
+      .then(() => dbInvitations.accept(code))
+      .then(() => db.end())
+      .catch((err) => {
         db.end();
+        if (err.code === 'UserNotFoundException') {
+          throw this.err.notFound('User account does not exist. Please signup first.');
+        }
         throw err;
       });
   }

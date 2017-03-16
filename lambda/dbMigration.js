@@ -17,7 +17,7 @@ exports.handler = function (event, context, callback) {
         host: process.env.RDS_HOST,
         database: process.env.RDS_DATABASE,
         port: process.env.RDS_PORT,
-        ssl: 'Amazon RDS',
+        ssl: process.env.RDS_SSL,
         multipleStatements: true,
       },
     },

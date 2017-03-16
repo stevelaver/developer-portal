@@ -27,6 +27,7 @@ before_script:
     -e RDS_PASSWORD=$TEST_RDS_PASSWORD
     -e RDS_HOST=$TEST_RDS_HOST
     -e RDS_PORT=$TEST_RDS_PORT
+    -e RDS_SSL=$TEST_RDS_SSL
     -e RDS_SECURITY_GROUP=$TEST_RDS_SECURITY_GROUP
     -e S3_BUCKET=$TEST_S3_BUCKET
     -e LOG_HOST=$TEST_LOG_HOST
@@ -55,12 +56,13 @@ script:
   - node ./scripts/create-env.js ./env.yml TEST
   - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
+    mocha --timeout 0 --compilers js:babel-core/register test/lib
+  - mocha --timeout 0 --compilers js:babel-core/register test/app
+  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
     FUNC_RDS_HOST=127.0.0.1
     FUNC_RDS_PORT=33060
     mocha --timeout 0 --compilers js:babel-core/register test/functional
-  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
-    mocha --timeout 0 --compilers js:babel-core/register test/lib
 
 deploy:
   provider: script
@@ -81,6 +83,7 @@ deploy:
       -e RDS_PASSWORD=$DEPLOY_RDS_PASSWORD
       -e RDS_HOST=$DEPLOY_RDS_HOST
       -e RDS_PORT=$DEPLOY_RDS_PORT
+      -e RDS_SSL=$DEPLOY_RDS_SSL
       -e S3_BUCKET=$DEPLOY_S3_BUCKET
       -e LOG_HOST=$DEPLOY_LOG_HOST
       -e LOG_PORT=$DEPLOY_LOG_PORT

@@ -1,6 +1,7 @@
 'use strict';
 
 import App from '../lib/app';
+import Email from '../lib/email';
 import Icon from '../app/icon';
 import Identity from '../lib/identity';
 import Notification from '../lib/notification';
@@ -26,6 +27,7 @@ const s3 = new aws.S3();
 const app = new App(db, Identity, process.env, error);
 const iconApp = new Icon(s3, db, process.env, error);
 const vendorApp = new Vendor(db, process.env, error);
+vendorApp.setEmail(Email);
 const identity = new Identity(jwt, error);
 const notification = new Notification(
   requestLib,
@@ -270,12 +272,20 @@ function sendInvitation(event, context, callback) {
 }
 
 function acceptInvitation(event, context, callback) {
-  request.htmlResponse(error, {
-    header: 'Account confirmation',
-    content: 'Your account has been successfully confirmed. Now you have ' +
-    'to wait for approval from our staff. Your account is disabled ' +
-    'until then.',
-  }, event, context, callback);
+  validation.validate(event, {
+    path: ['vendor', 'email', 'code'],
+  });
+
+  return vendorApp.acceptInvitation(
+    event.pathParameters.vendor,
+    event.pathParameters.email,
+    event.pathParameters.code,
+  )
+    .then(() => request.htmlResponse(null, {
+      header: 'Invitation confirmed',
+      content: `Your invitation to vendor ${event.pathParameters.vendor} has been successfully confirmed.`,
+    }, event, context, callback))
+    .catch(err => request.htmlResponse(err, null, event, context, callback));
 }
 
 
