@@ -1,11 +1,13 @@
 'use strict';
 
 import Identity from '../../lib/identity';
+import UserPool from '../../lib/UserPool';
 
 const async = require('async');
 const aws = require('aws-sdk');
 const expect = require('unexpected');
 const mysql = require('mysql');
+const Promise = require('bluebird');
 const request = require('request');
 
 const env = require('../../lib/env').load();
@@ -20,7 +22,13 @@ const rds = mysql.createConnection({
   multipleStatements: true,
 });
 
-const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+aws.config.setPromisesDependency(Promise);
+const userPool = new UserPool(
+  new aws.CognitoIdentityServiceProvider({ region: env.REGION }),
+  env.COGNITO_POOL_ID,
+  env.COGNITO_CLIENT_ID,
+  Identity,
+);
 
 const userEmail = `u${Date.now()}@keboola.com`;
 const vendor = process.env.FUNC_VENDOR;
@@ -30,18 +38,10 @@ let token;
 describe('Vendors', () => {
   before((done) => {
     async.waterfall([
-      (cb) => {
-        cognito.adminUpdateUserAttributes({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: process.env.FUNC_USER_EMAIL,
-          UserAttributes: [
-            {
-              Name: 'profile',
-              Value: vendor,
-            },
-          ],
-        }, err => cb(err));
-      },
+      cb =>
+        userPool.updateUserAttribute(process.env.FUNC_USER_EMAIL, 'profile', vendor)
+          .then(() => cb())
+          .catch(err => cb(err)),
       (cb) => {
         request.post({
           url: `${env.API_ENDPOINT}/auth/login`,
@@ -64,6 +64,46 @@ describe('Vendors', () => {
           err => cb(err)
         );
       },
+    ], done);
+  });
+
+  it('Join a Vendor', (done) => {
+    async.waterfall([
+      (cb) => {
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/login`,
+          json: true,
+          body: {
+            email: process.env.FUNC_USER_EMAIL,
+            password: process.env.FUNC_USER_PASSWORD,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          token = res.body.token;
+          cb();
+        });
+      },
+      (cb) => {
+        // Add vendor
+        request.post({
+          url: `${env.API_ENDPOINT}/vendors/${vendor1}/users`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
+          cb();
+        });
+      },
+      cb =>
+        userPool.getUser(process.env.FUNC_USER_EMAIL)
+          .then((user) => {
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'to contain', vendor1);
+          })
+          .then(() => cb())
+          .catch(err => cb(err)),
     ], done);
   });
 
@@ -115,16 +155,11 @@ describe('Vendors', () => {
       },
       (cb) => {
         // 5) Check vendor in cognito
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }, (err, res) => cb(err, res));
-      },
-      (data, cb) => {
-        Identity.formatUser(data)
-          .then((uData) => {
-            expect(uData.vendors, 'to contain', vendor);
-            expect(uData.vendors, 'to contain', vendor1);
+        userPool.getUser(process.env.FUNC_USER_EMAIL)
+          .then((user) => {
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'to contain', vendor);
+            expect(user.vendors, 'to contain', vendor1);
           })
           .then(() => cb())
           .catch(err => cb(err));
@@ -137,24 +172,14 @@ describe('Vendors', () => {
       (cb) => {
         rds.query('DELETE FROM `invitations` WHERE vendor=? AND email=?', [vendor, userEmail], () => cb());
       },
-      (cb) => {
-        cognito.adminDeleteUser(
-          { UserPoolId: env.COGNITO_POOL_ID, Username: userEmail },
-          () => cb()
-        );
-      },
-      (cb) => {
-        cognito.adminUpdateUserAttributes({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: process.env.FUNC_USER_EMAIL,
-          UserAttributes: [
-            {
-              Name: 'profile',
-              Value: vendor,
-            },
-          ],
-        }, err => cb(err));
-      },
+      cb =>
+        userPool.deleteUser(userEmail)
+          .then(() => cb())
+          .catch(err => cb(err)),
+      cb =>
+        userPool.updateUserAttribute(process.env.FUNC_USER_EMAIL, 'profile', vendor)
+          .then(() => cb())
+          .catch(err => cb(err)),
     ], done);
   });
 });

@@ -163,7 +163,10 @@ Sends email with confirmation code which has to be used in the next API call
 + Response 204 (application/json)
 
 
-### Request to join a vendor [POST /auth/vendors/{vendor}]
+
+## Vendors [/vendors]
+
+### Request to join a vendor [POST /vendors/{vendor}/join]
 
 Request to join a vendor. You will recieve an email confirmation once it is approved.
 
@@ -177,9 +180,6 @@ Request to join a vendor. You will recieve an email confirmation once it is appr
             Authorization: {your_token}
 
 + Response 204 (application/json)
-
-
-## Vendors [/vendors]
 
 ### Invite user to a vendor [POST /vendors/{vendor}/invitations/{email}]
 

@@ -18,6 +18,15 @@ class Vendor {
     this.err = err;
   }
 
+  initUserPool() {
+    return new UserPool(
+      new aws.CognitoIdentityServiceProvider({ region: this.env.REGION }),
+      this.env.COGNITO_POOL_ID,
+      this.env.COGNITO_CLIENT_ID,
+      Identity,
+    );
+  }
+
   setEmail(Email) {
     this.Email = Email;
   }
@@ -54,7 +63,8 @@ class Vendor {
       });
   }
 
-  join(cognito, IdentityClass, user, vendor) {
+  join(user, vendor) {
+    const userPool = this.initUserPool();
     return this.db.connect(this.env)
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.end())
@@ -62,27 +72,7 @@ class Vendor {
         this.db.end();
         throw err;
       })
-      .then(() => cognito.adminGetUser({
-        UserPoolId: this.env.COGNITO_POOL_ID,
-        Username: user.email,
-      }).promise())
-      .then(data => IdentityClass.formatUser(data))
-      .then((data) => {
-        if (data.vendors.indexOf(vendor) !== -1) {
-          throw this.err.badRequest(`User ${user.email} is already member of vendor ${vendor}`);
-        }
-        data.vendors.push(vendor);
-        return cognito.adminUpdateUserAttributes({
-          UserPoolId: this.env.COGNITO_POOL_ID,
-          Username: user.email,
-          UserAttributes: [
-            {
-              Name: 'profile',
-              Value: data.vendors.join(','),
-            },
-          ],
-        }).promise();
-      });
+      .then(() => userPool.addVendorToUser(user.email, vendor));
   }
 
   invite(vendor, email, user) {
@@ -90,12 +80,7 @@ class Vendor {
       new aws.SES({ apiVersion: '2010-12-01', region: this.env.REGION }),
       this.env.SES_EMAIL_FROM
     );
-    const userPool = new UserPool(
-      new aws.CognitoIdentityServiceProvider({ region: this.env.REGION }),
-      this.env.COGNITO_POOL_ID,
-      this.env.COGNITO_CLIENT_ID,
-      Identity,
-    );
+    const userPool = this.initUserPool();
     if (user.vendors.indexOf(vendor) === -1) {
       throw this.err.forbidden('You do not have access to the vendor');
     }

@@ -1,7 +1,5 @@
 'use strict';
 
-import Identity from '../../lib/identity';
-
 const async = require('async');
 const aws = require('aws-sdk');
 const expect = require('unexpected');
@@ -272,63 +270,6 @@ describe('Auth', () => {
           cb(null, token);
         });
       },
-    ], done);
-  });
-
-  it('Join a Vendor', (done) => {
-    let token;
-    async.waterfall([
-      (cb) => {
-        cognito.adminUpdateUserAttributes({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: process.env.FUNC_USER_EMAIL,
-          UserAttributes: [
-            {
-              Name: 'profile',
-              Value: vendor,
-            },
-          ],
-        }, () => cb());
-      },
-      (cb) => {
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/login`,
-          json: true,
-          body: {
-            email: process.env.FUNC_USER_EMAIL,
-            password: process.env.FUNC_USER_PASSWORD,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'token');
-          token = res.body.token;
-          cb();
-        });
-      },
-      (cb) => {
-        // Add vendor
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/vendors/${otherVendor}`,
-          headers: {
-            Authorization: token,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      cb =>
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: process.env.FUNC_USER_EMAIL,
-        }).promise()
-          .then(data => Identity.formatUser(data))
-          .then((user) => {
-            expect(user, 'to have key', 'vendors');
-            expect(user.vendors, 'to contain', otherVendor);
-          })
-          .then(() => cb())
-          .catch(err => cb(err)),
     ], done);
   });
 

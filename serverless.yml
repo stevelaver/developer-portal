@@ -223,6 +223,11 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
+          path: "vendors/{vendor}/users"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
           path: "vendors/{vendor}/invitations/{email}"
       -
         http:
@@ -281,11 +286,6 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "auth/profile"
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: post
-          path: "auth/vendors/{vendor}"
       -
         http:
           method: post

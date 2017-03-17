@@ -14,6 +14,7 @@ const aws = require('aws-sdk');
 const joi = require('joi');
 const jwt = require('jsonwebtoken');
 const requestLib = require('request-promise-lite');
+const Promise = require('bluebird');
 
 const db = require('../lib/db');
 const error = require('../lib/error');
@@ -135,34 +136,6 @@ function profile(event, context, callback) {
     event,
     context,
     callback
-  );
-}
-
-function joinVendor(event, context, callback) {
-  validation.validate(event, {
-    auth: true,
-    path: {
-      vendor: joi.string().required()
-        .error(Error('Parameter vendor is required and must be a string')),
-    },
-  });
-
-  return request.responsePromise(
-    identity.getUser(event.headers.Authorization)
-      .then((user) => {
-        if (user.isAdmin) {
-          const vendor = new Vendor(db, process.env, error);
-          return vendor.join(cognito, Identity, user, event.pathParameters.vendor);
-        }
-        return notification.approveJoinVendor({
-          email: user.email,
-          vendor: event.pathParameters.vendor,
-        });
-      }),
-    event,
-    context,
-    callback,
-    204
   );
 }
 
@@ -323,8 +296,6 @@ module.exports.auth = (event, context, callback) => request.errorHandler(() => {
       return forgotConfirm(event, context, callback);
     case '/auth/profile':
       return profile(event, context, callback);
-    case '/auth/vendors/{vendor}':
-      return joinVendor(event, context, callback);
     case '/auth/signup':
       return signup(event, context, callback);
     case '/auth/confirm/{email}/{code}':

@@ -252,6 +252,30 @@ function icon(event, context, callback) {
   );
 }
 
+function requestJoinVendor(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['vendor'],
+  });
+
+  return request.responsePromise(
+    identity.getUser(event.headers.Authorization)
+      .then((user) => {
+        if (user.isAdmin) {
+          return vendorApp.join(user, event.pathParameters.vendor);
+        }
+        return notification.approveJoinVendor({
+          email: user.email,
+          vendor: event.pathParameters.vendor,
+        });
+      }),
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 function sendInvitation(event, context, callback) {
   validation.validate(event, {
     auth: true,
@@ -312,6 +336,8 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
       return rollback(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/icon':
       return icon(event, context, callback);
+    case '/vendors/{vendor}/users':
+      return requestJoinVendor(event, context, callback);
     case '/vendors/{vendor}/invitations/{email}':
       return sendInvitation(event, context, callback);
     case '/vendors/{vendor}/invitations/{email}/{code}':
