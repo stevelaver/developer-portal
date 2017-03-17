@@ -54,7 +54,7 @@ class Vendor {
       });
   }
 
-  join(cognito, Identity, user, vendor) {
+  join(cognito, IdentityClass, user, vendor) {
     return this.db.connect(this.env)
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.end())
@@ -66,7 +66,7 @@ class Vendor {
         UserPoolId: this.env.COGNITO_POOL_ID,
         Username: user.email,
       }).promise())
-      .then(data => Identity.formatUser(data))
+      .then(data => IdentityClass.formatUser(data))
       .then((data) => {
         if (data.vendors.indexOf(vendor) !== -1) {
           throw this.err.badRequest(`User ${user.email} is already member of vendor ${vendor}`);

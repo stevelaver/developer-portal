@@ -4,10 +4,8 @@ import Identity from '../../lib/identity';
 import Vendor from '../../app/vendor';
 
 const _ = require('lodash');
-const async = require('async');
 const aws = require('aws-sdk');
 const expect = require('unexpected');
-const fs = require('fs');
 const moment = require('moment');
 const mysql = require('mysql');
 const Promise = require('bluebird');
@@ -31,11 +29,13 @@ const rds = mysql.createConnection({
   multipleStatements: true,
 });
 
+/* eslint-disable */
 class Email {
   send(to, subject, header, content, buttonUrl = null, buttonText = null) {
     return null;
   }
 }
+/* eslint-enable */
 
 const appEnv = _.clone(env);
 appEnv.RDS_HOST = process.env.UNIT_RDS_HOST;
@@ -127,7 +127,7 @@ describe('Vendor App', () => {
       }).promise()
       .then(data => Identity.formatUser(data)))
       .then((data) => {
-        expect(data.vendors, 'to contain', vendor)
+        expect(data.vendors, 'to contain', vendor);
       });
   });
 

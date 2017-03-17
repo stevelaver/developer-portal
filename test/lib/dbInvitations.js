@@ -90,7 +90,7 @@ describe('dbInvitations', () => {
       .then((res) => {
         expect(res, 'to have length', 1);
         expect(res[0].createdOn, 'not to be', firstCreatedOn);
-      })
+      });
   });
 
   it('get', () => {
