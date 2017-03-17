@@ -57,7 +57,9 @@ script:
   - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
     mocha --timeout 0 --compilers js:babel-core/register test/lib
-  - mocha --timeout 0 --compilers js:babel-core/register test/app
+  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
+    mocha --timeout 0 --compilers js:babel-core/register test/app
   - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
     FUNC_RDS_HOST=127.0.0.1
