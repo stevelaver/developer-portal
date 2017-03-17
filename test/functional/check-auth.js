@@ -25,13 +25,6 @@ describe('Check if all endpoints have auth required', () => {
         );
       },
       (cb) => {
-        // Join vendor
-        request.post(
-          { url: `${env.API_ENDPOINT}/vendors/keboola/join` },
-          (err, res) => checkAuth(err, res, cb)
-        );
-      },
-      (cb) => {
         // Enable MFA
         request.post(
           { url: `${env.API_ENDPOINT}/auth/mfa/phone` },
