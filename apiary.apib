@@ -179,8 +179,37 @@ Request to join a vendor. You will recieve an email confirmation once it is appr
 + Response 204 (application/json)
 
 
+## Vendors [/vendors]
 
-## Apps [/vendors]
+### Invite user to a vendor [POST /vendors/{vendor}/invitations/{email}]
+
+Sends an email with a link to accept the invitation.
+
++ Parameters
+    + vendor
+    + email
+    
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+### Accept invitation to a vendor [GET /vendors/{vendor}/invitations/{email}/{code}]
+
+Link to this resource is sent to an email.
+
++ Parameters
+    + vendor
+    + email
+    + code - verification code
+    
++ Response 200 (text/html)
+
+
+## Apps [/vendors/{vendor}/apps]
 
 Manual approval from Keboola is required before an app is allowed to be published.
 Apps can be created and updated freely before requesting approval.
@@ -274,9 +303,9 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
     + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
         + Default: `true`
     + permissions (optional, array) - List of specific permissions for the app. You may choose specific KBC stacks
-        + permission (object)
-            + stack: (string, required) - name of the stack
-            + projects: (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
+        + (object)
+            + stack (string, required) - name of the stack
+            + projects (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
 
 + Request (application/json)
 
@@ -366,9 +395,9 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
     + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
         + Default: `true`
     + permissions (optional, array) - List of specific permissions for the app. You may choose specific KBC stacks
-        + permission (object)
-            + stack: (string, required) - name of the stack
-            + projects: (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
+        + (object)
+            + stack (string, required) - name of the stack
+            + projects (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
 
 + Request (application/json)
 
@@ -1094,9 +1123,9 @@ Allows to update apps across vendors
     + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
         + Default: `true`
     + permissions (optional, array) - List of specific permissions for the app. You may choose specific KBC stacks
-        + permission (object)
-            + stack: (string, required) - name of the stack
-            + projects: (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
+        + (object)
+            + stack (string, required) - name of the stack
+            + projects (array, optional) - ids of KBC projects where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
 
 + Request (application/json)
 
