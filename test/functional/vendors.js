@@ -1,16 +1,14 @@
 'use strict';
 
-import Identity from '../../lib/identity';
-import UserPool from '../../lib/UserPool';
+import InitApp from '../InitApp';
 
 const async = require('async');
-const aws = require('aws-sdk');
 const expect = require('unexpected');
 const mysql = require('mysql');
-const Promise = require('bluebird');
 const request = require('request');
-
 const env = require('../../lib/env').load();
+
+const init = new InitApp(env);
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST ? process.env.FUNC_RDS_HOST : env.RDS_HOST,
@@ -21,14 +19,7 @@ const rds = mysql.createConnection({
   ssl: env.RDS_SSL,
   multipleStatements: true,
 });
-
-aws.config.setPromisesDependency(Promise);
-const userPool = new UserPool(
-  new aws.CognitoIdentityServiceProvider({ region: env.REGION }),
-  env.COGNITO_POOL_ID,
-  env.COGNITO_CLIENT_ID,
-  Identity,
-);
+const userPool = init.getUserPool();
 
 const userEmail = `u${Date.now()}@keboola.com`;
 const vendor = process.env.FUNC_VENDOR;

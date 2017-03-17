@@ -1,34 +1,16 @@
 import DbInvitations from '../lib/db/invitations';
-import UserPool from '../lib/UserPool';
-import Identity from '../lib/identity';
 
 const _ = require('lodash');
-const aws = require('aws-sdk');
 const moment = require('moment');
-const Promise = require('bluebird');
 
 const db = require('../lib/db');
 
-aws.config.setPromisesDependency(Promise);
-
 class Vendor {
-  constructor(dbIn, env, err) {
+  constructor(init, dbIn, env, err) {
+    this.init = init;
     this.db = dbIn;
     this.env = env;
     this.err = err;
-  }
-
-  initUserPool() {
-    return new UserPool(
-      new aws.CognitoIdentityServiceProvider({ region: this.env.REGION }),
-      this.env.COGNITO_POOL_ID,
-      this.env.COGNITO_CLIENT_ID,
-      Identity,
-    );
-  }
-
-  setEmail(Email) {
-    this.Email = Email;
   }
 
   list(offset = 0, limit = 1000) {
@@ -64,7 +46,7 @@ class Vendor {
   }
 
   join(user, vendor) {
-    const userPool = this.initUserPool();
+    const userPool = this.init.getUserPool();
     return this.db.connect(this.env)
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.end())
@@ -72,15 +54,12 @@ class Vendor {
         this.db.end();
         throw err;
       })
-      .then(() => userPool.addVendorToUser(user.email, vendor));
+      .then(() => userPool.addUserToVendor(user.email, vendor));
   }
 
   invite(vendor, email, user) {
-    const emailLib = new this.Email(
-      new aws.SES({ apiVersion: '2010-12-01', region: this.env.REGION }),
-      this.env.SES_EMAIL_FROM
-    );
-    const userPool = this.initUserPool();
+    const emailLib = this.init.getEmail();
+    const userPool = this.init.getUserPool();
     if (user.vendors.indexOf(vendor) === -1) {
       throw this.err.forbidden('You do not have access to the vendor');
     }
@@ -114,12 +93,7 @@ class Vendor {
   }
 
   acceptInvitation(vendor, email, code) {
-    const userPool = new UserPool(
-      new aws.CognitoIdentityServiceProvider({ region: this.env.REGION }),
-      this.env.COGNITO_POOL_ID,
-      this.env.COGNITO_CLIENT_ID,
-      Identity,
-    );
+    const userPool = this.init.getUserPool();
     let dbInvitations;
     return db.connect(this.env)
       .then(() => {
@@ -135,7 +109,7 @@ class Vendor {
           throw this.err.badRequest('Your invitation expired. Please ask for a new one.');
         }
       })
-      .then(() => userPool.addVendorToUser(email, vendor))
+      .then(() => userPool.addUserToVendor(email, vendor))
       .then(() => dbInvitations.accept(code))
       .then(() => db.end())
       .catch((err) => {

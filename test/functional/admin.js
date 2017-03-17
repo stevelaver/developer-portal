@@ -1,6 +1,6 @@
 'use strict';
 
-import AdminUser from '../../app/adminUser';
+import InitApp from '../InitApp';
 import Identity from '../../lib/identity';
 
 const _ = require('lodash');
@@ -11,9 +11,10 @@ const moment = require('moment');
 const mysql = require('mysql');
 const request = require('request');
 const db = require('../../lib/db');
-const error = require('../../lib/error');
-
 const env = require('../../lib/env').load();
+
+const init = new InitApp(env);
+const userPool = init.getUserPool();
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST ? process.env.FUNC_RDS_HOST : env.RDS_HOST,
@@ -29,7 +30,6 @@ db.init(rds);
 const cognito = new aws.CognitoIdentityServiceProvider({
   region: env.REGION,
 });
-const adminUser = new AdminUser(cognito, db, Identity, env, error);
 const vendor = process.env.FUNC_VENDOR;
 const otherVendor = `${vendor}o1`;
 const appId = `app_admin_${Date.now()}`;
@@ -499,7 +499,7 @@ describe('Admin', () => {
           err => cb(err)
         );
       },
-      cb => adminUser.addToVendor(userEmail, vendor1)
+      cb => userPool.addUserToVendor(userEmail, vendor1)
         .then(() => cb()),
       (cb) => {
         request.post({
@@ -533,11 +533,7 @@ describe('Admin', () => {
         expect(data[0].isApproved, 'to be', 1);
         cb();
       },
-      cb => cognito.adminGetUser({
-        UserPoolId: env.COGNITO_POOL_ID,
-        Username: userEmail,
-      }, cb),
-      (user, cb) => adminUser.get(userEmail)
+      cb => userPool.getUser(userEmail)
         .then((data) => {
           expect(data.vendors, 'not to contain', vendor1);
           expect(data.vendors, 'to contain', vendor2);

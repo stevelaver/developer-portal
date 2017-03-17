@@ -1,9 +1,8 @@
 'use strict';
 
-import AdminUser from '../app/adminUser';
 import App from '../lib/app';
-import Email from '../lib/email';
 import Identity from '../lib/identity';
+import InitApp from '../lib/InitApp';
 import Validation from '../lib/validation';
 import Vendor from '../app/vendor';
 
@@ -11,30 +10,21 @@ require('longjohn');
 require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
-const aws = require('aws-sdk');
 const joiBase = require('joi');
 const joiExtension = require('joi-date-extensions');
 const jwt = require('jsonwebtoken');
-const Promise = require('bluebird');
 
 const db = require('../lib/db');
 const error = require('../lib/error');
 const request = require('../lib/request');
 
+const init = new InitApp(process.env);
 
-aws.config.setPromisesDependency(Promise);
-const cognito = new aws.CognitoIdentityServiceProvider({
-  region: process.env.REGION,
-});
 const app = new App(db, Identity, process.env, error);
-const email = new Email(
-  new aws.SES({ apiVersion: '2010-12-01', region: process.env.REGION }),
-  process.env.SES_EMAIL_FROM
-);
 const identity = new Identity(jwt, error);
 const joi = joiBase.extend(joiExtension);
 const validation = new Validation(joi, error);
-const vendorApp = new Vendor(db, process.env, error);
+const vendorApp = new Vendor(init, db, process.env, error);
 
 
 function listUsers(event, context, callback) {
@@ -44,11 +34,10 @@ function listUsers(event, context, callback) {
     query: ['filter'],
   });
 
-  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => adminUser.list(_.get(event, 'queryStringParameters.filter', null))),
+      .then(() => init.getUserPool().listUsers(_.get(event, 'queryStringParameters.filter', null))),
     db,
     event,
     context,
@@ -62,11 +51,10 @@ function makeUserAdmin(event, context, callback) {
     path: ['email'],
   });
 
-  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => adminUser.makeAdmin(event.pathParameters.email))
+      .then(() => init.getUserPool().makeUserAdmin(event.pathParameters.email))
       .then(() => null),
     db,
     event,
@@ -82,12 +70,11 @@ function addUserToVendor(event, context, callback) {
     path: ['email', 'vendor'],
   });
 
-  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => adminUser.addToVendor(event.pathParameters.email, event.pathParameters.vendor))
-      .then(() => null),
+      .then(() => init.getUserPool()
+        .addUserToVendor(event.pathParameters.email, event.pathParameters.vendor)),
     db,
     event,
     context,
@@ -102,12 +89,11 @@ function enableUser(event, context, callback) {
     path: ['email'],
   });
 
-  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => adminUser.enable(event.pathParameters.email))
-      .then(() => email.send(
+      .then(() => init.getUserPool().enableUser(event.pathParameters.email))
+      .then(() => init.getEmail().send(
         event.pathParameters.email,
         'Welcome to Keboola Developer Portal',
         'Welcome to Keboola Developer Portal',
@@ -132,7 +118,7 @@ function approveApp(event, context, callback) {
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
       .then(user => app.approveApp(event.pathParameters.id, user))
-      .then(vendor => email.send(
+      .then(vendor => init.getEmail().send(
         vendor.email,
         'App approval in Keboola Developer Portal',
         'Keboola Developer Portal',
@@ -268,15 +254,15 @@ function approveVendor(event, context, callback) {
   });
 
   const body = JSON.parse(event.body);
-  const adminUser = new AdminUser(cognito, db, Identity, process.env, error);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
       .then(() => vendorApp.approve(event.pathParameters.vendor, _.get(body, 'newId', null)))
       .then((user) => {
         if (_.has(body, 'newId') && user) {
-          return adminUser.addToVendor(user, body.newId)
-            .then(() => adminUser.removeFromVendor(user, event.pathParameters.vendor));
+          const userPool = init.getUserPool();
+          return userPool.addUserToVendor(user, body.newId)
+            .then(() => userPool.removeUserFromVendor(user, event.pathParameters.vendor));
         }
       })
       .then(() => null),

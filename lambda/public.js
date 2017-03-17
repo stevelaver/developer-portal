@@ -2,6 +2,7 @@
 
 import App from '../lib/app';
 import Identity from '../lib/identity';
+import InitApp from '../lib/InitApp';
 import Validation from '../lib/validation';
 import Vendor from '../app/vendor';
 
@@ -16,9 +17,10 @@ const error = require('../lib/error');
 const landingHtml = require('../views/landing.html');
 const request = require('../lib/request');
 
+const init = new InitApp(process.env);
 const app = new App(db, Identity, process.env, error);
 const validation = new Validation(joi, error);
-const vendorApp = new Vendor(db, process.env, error);
+const vendorApp = new Vendor(init, db, process.env, error);
 
 
 function landing(event, context, callback) {

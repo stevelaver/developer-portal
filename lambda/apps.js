@@ -1,9 +1,9 @@
 'use strict';
 
 import App from '../lib/app';
-import Email from '../lib/email';
 import Icon from '../app/icon';
 import Identity from '../lib/identity';
+import InitApp from '../lib/InitApp';
 import Notification from '../lib/notification';
 import Validation from '../lib/validation';
 import Vendor from '../app/vendor';
@@ -21,13 +21,13 @@ const db = require('../lib/db');
 const error = require('../lib/error');
 const request = require('../lib/request');
 
+const init = new InitApp(process.env);
 aws.config.setPromisesDependency(Promise);
 const s3 = new aws.S3();
 
 const app = new App(db, Identity, process.env, error);
 const iconApp = new Icon(s3, db, process.env, error);
-const vendorApp = new Vendor(db, process.env, error);
-vendorApp.setEmail(Email);
+const vendorApp = new Vendor(init, db, process.env, error);
 const identity = new Identity(jwt, error);
 const notification = new Notification(
   requestLib,

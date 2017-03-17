@@ -1,26 +1,19 @@
 
 class Auth {
-  constructor(cognito, db, env, err) {
+  constructor(init, cognito, db, env, err) {
     this.cognito = cognito;
     this.db = db;
     this.env = env;
     this.err = err;
+    this.userPool = init.getUserPool();
   }
 
   forgot(email) {
-    return this.cognito.forgotPassword({
-      ClientId: this.env.COGNITO_CLIENT_ID,
-      Username: email,
-    }).promise();
+    return this.userPool.forgotPassword(email);
   }
 
   confirmForgotPassword(email, password, code) {
-    return this.cognito.confirmForgotPassword({
-      ClientId: this.env.COGNITO_CLIENT_ID,
-      ConfirmationCode: code,
-      Password: password,
-      Username: email,
-    }).promise();
+    return this.userPool.confirmForgotPassword(email, password, code);
   }
 
   login(email, password) {
@@ -91,25 +84,7 @@ class Auth {
         this.db.end();
         throw err;
       })
-      .then(() => this.cognito.signUp({
-        ClientId: this.env.COGNITO_CLIENT_ID,
-        Username: email,
-        Password: password,
-        UserAttributes: [
-          {
-            Name: 'email',
-            Value: email,
-          },
-          {
-            Name: 'name',
-            Value: name,
-          },
-          {
-            Name: 'profile',
-            Value: vendor,
-          },
-        ],
-      }).promise());
+      .then(() => this.userPool.signUp(email, password, name, vendor));
   }
 
   signUpCreateVendor(vendorApp, email, password, name, vendor) {
@@ -127,25 +102,7 @@ class Auth {
         this.db.end();
         throw err;
       })
-      .then(() => this.cognito.signUp({
-        ClientId: this.env.COGNITO_CLIENT_ID,
-        Username: email,
-        Password: password,
-        UserAttributes: [
-          {
-            Name: 'email',
-            Value: email,
-          },
-          {
-            Name: 'name',
-            Value: name,
-          },
-          {
-            Name: 'profile',
-            Value: vendorId,
-          },
-        ],
-      }).promise())
+      .then(() => this.userPool.signUp(email, password, name, vendorId))
       .then(() => vendorId);
   }
 

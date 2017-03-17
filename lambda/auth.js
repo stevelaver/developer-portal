@@ -2,6 +2,7 @@
 
 import Auth from '../app/auth';
 import Identity from '../lib/identity';
+import InitApp from '../lib/InitApp';
 import Notification from '../lib/notification';
 import Validation from '../lib/validation';
 import Vendor from '../app/vendor';
@@ -20,12 +21,13 @@ const db = require('../lib/db');
 const error = require('../lib/error');
 const request = require('../lib/request');
 
+const init = new InitApp(process.env);
 aws.config.setPromisesDependency(Promise);
 const cognito = new aws.CognitoIdentityServiceProvider({
   region: process.env.REGION,
 });
 
-const app = new Auth(cognito, db, process.env, error);
+const app = new Auth(init, cognito, db, process.env, error);
 const identity = new Identity(jwt, error);
 const notification = new Notification(
   requestLib,
@@ -166,7 +168,7 @@ function signup(event, context, callback) {
   const body = JSON.parse(event.body);
 
   if (typeof body.vendor === 'object') {
-    const vendorApp = new Vendor(db, process.env, error);
+    const vendorApp = new Vendor(init, db, process.env, error);
     return request.responseAuthPromise(
       app.signUpCreateVendor(vendorApp, body.email, body.password, body.name, body.vendor)
         .then(vendorId => notification.approveVendor(vendorId, body.vendor.name, {

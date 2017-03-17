@@ -1,6 +1,7 @@
 'use strict';
 
 import Identity from '../../lib/identity';
+import InitApp from '../InitApp';
 import Vendor from '../../app/vendor';
 
 const _ = require('lodash');
@@ -29,14 +30,6 @@ const rds = mysql.createConnection({
   multipleStatements: true,
 });
 
-/* eslint-disable */
-class Email {
-  send(to, subject, header, content, buttonUrl = null, buttonText = null) {
-    return null;
-  }
-}
-/* eslint-enable */
-
 const appEnv = _.clone(env);
 appEnv.RDS_HOST = process.env.UNIT_RDS_HOST;
 appEnv.RDS_PORT = process.env.UNIT_RDS_PORT;
@@ -44,8 +37,8 @@ appEnv.RDS_USER = process.env.UNIT_RDS_USER;
 appEnv.RDS_PASSWORD = process.env.UNIT_RDS_PASSWORD;
 appEnv.RDS_DATABASE = process.env.UNIT_RDS_DATABASE;
 appEnv.RDS_SSL = false;
-const vendorApp = new Vendor(db, appEnv, error);
-vendorApp.setEmail(Email);
+const init = new InitApp(appEnv);
+const vendorApp = new Vendor(init, db, appEnv, error);
 
 const vendor = `v${Date.now()}`;
 const userEmail = `u${Date.now()}@test.com`;
