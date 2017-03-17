@@ -267,7 +267,8 @@ function sendInvitation(event, context, callback) {
       )),
     event,
     context,
-    callback
+    callback,
+    204
   );
 }
 
