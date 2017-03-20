@@ -1,7 +1,6 @@
 
 class Auth {
-  constructor(init, cognito, db, env, err) {
-    this.cognito = cognito;
+  constructor(init, db, env, err) {
     this.db = db;
     this.env = env;
     this.err = err;
@@ -17,7 +16,7 @@ class Auth {
   }
 
   login(email, password) {
-    return this.cognito.adminInitiateAuth({
+    return this.userPool.getCognito().adminInitiateAuth({
       AuthFlow: 'ADMIN_NO_SRP_AUTH',
       ClientId: this.env.COGNITO_CLIENT_ID,
       UserPoolId: this.env.COGNITO_POOL_ID,
@@ -43,7 +42,7 @@ class Auth {
   }
 
   loginWithCode(email, code, session) {
-    return this.cognito.respondToAuthChallenge({
+    return this.userPool.getCognito().respondToAuthChallenge({
       ChallengeName: 'SMS_MFA_CODE',
       Session: session,
       ClientId: this.env.COGNITO_CLIENT_ID,
@@ -61,7 +60,7 @@ class Auth {
   }
 
   refreshToken(token) {
-    return this.cognito.adminInitiateAuth({
+    return this.userPool.getCognito().adminInitiateAuth({
       AuthFlow: 'REFRESH_TOKEN',
       ClientId: this.env.COGNITO_CLIENT_ID,
       UserPoolId: this.env.COGNITO_POOL_ID,
@@ -107,23 +106,20 @@ class Auth {
   }
 
   confirm(email, code) {
-    return this.cognito.confirmSignUp({
+    return this.userPool.getCognito().confirmSignUp({
       ClientId: this.env.COGNITO_CLIENT_ID,
       ConfirmationCode: code,
       Username: email,
     }).promise()
-      .then(() => this.cognito.adminDisableUser({
+      .then(() => this.userPool.getCognito().adminDisableUser({
         UserPoolId: this.env.COGNITO_POOL_ID,
         Username: email,
       }).promise())
-      .then(() => this.cognito.adminGetUser({
-        UserPoolId: this.env.COGNITO_POOL_ID,
-        Username: email,
-      }).promise());
+      .then(() => this.userPool.getUser());
   }
 
   resend(email, password) {
-    return this.cognito.adminInitiateAuth({
+    return this.userPool.getCognito().adminInitiateAuth({
       AuthFlow: 'ADMIN_NO_SRP_AUTH',
       ClientId: this.env.COGNITO_CLIENT_ID,
       UserPoolId: this.env.COGNITO_POOL_ID,
@@ -134,7 +130,7 @@ class Auth {
     }).promise()
       .catch((err) => {
         if (err && err.code === 'UserNotConfirmedException') {
-          return this.cognito.resendConfirmationCode({
+          return this.userPool.getCognito().resendConfirmationCode({
             ClientId: this.env.COGNITO_CLIENT_ID,
             Username: email,
           }).promise();
@@ -147,23 +143,14 @@ class Auth {
   }
 
   enableMfa(email, phone) {
-    return this.cognito.adminUpdateUserAttributes({
-      UserPoolId: this.env.COGNITO_POOL_ID,
-      Username: email,
-      UserAttributes: [
-        {
-          Name: 'phone_number',
-          Value: phone,
-        },
-      ],
-    }).promise()
+    return this.userPool.updateUserAttribute(email, 'phone_number', phone)
       .catch((err) => {
         if (err.code === 'InvalidParameterException') {
           throw this.err.unprocessable('Phone number must be valid and in format +[country code][number]');
         }
         throw err;
       })
-      .then(() => this.cognito.adminSetUserSettings({
+      .then(() => this.userPool.getCognito().adminSetUserSettings({
         UserPoolId: this.env.COGNITO_POOL_ID,
         Username: email,
         MFAOptions: [
@@ -176,7 +163,7 @@ class Auth {
   }
 
   confirmMfa(token, code) {
-    return this.cognito.verifyUserAttribute({
+    return this.userPool.getCognito().verifyUserAttribute({
       AccessToken: token,
       Code: code,
       AttributeName: 'phone_number',

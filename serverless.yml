@@ -25,7 +25,6 @@ provider:
   name: aws
   region: ${file(./env.yml):REGION}
   stage: ${file(./env.yml):STAGE}
-  profile: ${file(./env.yml):PROFILE}
   runtime: nodejs4.3
   memorySize: 256
   timeout: 30

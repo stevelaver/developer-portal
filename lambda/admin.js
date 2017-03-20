@@ -19,7 +19,6 @@ const error = require('../lib/error');
 const request = require('../lib/request');
 
 const init = new InitApp(process.env);
-
 const app = new App(db, Identity, process.env, error);
 const identity = new Identity(jwt, error);
 const joi = joiBase.extend(joiExtension);

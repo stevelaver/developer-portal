@@ -4,7 +4,6 @@ import App from '../lib/app';
 import Icon from '../app/icon';
 import Identity from '../lib/identity';
 import InitApp from '../lib/InitApp';
-import Notification from '../lib/notification';
 import Validation from '../lib/validation';
 import Vendor from '../app/vendor';
 
@@ -12,28 +11,18 @@ require('longjohn');
 require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
-const aws = require('aws-sdk');
 const joi = require('joi');
 const jwt = require('jsonwebtoken');
-const requestLib = require('request-promise-lite');
 
 const db = require('../lib/db');
 const error = require('../lib/error');
 const request = require('../lib/request');
 
 const init = new InitApp(process.env);
-aws.config.setPromisesDependency(Promise);
-const s3 = new aws.S3();
-
 const app = new App(db, Identity, process.env, error);
-const iconApp = new Icon(s3, db, process.env, error);
+const iconApp = new Icon(InitApp.getS3(), db, process.env, error);
 const vendorApp = new Vendor(init, db, process.env, error);
 const identity = new Identity(jwt, error);
-const notification = new Notification(
-  requestLib,
-  process.env.SLACK_HOOK_URL,
-  process.env.SERVICE_NAME
-);
 const validation = new Validation(joi, error);
 
 
@@ -164,7 +153,7 @@ function approve(event, context, callback) {
         event.pathParameters.vendor,
         user,
       ))
-      .then(() => notification.approveApp(event.pathParameters.app)),
+      .then(() => init.getNotification().approveApp(event.pathParameters.app)),
     db,
     event,
     context,
@@ -264,7 +253,7 @@ function requestJoinVendor(event, context, callback) {
         if (user.isAdmin) {
           return vendorApp.join(user, event.pathParameters.vendor);
         }
-        return notification.approveJoinVendor({
+        return init.getNotification().approveJoinVendor({
           email: user.email,
           vendor: event.pathParameters.vendor,
         });

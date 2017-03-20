@@ -3,7 +3,6 @@
 import Auth from '../app/auth';
 import Identity from '../lib/identity';
 import InitApp from '../lib/InitApp';
-import Notification from '../lib/notification';
 import Validation from '../lib/validation';
 import Vendor from '../app/vendor';
 
@@ -11,29 +10,16 @@ require('longjohn');
 require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
-const aws = require('aws-sdk');
 const joi = require('joi');
 const jwt = require('jsonwebtoken');
-const requestLib = require('request-promise-lite');
-const Promise = require('bluebird');
 
 const db = require('../lib/db');
 const error = require('../lib/error');
 const request = require('../lib/request');
 
 const init = new InitApp(process.env);
-aws.config.setPromisesDependency(Promise);
-const cognito = new aws.CognitoIdentityServiceProvider({
-  region: process.env.REGION,
-});
-
-const app = new Auth(init, cognito, db, process.env, error);
+const app = new Auth(init, db, process.env, error);
 const identity = new Identity(jwt, error);
-const notification = new Notification(
-  requestLib,
-  process.env.SLACK_HOOK_URL,
-  process.env.SERVICE_NAME
-);
 const validation = new Validation(joi, error);
 
 
@@ -171,7 +157,7 @@ function signup(event, context, callback) {
     const vendorApp = new Vendor(init, db, process.env, error);
     return request.responseAuthPromise(
       app.signUpCreateVendor(vendorApp, body.email, body.password, body.name, body.vendor)
-        .then(vendorId => notification.approveVendor(vendorId, body.vendor.name, {
+        .then(vendorId => init.getNotification().approveVendor(vendorId, body.vendor.name, {
           name: body.name,
           email: body.email,
         })),
@@ -200,12 +186,7 @@ function confirm(event, context, callback) {
 
   return request.responseAuthPromise(
     app.confirm(event.pathParameters.email, event.pathParameters.code)
-      .then(data => cognito.adminGetUser({
-        UserPoolId: process.env.COGNITO_POOL_ID,
-        Username: data.Username,
-      }).promise())
-      .then(user => Identity.formatUser(user))
-      .then(user => notification.approveUser({
+      .then(user => init.getNotification().approveUser({
         name: user.name,
         email: event.pathParameters.email,
         vendors: user.vendors,

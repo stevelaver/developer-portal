@@ -1,22 +1,19 @@
 'use strict';
 
 import Icon from '../app/icon';
+import InitApp from '../lib/InitApp';
 
 require('longjohn');
 require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
-const aws = require('aws-sdk');
+
 const db = require('../lib/db');
 const error = require('../lib/error');
 const jimp = require('jimp');
-const Promise = require('bluebird');
 const request = require('../lib/request');
 
-aws.config.setPromisesDependency(Promise);
-const s3 = new aws.S3();
-
-const app = new Icon(s3, db, process.env, error);
+const app = new Icon(InitApp.getS3(), db, process.env, error);
 
 
 module.exports.upload = (event, context, callback) => request.errorHandler(() => {
