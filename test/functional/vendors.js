@@ -94,24 +94,24 @@ describe('Vendors', () => {
           cb();
         });
       },
-      cb =>
-        // Check user's vendor in cognito
-        userPool.getUser(process.env.FUNC_USER_EMAIL)
-          .then((user) => {
-            expect(user, 'to have key', 'vendors');
-            expect(user.vendors, 'to contain', vendor1);
-          })
-          .then(() => cb())
-          .catch(err => cb(err)),
       (cb) => {
         // Check database
         rds.query('SELECT * FROM `vendors` WHERE name=?', [vendorName], (err, res) => {
           expect(res, 'to have length', 1);
           expect(res[0].id, 'to begin with', '_v');
           expect(res[0].isApproved, 'to be', 0);
-          cb();
+          cb(null, res[0].id);
         });
       },
+      (vendorId, cb) =>
+        // Check user's vendor in cognito
+        userPool.getUser(process.env.FUNC_USER_EMAIL)
+          .then((user) => {
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'to contain', vendorId);
+          })
+          .then(() => cb())
+          .catch(err => cb(err)),
     ], done);
   });
 

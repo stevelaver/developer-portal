@@ -38,7 +38,7 @@ function createVendor(event, context, callback) {
   return request.responsePromise(
     identity.getUser(event.headers.Authorization)
       .then(user =>
-        db.connect(this.env)
+        db.connect(process.env)
           .then(() => vendorApp.create({
             id: vendorId,
             name: body.name,
@@ -47,7 +47,7 @@ function createVendor(event, context, callback) {
             createdBy: user.email,
           }, false))
           .then(() => init.getUserPool().addUserToVendor(user.email, vendorId))
-          .then(() => init.getNotification().approveVendor(vendorId, body.vendor.name, {
+          .then(() => init.getNotification().approveVendor(vendorId, body.name, {
             name: body.name,
             email: body.email,
           })),
