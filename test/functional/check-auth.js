@@ -112,13 +112,6 @@ describe('Check if all endpoints have auth required', () => {
         );
       },
       (cb) => {
-        // Enable user
-        request.post(
-          { url: `${env.API_ENDPOINT}/admin/users/test@test.com/enable` },
-          (err, res) => checkAuth(err, res, cb)
-        );
-      },
-      (cb) => {
         // Create vendor
         request.post(
           { url: `${env.API_ENDPOINT}/admin/users/test@test.com/vendors/keboola` },
