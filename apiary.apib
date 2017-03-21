@@ -13,22 +13,19 @@ for fresh auth token.
 
 ### Create account [POST /auth/signup]
 
-Anyone can create account but needs to know to which vendor he belongs or create a new vendor.
-User accounts are approved manually by Keboola staff so user needs to wait before he can proceed.
+Anyone can create account but needs to belong to a vendor to be able to manage apps.
 
 + Attributes
     + name (required)
     + email (required)
     + password (required) - must contain at least 8 characters and at least one lowercase letter, one uppercase letter, one number and one special character
-    + vendor (string) - vendor which you want to join
 
 + Request (application/json)
 
         {
             "name": "John Doe",
             "email": "john@keboola.com",
-            "password": "superSecret",
-            "vendor": "keboola"
+            "password": "superSecret"
         }
 
 + Response 204
@@ -62,7 +59,7 @@ Account needs to be confirmed by code from confirmation email sent on his email 
 
 ### Login [POST /auth/login]
 
-Login returns three different tokens. 
+Login returns three different tokens.
 
 - `token` - is used to authenticate most of the API calls
 - `accessToken` - is used to verify MFA setup with a code from text message
@@ -210,7 +207,7 @@ Sends an email with a link to accept the invitation.
 + Parameters
     + vendor
     + email
-    
+
 + Request
 
     + Headers
@@ -227,7 +224,7 @@ Link to this resource is sent to an email.
     + vendor
     + email
     + code - verification code
-    
+
 + Response 200 (text/html)
 
 
@@ -909,22 +906,6 @@ Management of users and apps designated for Developer Portal staff only
                     "status": "CONFIRMED",
                 }
             ]
-
-
-### Enable user [POST /admin/users/{email}/enable]
-
-It will send email confirmation to a user.
-
-+ Parameters
-    + email
-
-+ Request
-
-    + Headers
-
-            Authorization: {admin_token}
-
-+ Response 204
 
 
 ### Add user to a vendor [POST /admin/users/{email}/vendors/{vendor}]

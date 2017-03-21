@@ -257,57 +257,6 @@ describe('Admin', () => {
     ], done);
   });
 
-  it('Approve User', (done) => {
-    async.waterfall([
-      (cb) => {
-        cognito.adminDisableUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }, err => cb(err));
-      },
-      (cb) => {
-        // List unapproved users
-        request.get({
-          url: `${env.API_ENDPOINT}/admin/users?filter=disabled`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(_.map(res.body, item => item.email), 'to contain', userEmail);
-          cb();
-        });
-      },
-      (cb) => {
-        // Enable
-        request.post({
-          url: `${env.API_ENDPOINT}/admin/users/${userEmail}/enable`,
-          headers: {
-            Authorization: token,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      (cb) => {
-        // List unapproved apps without the approved one
-        request.get({
-          url: `${env.API_ENDPOINT}/admin/users?filter=enabled`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(_.map(res.body, item => item.email), 'to contain', userEmail);
-          cb();
-        });
-      },
-    ], done);
-  });
-
   it('Make User Admin', (done) => {
     async.waterfall([
       (cb) => {

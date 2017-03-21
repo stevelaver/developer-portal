@@ -75,15 +75,8 @@ class Auth {
       }));
   }
 
-  signUp(email, password, name, vendor) {
-    return this.db.connect(this.env)
-      .then(() => this.db.checkVendorExists(vendor))
-      .then(() => this.db.end())
-      .catch((err) => {
-        this.db.end();
-        throw err;
-      })
-      .then(() => this.userPool.signUp(email, password, name, vendor));
+  signUp(email, password, name) {
+    return this.userPool.signUp(email, password, name);
   }
 
   confirm(email, code) {
@@ -91,12 +84,7 @@ class Auth {
       ClientId: this.env.COGNITO_CLIENT_ID,
       ConfirmationCode: code,
       Username: email,
-    }).promise()
-      .then(() => this.userPool.getCognito().adminDisableUser({
-        UserPoolId: this.env.COGNITO_POOL_ID,
-        Username: email,
-      }).promise())
-      .then(() => this.userPool.getUser());
+    }).promise();
   }
 
   resend(email, password) {

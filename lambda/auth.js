@@ -137,13 +137,12 @@ function signup(event, context, callback) {
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
         .error(Error('Parameter password is required, it must have at least 8 characters and contain ' +
           'at least one lowercase letter, one uppercase letter and one number')),
-      vendor: joi.string().required().error(Error('Parameter vendor is required and must be a string')),
     },
   });
   const body = JSON.parse(event.body);
 
   return request.responseAuthPromise(
-    app.signUp(body.email, body.password, body.name, body.vendor),
+    app.signUp(body.email, body.password, body.name),
     event,
     context,
     callback,
@@ -159,12 +158,7 @@ function confirm(event, context, callback) {
   }
 
   return request.responseAuthPromise(
-    app.confirm(event.pathParameters.email, event.pathParameters.code)
-      .then(user => init.getNotification().approveUser({
-        name: user.name,
-        email: event.pathParameters.email,
-        vendors: user.vendors,
-      })),
+    app.confirm(event.pathParameters.email, event.pathParameters.code),
     event,
     context,
     callback,
@@ -176,9 +170,7 @@ function confirmGet(event, context, callback) {
   return confirm(event, context, (err) => {
     request.htmlResponse(err, {
       header: 'Account confirmation',
-      content: 'Your account has been successfully confirmed. Now you have ' +
-      'to wait for approval from our staff. Your account is disabled ' +
-      'until then.',
+      content: 'Your account has been successfully confirmed. Now you should join a vendor or create a new one.',
     }, event, context, callback);
   });
 }

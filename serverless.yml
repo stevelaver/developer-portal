@@ -153,11 +153,6 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
-          path: "admin/users/{email}/enable"
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: post
           path: "admin/vendors"
       -
         http:

@@ -82,31 +82,6 @@ function addUserToVendor(event, context, callback) {
   );
 }
 
-function enableUser(event, context, callback) {
-  validation.validate(event, {
-    auth: true,
-    path: ['email'],
-  });
-
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => init.getUserPool().enableUser(event.pathParameters.email))
-      .then(() => init.getEmail().send(
-        event.pathParameters.email,
-        'Welcome to Keboola Developer Portal',
-        'Welcome to Keboola Developer Portal',
-        'Your account in Keboola Developer Portal has been approved.'
-      ))
-      .then(() => null),
-    db,
-    event,
-    context,
-    callback,
-    204
-  );
-}
-
 function approveApp(event, context, callback) {
   validation.validate(event, {
     auth: true,
@@ -282,8 +257,6 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
       return makeUserAdmin(event, context, callback);
     case '/admin/users/{email}/vendors/{vendor}':
       return addUserToVendor(event, context, callback);
-    case '/admin/users/{email}/enable':
-      return enableUser(event, context, callback);
     case '/admin/apps/{id}/approve':
       return approveApp(event, context, callback);
     case '/admin/apps/{id}':

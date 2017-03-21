@@ -45,24 +45,8 @@ describe('Auth', () => {
     ], done);
   });
 
-  it('Approve User', (done) => {
+  it('Signup user', (done) => {
     async.waterfall([
-      (cb) => {
-        // 1) Signup with non-existing vendor
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/signup`,
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1,
-            name: 'Test',
-            vendor: `T.vendor.${Date.now()}`,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 400);
-          cb();
-        });
-      },
       (cb) => {
         // 1) Signup
         request.post({
@@ -72,7 +56,6 @@ describe('Auth', () => {
             email: userEmail,
             password: userPassword1,
             name: 'Test',
-            vendor,
           },
         }, (err, res) => {
           expect(res.statusCode, 'to be', 204);
@@ -155,14 +138,13 @@ describe('Auth', () => {
         }, (err, res) => {
           expect(res.statusCode, 'to be', 200);
           expect(res.body, 'to have key', 'vendors');
-          expect(res.body.vendors, 'to contain', vendor);
           cb(null, token);
         });
       },
     ], done);
   });
 
-  it('Forgot Password', (done) => {
+  it('Forgot password', (done) => {
     async.waterfall([
       (cb) => {
         request.post({
@@ -192,7 +174,7 @@ describe('Auth', () => {
     ], done);
   });
 
-  it('Refresh Token', (done) => {
+  it('Refresh token', (done) => {
     async.waterfall([
       (cb) => {
         request.post({
