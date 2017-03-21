@@ -16,7 +16,7 @@ class Email {
 }
 /* eslint-enable */
 
-class InitApp {
+class Services {
   constructor(env) {
     this.env = env;
   }
@@ -39,4 +39,4 @@ class InitApp {
   }
 }
 
-export default InitApp;
+export default Services;

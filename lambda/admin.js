@@ -2,28 +2,22 @@
 
 import App from '../lib/app';
 import Identity from '../lib/identity';
-import InitApp from '../lib/InitApp';
-import Validation from '../lib/validation';
+import Services from '../lib/Services';
 import Vendor from '../app/vendor';
 
 require('longjohn');
 require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
-const joiBase = require('joi');
-const joiExtension = require('joi-date-extensions');
-const jwt = require('jsonwebtoken');
 
 const db = require('../lib/db');
-const error = require('../lib/error');
 const request = require('../lib/request');
 
-const init = new InitApp(process.env);
-const app = new App(db, Identity, process.env, error);
-const identity = new Identity(jwt, error);
-const joi = joiBase.extend(joiExtension);
-const validation = new Validation(joi, error);
-const vendorApp = new Vendor(init, db, process.env, error);
+const services = new Services(process.env);
+const app = new App(db, Identity, process.env, Services.getError());
+const identity = Services.getIdentity();
+const validation = Services.getValidation();
+const vendorApp = new Vendor(services, db, process.env, Services.getError());
 
 
 function listUsers(event, context, callback) {
@@ -36,7 +30,7 @@ function listUsers(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => init.getUserPool().listUsers(_.get(event, 'queryStringParameters.filter', null))),
+      .then(() => services.getUserPool().listUsers(_.get(event, 'queryStringParameters.filter', null))),
     db,
     event,
     context,
@@ -53,7 +47,7 @@ function makeUserAdmin(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => init.getUserPool().makeUserAdmin(event.pathParameters.email))
+      .then(() => services.getUserPool().makeUserAdmin(event.pathParameters.email))
       .then(() => null),
     db,
     event,
@@ -72,7 +66,7 @@ function addUserToVendor(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => init.getUserPool()
+      .then(() => services.getUserPool()
         .addUserToVendor(event.pathParameters.email, event.pathParameters.vendor)),
     db,
     event,
@@ -92,7 +86,7 @@ function approveApp(event, context, callback) {
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
       .then(user => app.approveApp(event.pathParameters.id, user))
-      .then(vendor => init.getEmail().send(
+      .then(vendor => services.getEmail().send(
         vendor.email,
         'App approval in Keboola Developer Portal',
         'Keboola Developer Portal',
@@ -132,8 +126,8 @@ function detailApp(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: {
-      id: joi.string().required(),
-      version: joi.number().integer(),
+      id: Services.getJoi().string().required(),
+      version: Services.getJoi().number().integer(),
     },
   });
 
@@ -179,9 +173,9 @@ function listAppChanges(event, context, callback) {
   validation.validate(event, {
     auth: true,
     query: {
-      since: joi.date().format('YYYY-MM-DD')
+      since: Services.getJoi().date().format('YYYY-MM-DD')
         .error(Error('Parameter since must be a date in format YYYY-MM-DD')),
-      until: joi.date().format('YYYY-MM-DD')
+      until: Services.getJoi().date().format('YYYY-MM-DD')
         .error(Error('Parameter until must be a date format YYYY-MM-DD')),
     },
   });
@@ -234,7 +228,7 @@ function approveVendor(event, context, callback) {
       .then(() => vendorApp.approve(event.pathParameters.vendor, _.get(body, 'newId', null)))
       .then((user) => {
         if (_.has(body, 'newId') && user) {
-          const userPool = init.getUserPool();
+          const userPool = services.getUserPool();
           return userPool.addUserToVendor(user, body.newId)
             .then(() => userPool.removeUserFromVendor(user, event.pathParameters.vendor));
         }
@@ -273,6 +267,6 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
     case '/admin/vendors/{vendor}/approve':
       return approveVendor(event, context, callback);
     default:
-      throw error.notFound();
+      throw Services.getError().notFound();
   }
 }, event, context, (err, res) => db.endCallback(err, res, callback));

@@ -3,25 +3,21 @@
 import App from '../lib/app';
 import Icon from '../app/icon';
 import Identity from '../lib/identity';
-import InitApp from '../lib/InitApp';
-import Validation from '../lib/validation';
+import Services from '../lib/Services';
 
 require('longjohn');
 require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
 const joi = require('joi');
-const jwt = require('jsonwebtoken');
 
 const db = require('../lib/db');
-const error = require('../lib/error');
 const request = require('../lib/request');
 
-const init = new InitApp(process.env);
-const app = new App(db, Identity, process.env, error);
-const iconApp = new Icon(InitApp.getS3(), db, process.env, error);
-const identity = new Identity(jwt, error);
-const validation = new Validation(joi, error);
+const services = new Services(process.env);
+const app = new App(db, Identity, process.env, Services.getError());
+const identity = Services.getIdentity();
+const validation = Services.getValidation();
 
 
 function create(event, context, callback) {
@@ -151,7 +147,7 @@ function approve(event, context, callback) {
         event.pathParameters.vendor,
         user,
       ))
-      .then(() => init.getNotification().approveApp(event.pathParameters.app)),
+      .then(() => services.getNotification().approveApp(event.pathParameters.app)),
     db,
     event,
     context,
@@ -223,6 +219,7 @@ function icon(event, context, callback) {
     },
   });
 
+  const iconApp = new Icon(Services.getS3(), db, process.env, Services.getError());
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
@@ -262,6 +259,6 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
     case '/vendors/{vendor}/apps/{app}/icon':
       return icon(event, context, callback);
     default:
-      throw error.notFound();
+      throw Services.getError().notFound();
   }
 }, event, context, (err, res) => db.endCallback(err, res, callback));

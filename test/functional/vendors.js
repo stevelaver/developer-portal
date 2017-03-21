@@ -1,6 +1,6 @@
 'use strict';
 
-import InitApp from '../InitApp';
+import Services from '../Services';
 
 const async = require('async');
 const expect = require('unexpected');
@@ -8,7 +8,7 @@ const mysql = require('mysql');
 const request = require('request');
 const env = require('../../lib/env').load();
 
-const init = new InitApp(env);
+const services = new Services(env);
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST ? process.env.FUNC_RDS_HOST : env.RDS_HOST,
@@ -19,7 +19,7 @@ const rds = mysql.createConnection({
   ssl: env.RDS_SSL,
   multipleStatements: true,
 });
-const userPool = init.getUserPool();
+const userPool = services.getUserPool();
 
 const userEmail = `u${Date.now()}@keboola.com`;
 const vendor = process.env.FUNC_VENDOR;

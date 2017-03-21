@@ -1,24 +1,20 @@
 'use strict';
 
-import Identity from '../lib/identity';
-import InitApp from '../lib/InitApp';
-import Validation from '../lib/validation';
+import Services from '../lib/Services';
 import Vendor from '../app/vendor';
 
 require('longjohn');
 require('babel-polyfill');
 require('source-map-support').install();
 const joi = require('joi');
-const jwt = require('jsonwebtoken');
 
 const db = require('../lib/db');
-const error = require('../lib/error');
 const request = require('../lib/request');
 
-const init = new InitApp(process.env);
-const identity = new Identity(jwt, error);
-const validation = new Validation(joi, error);
-const vendorApp = new Vendor(init, db, process.env, error);
+const services = new Services(process.env);
+const identity = Services.getIdentity();
+const validation = Services.getValidation();
+const vendorApp = new Vendor(services, db, process.env, Services.getError());
 
 
 function createVendor(event, context, callback) {
@@ -46,8 +42,8 @@ function createVendor(event, context, callback) {
             email: body.email,
             createdBy: user.email,
           }, false))
-          .then(() => init.getUserPool().addUserToVendor(user.email, vendorId))
-          .then(() => init.getNotification().approveVendor(vendorId, body.name, {
+          .then(() => services.getUserPool().addUserToVendor(user.email, vendorId))
+          .then(() => services.getNotification().approveVendor(vendorId, body.name, {
             name: body.name,
             email: body.email,
           })),
@@ -76,7 +72,7 @@ function requestJoinVendor(event, context, callback) {
         if (user.isAdmin) {
           return vendorApp.join(user, event.pathParameters.vendor);
         }
-        return init.getNotification().approveJoinVendor({
+        return services.getNotification().approveJoinVendor({
           email: user.email,
           vendor: event.pathParameters.vendor,
         });
@@ -137,7 +133,7 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
     case '/vendors/{vendor}/invitations/{email}/{code}':
       return acceptInvitation(event, context, callback);
     default:
-      throw error.notFound();
+      throw Services.getError().notFound();
   }
 }, event, context, (err, res) => db.endCallback(err, res, callback));
 

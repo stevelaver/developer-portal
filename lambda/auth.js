@@ -1,25 +1,21 @@
 'use strict';
 
 import Auth from '../app/auth';
-import Identity from '../lib/identity';
-import InitApp from '../lib/InitApp';
-import Validation from '../lib/validation';
+import Services from '../lib/Services';
 
 require('longjohn');
 require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
 const joi = require('joi');
-const jwt = require('jsonwebtoken');
 
 const db = require('../lib/db');
-const error = require('../lib/error');
 const request = require('../lib/request');
 
-const init = new InitApp(process.env);
-const app = new Auth(init, db, process.env, error);
-const identity = new Identity(jwt, error);
-const validation = new Validation(joi, error);
+const services = new Services(process.env);
+const app = new Auth(services, db, process.env, Services.getError());
+const identity = Services.getIdentity();
+const validation = Services.getValidation();
 
 
 function login(event, context, callback) {
@@ -40,7 +36,7 @@ function login(event, context, callback) {
   } else if (_.has(body, 'code') && _.has(body, 'session')) {
     promise = app.loginWithCode(body.email, body.code, body.session);
   } else {
-    throw error.unprocessable('You have to pass either password or code and session');
+    throw Services.getError().unprocessable('You have to pass either password or code and session');
   }
   return request.responseAuthPromise(
     promise,
@@ -67,8 +63,7 @@ function forgot(event, context, callback) {
   validation.validate(event, {
     path: {
       email: joi.string().email().required()
-        .error(Error('Parameter email is required and should have ' +
-          'format of email address')),
+        .error(Error('Parameter email is required and should have format of email address')),
     },
   });
 
@@ -152,9 +147,9 @@ function signup(event, context, callback) {
 
 function confirm(event, context, callback) {
   if (!_.has(event.pathParameters, 'code')) {
-    throw error.badRequest('Parameter code is required');
+    throw Services.getError().badRequest('Parameter code is required');
   } else if (!_.has(event.pathParameters, 'email')) {
-    throw error.badRequest('Parameter email is required');
+    throw Services.getError().badRequest('Parameter email is required');
   }
 
   return request.responseAuthPromise(
@@ -259,6 +254,6 @@ module.exports.auth = (event, context, callback) => request.errorHandler(() => {
     case '/auth/mfa/confirm/{code}':
       return confirmMfa(event, context, callback);
     default:
-      throw error.notFound();
+      throw Services.getError().notFound();
   }
 }, event, context, (err, res) => db.endCallback(err, res, callback));

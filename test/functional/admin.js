@@ -1,6 +1,6 @@
 'use strict';
 
-import InitApp from '../InitApp';
+import Services from '../Services';
 import Identity from '../../lib/identity';
 
 const _ = require('lodash');
@@ -13,8 +13,8 @@ const request = require('request');
 const db = require('../../lib/db');
 const env = require('../../lib/env').load();
 
-const init = new InitApp(env);
-const userPool = init.getUserPool();
+const services = new Services(env);
+const userPool = services.getUserPool();
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST ? process.env.FUNC_RDS_HOST : env.RDS_HOST,

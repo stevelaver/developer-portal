@@ -1,7 +1,7 @@
 'use strict';
 
 import Icon from '../app/icon';
-import InitApp from '../lib/InitApp';
+import Services from '../lib/Services';
 
 require('longjohn');
 require('babel-polyfill');
@@ -9,11 +9,10 @@ require('source-map-support').install();
 const _ = require('lodash');
 
 const db = require('../lib/db');
-const error = require('../lib/error');
 const jimp = require('jimp');
 const request = require('../lib/request');
 
-const app = new Icon(InitApp.getS3(), db, process.env, error);
+const app = new Icon(Services.getS3(), db, process.env, Services.getError());
 
 
 module.exports.upload = (event, context, callback) => request.errorHandler(() => {

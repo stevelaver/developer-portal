@@ -1,7 +1,7 @@
 'use strict';
 
 import Identity from '../../lib/identity';
-import InitApp from '../InitApp';
+import Services from '../Services';
 import Vendor from '../../app/vendor';
 
 const _ = require('lodash');
@@ -37,8 +37,8 @@ appEnv.RDS_USER = process.env.UNIT_RDS_USER;
 appEnv.RDS_PASSWORD = process.env.UNIT_RDS_PASSWORD;
 appEnv.RDS_DATABASE = process.env.UNIT_RDS_DATABASE;
 appEnv.RDS_SSL = false;
-const init = new InitApp(appEnv);
-const vendorApp = new Vendor(init, db, appEnv, error);
+const services = new Services(appEnv);
+const vendorApp = new Vendor(services, db, appEnv, error);
 
 const vendor = `v${Date.now()}`;
 const userEmail = `u${Date.now()}@test.com`;

@@ -2,8 +2,7 @@
 
 import App from '../lib/app';
 import Identity from '../lib/identity';
-import InitApp from '../lib/InitApp';
-import Validation from '../lib/validation';
+import Services from '../lib/Services';
 import Vendor from '../app/vendor';
 
 require('longjohn');
@@ -13,14 +12,13 @@ const _ = require('lodash');
 const joi = require('joi');
 
 const db = require('../lib/db');
-const error = require('../lib/error');
 const landingHtml = require('../views/landing.html');
 const request = require('../lib/request');
 
-const init = new InitApp(process.env);
-const app = new App(db, Identity, process.env, error);
-const validation = new Validation(joi, error);
-const vendorApp = new Vendor(init, db, process.env, error);
+const services = new Services(process.env);
+const app = new App(db, Identity, process.env, Services.getError());
+const validation = Services.getValidation();
+const vendorApp = new Vendor(services, db, process.env, Services.getError());
 
 
 function landing(event, context, callback) {
@@ -140,6 +138,6 @@ module.exports.public = (event, context, callback) => request.errorHandler(() =>
     case '/vendors/{vendor}':
       return getVendor(event, context, callback);
     default:
-      throw error.notFound();
+      throw Services.getError().notFound();
   }
 }, event, context, (err, res) => db.endCallback(err, res, callback));
