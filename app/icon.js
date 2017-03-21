@@ -63,7 +63,7 @@ class Icon {
       }).promise())
       .then(data => jimp.read(data.Body))
       .then(image => new Promise((res, rej) => {
-        image.resize(64, 64).getBuffer(jimp.MIME_PNG, (err, data) => {
+        image.resize(64, 64, jimp.RESIZE_BICUBIC).getBuffer(jimp.MIME_PNG, (err, data) => {
           if (err) {
             rej(err);
           }
@@ -83,7 +83,7 @@ class Icon {
       }).promise())
       .then(data => jimp.read(data.Body))
       .then(image => new Promise((res, rej) => {
-        image.resize(32, 32).getBuffer(jimp.MIME_PNG, (err, data) => {
+        image.resize(32, 32, jimp.RESIZE_BICUBIC).getBuffer(jimp.MIME_PNG, (err, data) => {
           if (err) {
             rej(err);
           }
