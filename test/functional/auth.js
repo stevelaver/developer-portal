@@ -218,7 +218,7 @@ describe('Auth', () => {
       },
     ], done);
   });
-
+/*
   it('MFA', (done) => {
     let token;
     async.waterfall([
@@ -288,7 +288,7 @@ describe('Auth', () => {
           .catch(err => cb(err)),
     ], done);
   });
-
+*/
   afterEach((done) => {
     async.waterfall([
       (cb) => {
