@@ -86,25 +86,6 @@ class Auth {
       .then(() => this.userPool.signUp(email, password, name, vendor));
   }
 
-  signUpCreateVendor(vendorApp, email, password, name, vendor) {
-    const vendorId = `tv${Date.now()}${Math.random()}`.substr(0, 32);
-    return this.db.connect(this.env)
-      .then(() => vendorApp.create({
-        id: vendorId,
-        name: vendor.name,
-        address: vendor.address,
-        email: vendor.email,
-        createdBy: email,
-      }, false))
-      .then(() => this.db.end())
-      .catch((err) => {
-        this.db.end();
-        throw err;
-      })
-      .then(() => this.userPool.signUp(email, password, name, vendorId))
-      .then(() => vendorId);
-  }
-
   confirm(email, code) {
     return this.userPool.getCognito().confirmSignUp({
       ClientId: this.env.COGNITO_CLIENT_ID,

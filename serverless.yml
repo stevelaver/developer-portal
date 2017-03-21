@@ -218,6 +218,15 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps/{app}/icon"
+
+  vendors:
+    handler: vendors.vendors
+    events:
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "vendors"
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}

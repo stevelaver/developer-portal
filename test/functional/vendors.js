@@ -58,7 +58,64 @@ describe('Vendors', () => {
     ], done);
   });
 
-  it('Join a Vendor', (done) => {
+  it('Create vendor', (done) => {
+    const vendorName = `vendor.${Date.now()}`;
+    async.waterfall([
+      (cb) => {
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/login`,
+          json: true,
+          body: {
+            email: process.env.FUNC_USER_EMAIL,
+            password: process.env.FUNC_USER_PASSWORD,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          token = res.body.token;
+          cb();
+        });
+      },
+      (cb) => {
+        // Create vendor
+        request.post({
+          url: `${env.API_ENDPOINT}/vendors`,
+          headers: {
+            Authorization: token,
+          },
+          json: true,
+          body: {
+            name: vendorName,
+            address: 'test',
+            email: 'test@test.com',
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
+          cb();
+        });
+      },
+      cb =>
+        // Check user's vendor in cognito
+        userPool.getUser(process.env.FUNC_USER_EMAIL)
+          .then((user) => {
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'to contain', vendor1);
+          })
+          .then(() => cb())
+          .catch(err => cb(err)),
+      (cb) => {
+        // Check database
+        rds.query('SELECT * FROM `vendors` WHERE name=?', [vendorName], (err, res) => {
+          expect(res, 'to have length', 1);
+          expect(res[0].id, 'to begin with', '_v');
+          expect(res[0].isApproved, 'to be', 0);
+          cb();
+        });
+      },
+    ], done);
+  });
+
+  it('Join vendor', (done) => {
     async.waterfall([
       (cb) => {
         request.post({
@@ -98,7 +155,7 @@ describe('Vendors', () => {
     ], done);
   });
 
-  it('Invite User', (done) => {
+  it('Invite user', (done) => {
     async.waterfall([
       (cb) => {
         // 1) Signup

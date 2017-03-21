@@ -60,6 +60,6 @@
   "scripts": {
     "test": "./node_modules/mocha-webpack/bin/mocha-webpack --timeout 0 --webpack-config webpack.config.js",
     "func": "./node_modules/mocha/bin/mocha --timeout 0 test/functional",
-    "eslint": "./node_modules/mocha/bin/eslint ."
+    "lint": "./node_modules/eslint/bin/eslint.js ."
   }
 }

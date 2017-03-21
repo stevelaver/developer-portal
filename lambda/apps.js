@@ -5,7 +5,6 @@ import Icon from '../app/icon';
 import Identity from '../lib/identity';
 import InitApp from '../lib/InitApp';
 import Validation from '../lib/validation';
-import Vendor from '../app/vendor';
 
 require('longjohn');
 require('babel-polyfill');
@@ -21,7 +20,6 @@ const request = require('../lib/request');
 const init = new InitApp(process.env);
 const app = new App(db, Identity, process.env, error);
 const iconApp = new Icon(InitApp.getS3(), db, process.env, error);
-const vendorApp = new Vendor(init, db, process.env, error);
 const identity = new Identity(jwt, error);
 const validation = new Validation(joi, error);
 
@@ -241,68 +239,6 @@ function icon(event, context, callback) {
   );
 }
 
-function requestJoinVendor(event, context, callback) {
-  validation.validate(event, {
-    auth: true,
-    path: ['vendor'],
-  });
-
-  return request.responsePromise(
-    identity.getUser(event.headers.Authorization)
-      .then((user) => {
-        if (user.isAdmin) {
-          return vendorApp.join(user, event.pathParameters.vendor);
-        }
-        return init.getNotification().approveJoinVendor({
-          email: user.email,
-          vendor: event.pathParameters.vendor,
-        });
-      }),
-    event,
-    context,
-    callback,
-    204
-  );
-}
-
-function sendInvitation(event, context, callback) {
-  validation.validate(event, {
-    auth: true,
-    path: ['vendor', 'email'],
-  });
-
-  return request.responsePromise(
-    identity.getUser(event.headers.Authorization)
-      .then(user => vendorApp.invite(
-        event.pathParameters.vendor,
-        event.pathParameters.email,
-        user,
-      )),
-    event,
-    context,
-    callback,
-    204
-  );
-}
-
-function acceptInvitation(event, context, callback) {
-  validation.validate(event, {
-    path: ['vendor', 'email', 'code'],
-  });
-
-  return vendorApp.acceptInvitation(
-    event.pathParameters.vendor,
-    event.pathParameters.email,
-    event.pathParameters.code,
-  )
-    .then(() => request.htmlResponse(null, {
-      header: 'Invitation confirmed',
-      content: `Your invitation to vendor ${event.pathParameters.vendor} has been successfully confirmed.`,
-    }, event, context, callback))
-    .catch(err => request.htmlResponse(err, null, event, context, callback));
-}
-
-
 module.exports.apps = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
     case '/vendors/{vendor}/apps':
@@ -325,12 +261,6 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
       return rollback(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/icon':
       return icon(event, context, callback);
-    case '/vendors/{vendor}/users':
-      return requestJoinVendor(event, context, callback);
-    case '/vendors/{vendor}/invitations/{email}':
-      return sendInvitation(event, context, callback);
-    case '/vendors/{vendor}/invitations/{email}/{code}':
-      return acceptInvitation(event, context, callback);
     default:
       throw error.notFound();
   }

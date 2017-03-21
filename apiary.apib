@@ -20,10 +20,7 @@ User accounts are approved manually by Keboola staff so user needs to wait befor
     + name (required)
     + email (required)
     + password (required) - must contain at least 8 characters and at least one lowercase letter, one uppercase letter, one number and one special character
-    + vendor (object) - can be either `string` if you want the join an existing vendor or `object` if you want to create a new one
-        + name (required)
-        + address (required)
-        + email (required)
+    + vendor (string) - vendor which you want to join
 
 + Request (application/json)
 
@@ -151,7 +148,7 @@ Sends email with confirmation code which has to be used in the next API call
     + code (required)
     + password (required)
 
-+ Request
++ Request(application/json)
 
     + Body
 
@@ -165,6 +162,31 @@ Sends email with confirmation code which has to be used in the next API call
 
 
 ## Vendors [/vendors]
+
+### Create a vendor [POST /vendors]
+
+You can create a vendor, however you have to wait for our approval. You will recieve an email confirmation once it is done.
+
++ Attributes
+    + name (required)
+    + address (required)
+    + email (required)
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "name": "Company ltd.",
+                "address": "410 Terry Ave. North, Seattle, WA",
+                "email": "info@company.com"
+            }
+
++ Response 204 (application/json)
 
 ### Request to join a vendor [POST /vendors/{vendor}/join]
 

@@ -12,6 +12,7 @@ module.exports = {
     iconUpload: ['babel-polyfill', './lambda/iconUpload.js'],
     logger: ['babel-polyfill', './lambda/logger.js'],
     public: ['babel-polyfill', './lambda/public.js'],
+    vendors: ['babel-polyfill', './lambda/vendors.js'],
     // repositories: ['babel-polyfill', './lambda/repositories.js'],
   },
   output: {

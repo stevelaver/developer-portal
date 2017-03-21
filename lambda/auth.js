@@ -4,7 +4,6 @@ import Auth from '../app/auth';
 import Identity from '../lib/identity';
 import InitApp from '../lib/InitApp';
 import Validation from '../lib/validation';
-import Vendor from '../app/vendor';
 
 require('longjohn');
 require('babel-polyfill');
@@ -138,35 +137,10 @@ function signup(event, context, callback) {
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/)
         .error(Error('Parameter password is required, it must have at least 8 characters and contain ' +
           'at least one lowercase letter, one uppercase letter and one number')),
-      vendor: joi.alternatives().try(
-        joi.string().required().error(Error('Parameter vendor is required and must be a string')),
-        joi.object().required().keys({
-          name: joi.string().max(64).required()
-            .error(Error('Parameter vendor.name is required string with max length 64 when vendor is object')),
-          address: joi.string().required()
-            .error(Error('Parameter vendor.address is required string when vendor is object')),
-          email: joi.string().email().required()
-            .error(Error('Parameter vendor.email is required email address when vendor is object')),
-        }),
-      ),
+      vendor: joi.string().required().error(Error('Parameter vendor is required and must be a string')),
     },
   });
   const body = JSON.parse(event.body);
-
-  if (typeof body.vendor === 'object') {
-    const vendorApp = new Vendor(init, db, process.env, error);
-    return request.responseAuthPromise(
-      app.signUpCreateVendor(vendorApp, body.email, body.password, body.name, body.vendor)
-        .then(vendorId => init.getNotification().approveVendor(vendorId, body.vendor.name, {
-          name: body.name,
-          email: body.email,
-        })),
-      event,
-      context,
-      callback,
-      204
-    );
-  }
 
   return request.responseAuthPromise(
     app.signUp(body.email, body.password, body.name, body.vendor),
