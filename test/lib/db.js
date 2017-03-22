@@ -12,7 +12,6 @@ Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 let rds;
-
 const dbConnectParams = {
   host: process.env.UNIT_RDS_HOST,
   port: process.env.UNIT_RDS_PORT,

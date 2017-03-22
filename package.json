@@ -17,7 +17,6 @@
     "db-migrate": "^0.10.0-beta.20",
     "db-migrate-mysql": "^1.1.10",
     "hogan.js": "^3.0.2",
-    "jimp": "^0.2.27",
     "joi": "^10.1.0",
     "joi-date-extensions": "^1.0.2",
     "jsonwebtoken": "7.0.0",
@@ -26,6 +25,7 @@
     "longjohn": "^0.2.12",
     "mysql": "^2.11.1",
     "request-promise-lite": "^0.8.1",
+    "sharp": "^0.17.2",
     "source-map-support": "^0.4.11",
     "winston": "*",
     "winston-papertrail": "^1.0.0"
@@ -53,6 +53,7 @@
     "serverless-webpack": "^1.0.0-rc.3",
     "sinon": "^1.17.7",
     "unexpected": "^10.26.0",
+    "wait-promise": "^0.4.1",
     "webpack": "^1.13.2",
     "webpack-node-externals": "^1.5.4",
     "yamljs": "^0.2.8"

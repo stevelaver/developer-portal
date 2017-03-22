@@ -248,8 +248,8 @@ describe('Apps', () => {
       },
       (prevRes, cb) => {
         // Upload icon
-        const stats = fs.statSync(`${__dirname}/icon.png`);
-        fs.createReadStream(`${__dirname}/icon.png`).pipe(request.put({
+        const stats = fs.statSync(`${__dirname}/../icon.png`);
+        fs.createReadStream(`${__dirname}/../icon.png`).pipe(request.put({
           url: prevRes.link,
           headers: {
             'Content-Length': stats.size,

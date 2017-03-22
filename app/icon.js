@@ -29,74 +29,51 @@ class Icon {
       });
   }
 
-  upload(jimp, id, bucket, sourceKey) {
-    let version;
-    return this.s3.headObject({
+  resize(sharp, bucket, appId, version, size) {
+    return this.s3.getObject({
       Bucket: bucket,
-      Key: sourceKey,
+      Key: `icons/${appId}/latest.png`,
+      ResponseContentType: 'image/png',
     }).promise()
+      .then(data => sharp(data.Body).resize(size, size).toBuffer())
+      .then(buffer => this.s3.putObject({
+        Body: buffer,
+        Bucket: bucket,
+        ContentType: 'image/png',
+        Key: `icons/${appId}/${size}/${version}.png`,
+        ACL: 'public-read',
+      }).promise());
+  }
+
+  upload(sharp, appId, bucket, sourceKey) {
+    let version;
+    return this.s3.headObject({ Bucket: bucket, Key: sourceKey }).promise()
       .catch((err) => {
         if (err.code === 'NotFound' || err.code === 'Forbidden') {
-          throw this.err.notFound();
+          throw this.err.notFound(`Uploaded file ${sourceKey} was not found in s3`);
         }
         throw err;
       })
       .then(() => this.s3.copyObject({
         CopySource: `${bucket}/${sourceKey}`,
         Bucket: bucket,
-        Key: `icons/${id}/latest.png`,
+        Key: `icons/${appId}/latest.png`,
         ACL: 'public-read',
       }).promise())
-      .then(() => this.s3.deleteObject(
-        {
-          Bucket: bucket,
-          Key: sourceKey,
-        }
-      ).promise())
-      .then(() => this.db.addAppIcon(id))
-      .then((v) => {
-        version = v;
+      .then(() => this.s3.deleteObject({ Bucket: bucket, Key: sourceKey }).promise())
+      .then(() => this.db.connect(this.env)
+        .then(() => this.db.addAppIcon(appId))
+        .then((v) => {
+          version = v;
+        })
+        .then(() => this.db.end())
+      )
+      .catch((err) => {
+        this.db.end();
+        throw err;
       })
-      .then(() => this.s3.getObject({
-        Bucket: bucket,
-        Key: `icons/${id}/latest.png`,
-      }).promise())
-      .then(data => jimp.read(data.Body))
-      .then(image => new Promise((res, rej) => {
-        image.resize(64, 64, jimp.RESIZE_BICUBIC).getBuffer(jimp.MIME_PNG, (err, data) => {
-          if (err) {
-            rej(err);
-          }
-          res(data);
-        });
-      }))
-      .then(buffer => this.s3.putObject({
-        Body: buffer,
-        Bucket: bucket,
-        ContentType: 'image/png',
-        Key: `icons/${id}/64/${version}.png`,
-        ACL: 'public-read',
-      }).promise())
-      .then(() => this.s3.getObject({
-        Bucket: bucket,
-        Key: `icons/${id}/latest.png`,
-      }).promise())
-      .then(data => jimp.read(data.Body))
-      .then(image => new Promise((res, rej) => {
-        image.resize(32, 32, jimp.RESIZE_BICUBIC).getBuffer(jimp.MIME_PNG, (err, data) => {
-          if (err) {
-            rej(err);
-          }
-          res(data);
-        });
-      }))
-      .then(buffer => this.s3.putObject({
-        Body: buffer,
-        Bucket: bucket,
-        ContentType: 'image/png',
-        Key: `icons/${id}/32/${version}.png`,
-        ACL: 'public-read',
-      }).promise());
+      .then(() => this.resize(sharp, bucket, appId, version, 64))
+      .then(() => this.resize(sharp, bucket, appId, version, 32));
   }
 }
 
