@@ -6,7 +6,7 @@ const yaml = require('yamljs');
 
 const args = process.argv.slice(2);
 
-const getEnvVar = (name, prefix = null) => {
+const getEnvVar = (name, prefix) => {
   const varName = prefix ? `${prefix}_${name}` : name;
   if (!_.has(process.env, varName)) {
     throw new Error(`Env variable ${varName} does not exist`);
