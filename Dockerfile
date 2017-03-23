@@ -1,21 +1,17 @@
-FROM node:alpine
+FROM amazonlinux
 
 # aws cli
-RUN apk add --update python py-pip git
-RUN pip install awscli
+#RUN apk add --update python py-pip git
+#RUN pip install awscli
+
+# node + yarn
+RUN yum -y groupinstall 'Development Tools'
+RUN curl --silent --location https://rpm.nodesource.com/setup_7.x | bash -
+RUN curl --silent https://dl.yarnpkg.com/rpm/yarn.repo > /etc/yum.repos.d/yarn.repo
+RUN yum -y install nodejs npm yarn
 
 # serverless
-RUN npm install -g serverless@1.8
-
-# yarn
-ENV PATH /root/.yarn/bin:$PATH
-RUN apk update \
-  && apk add curl bash binutils tar \
-  && rm -rf /var/cache/apk/* \
-  && /bin/bash \
-  && touch ~/.bashrc \
-  && curl -o- -L https://yarnpkg.com/install.sh | bash \
-  && apk del curl tar binutils
+RUN npm install -g serverless@1.9
 
 # working directory
 ADD ./ /code
