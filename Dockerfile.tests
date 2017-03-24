@@ -1,20 +1,16 @@
-FROM node:alpine
+FROM node
 
-# yarn + ssh
-ENV PATH /root/.yarn/bin:$PATH
-RUN apk update \
-  && apk add curl bash binutils tar openssh \
-  && rm -rf /var/cache/apk/* \
-  && /bin/bash \
-  && touch ~/.bashrc \
-  && curl -o- -L https://yarnpkg.com/install.sh | bash \
-  && apk del curl tar binutils
-
+# yarn
+RUN apt-get update && apt-get -y install apt-transport-https
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt-get update && apt-get -y install yarn
 
 # working directory
 ADD ./ /code
 WORKDIR /code
 
 # init node modules
+RUN npm install -g --silent node-gyp
 RUN npm install -g --silent mocha
 RUN yarn install

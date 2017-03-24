@@ -9,13 +9,14 @@ before_script:
   - docker-compose build
 
 script:
-  - docker-composer run deploy-test
+  #- docker-compose run deploy-testing
+  - docker-compose run test
 
 deploy:
   provider: script
   script: docker -v &&
     docker-compose -v &&
     docker-compose build &&
-    docker-composer run deploy-production
+    docker-compose run deploy-production
   on:
     tags: true

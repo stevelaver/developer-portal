@@ -11,12 +11,12 @@ const request = require('request');
 const env = require('../../lib/env').load();
 
 const rds = mysql.createConnection({
-  host: process.env.FUNC_RDS_HOST ? process.env.FUNC_RDS_HOST : env.RDS_HOST,
-  port: process.env.FUNC_RDS_PORT ? process.env.FUNC_RDS_PORT : env.RDS_PORT,
-  user: env.RDS_USER,
-  password: env.RDS_PASSWORD,
-  database: env.RDS_DATABASE,
-  ssl: env.RDS_SSL,
+  host: process.env.FUNC_RDS_HOST,
+  port: process.env.FUNC_RDS_PORT,
+  user: process.env.FUNC_RDS_USER,
+  password: process.env.FUNC_RDS_PASSWORD,
+  database: process.env.FUNC_RDS_DATABASE,
+  ssl: process.env.FUNC_RDS_SSL,
   multipleStatements: true,
 });
 
