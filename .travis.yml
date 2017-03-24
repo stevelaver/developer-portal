@@ -1,107 +1,21 @@
 sudo: true
-language: node_js
-node_js:
-  - "6"
+language: bash
 services:
-  - mysql
   - docker
 
-# $ENV_SETTING is either TEST or DEPLOY
 before_script:
-  - bash .travis.install-mysql-5.7.sh
-  - mysql -e 'create database dev_portal_test;'
-  - mysql -e "create user 'dev_portal_test'@'localhost' identified by 'dev_portal_pass'; grant all privileges on dev_portal_test. * to 'dev_portal_test'@'localhost';" -uroot
   - docker -v
-  - docker build -t keboola/developer-portal .
-  - docker run --rm -i
-    -e AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
-    -e AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
-    -e SERVICE_NAME=$TEST_SERVICE_NAME
-    -e KEBOOLA_STACK=$TEST_SERVICE_NAME
-    -e REGION=$TEST_REGION
-    -e STAGE=$TEST_STAGE
-    -e SES_EMAIL_FROM=$TEST_SES_EMAIL_FROM
-    -e RDS_INSTANCE_CLASS=$TEST_RDS_INSTANCE_CLASS
-    -e RDS_DATABASE=$TEST_RDS_DATABASE
-    -e RDS_USER=$TEST_RDS_USER
-    -e RDS_PASSWORD=$TEST_RDS_PASSWORD
-    -e RDS_HOST=$TEST_RDS_HOST
-    -e RDS_PORT=$TEST_RDS_PORT
-    -e "RDS_SSL=$TEST_RDS_SSL"
-    -e RDS_SECURITY_GROUP=$TEST_RDS_SECURITY_GROUP
-    -e S3_BUCKET=$TEST_S3_BUCKET
-    -e LOG_HOST=$TEST_LOG_HOST
-    -e LOG_PORT=$TEST_LOG_PORT
-    -e SLACK_HOOK_URL=$TEST_SLACK_HOOK_URL
-    -e ACCOUNT_ID=$TEST_ACCOUNT_ID
-    -e VPC_CF_STACK_ID=$TEST_VPC_CF_STACK_ID
-    -e VPC_SECURITY_GROUP=$TEST_VPC_SECURITY_GROUP
-    -e VPC_SUBNET1=$TEST_VPC_SUBNET1
-    -e VPC_SUBNET2=$TEST_VPC_SUBNET2
-    -e RDS_SUBNET_GROUP=$TEST_RDS_SUBNET_GROUP
-    -e COGNITO_POOL_ID=$TEST_COGNITO_POOL_ID
-    -e COGNITO_CLIENT_ID=$TEST_COGNITO_CLIENT_ID
-    -e CLOUDFRONT_URI=$TEST_CLOUDFRONT_URI
-    -e API_ENDPOINT=$TEST_API_ENDPOINT
-    -e WARMUP_ENABLED=$TEST_WARMUP_ENABLED
-    -e BASTION_IP=$TEST_BASTION_IP
-    keboola/developer-portal
-  - echo $TEST_BASTION_SSH_KEY | base64 --decode > bastion_ssh.key
-  - chmod 400 bastion_ssh.key
-  - ssh -f $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT -N
-  - rm -rf bastion_ssh.key
+  - docker-compose -v
+  - docker-compose build
 
 script:
-  - ./node_modules/.bin/eslint .
-  - node ./scripts/create-env.js ./env.yml TEST
-  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
-    mocha --timeout 0 --compilers js:babel-core/register test/lib
-  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
-    mocha --timeout 0 --compilers js:babel-core/register test/app
-  - env AWS_ACCESS_KEY_ID=$TEST_AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY=$TEST_AWS_SECRET_ACCESS_KEY
-    FUNC_RDS_HOST=127.0.0.1
-    FUNC_RDS_PORT=33060
-    mocha --timeout 0 --compilers js:babel-core/register test/functional
+  - docker-composer run deploy-test
 
 deploy:
   provider: script
   script: docker -v &&
-    docker build -t keboola/developer-portal . &&
-    docker run --rm -i
-      -e AWS_ACCESS_KEY_ID=$DEPLOY_AWS_ACCESS_KEY_ID
-      -e AWS_SECRET_ACCESS_KEY=$DEPLOY_AWS_SECRET_ACCESS_KEY
-      -e SERVICE_NAME=$DEPLOY_SERVICE_NAME
-      -e KEBOOLA_STACK=$DEPLOY_SERVICE_NAME
-      -e REGION=$DEPLOY_REGION
-      -e STAGE=$DEPLOY_STAGE
-      -e SES_EMAIL_FROM=$DEPLOY_SES_EMAIL_FROM
-      -e RDS_INSTANCE_CLASS=$DEPLOY_RDS_INSTANCE_CLASS
-      -e RDS_SECURITY_GROUP=$DEPLOY_RDS_SECURITY_GROUP
-      -e RDS_DATABASE=$DEPLOY_RDS_DATABASE
-      -e RDS_USER=$DEPLOY_RDS_USER
-      -e RDS_PASSWORD=$DEPLOY_RDS_PASSWORD
-      -e RDS_HOST=$DEPLOY_RDS_HOST
-      -e RDS_PORT=$DEPLOY_RDS_PORT
-      -e "RDS_SSL=$DEPLOY_RDS_SSL"
-      -e S3_BUCKET=$DEPLOY_S3_BUCKET
-      -e LOG_HOST=$DEPLOY_LOG_HOST
-      -e LOG_PORT=$DEPLOY_LOG_PORT
-      -e SLACK_HOOK_URL=$DEPLOY_SLACK_HOOK_URL
-      -e ACCOUNT_ID=$DEPLOY_ACCOUNT_ID
-      -e VPC_CF_STACK_ID=$DEPLOY_VPC_CF_STACK_ID
-      -e VPC_SECURITY_GROUP=$DEPLOY_VPC_SECURITY_GROUP
-      -e VPC_SUBNET1=$DEPLOY_VPC_SUBNET1
-      -e VPC_SUBNET2=$DEPLOY_VPC_SUBNET2
-      -e RDS_SUBNET_GROUP=$DEPLOY_RDS_SUBNET_GROUP
-      -e COGNITO_POOL_ID=$DEPLOY_COGNITO_POOL_ID
-      -e COGNITO_CLIENT_ID=$DEPLOY_COGNITO_CLIENT_ID
-      -e CLOUDFRONT_URI=$DEPLOY_CLOUDFRONT_URI
-      -e API_ENDPOINT=$DEPLOY_API_ENDPOINT
-      -e WARMUP_ENABLED=$DEPLOY_WARMUP_ENABLED
-      -e BASTION_IP=$DEPLOY_BASTION_IP
-      keboola/developer-portal
+    docker-compose -v &&
+    docker-compose build &&
+    docker-composer run deploy-production
   on:
     tags: true
