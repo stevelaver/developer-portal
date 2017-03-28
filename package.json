@@ -9,29 +9,28 @@
     "url": "https://github.com/keboola/developer-portal.git"
   },
   "dependencies": {
-    "async": "^2.0.1",
-    "aws-sdk": "^2.7.21",
     "babel-polyfill": "^6.16.0",
     "bluebird": "^3.4.7",
     "crypto-js": "^3.1.9-1",
     "db-migrate": "^0.10.0-beta.20",
     "db-migrate-mysql": "^1.1.10",
-    "hogan.js": "^3.0.2",
     "joi": "^10.1.0",
     "joi-date-extensions": "^1.0.2",
     "jsonwebtoken": "7.0.0",
-    "jwk-to-pem": "^1.2.5",
     "lodash": "^4.17.4",
     "longjohn": "^0.2.12",
+    "moment": "^2.17.1",
     "mysql": "^2.11.1",
     "request-promise-lite": "^0.8.1",
     "sharp": "^0.17.2",
     "source-map-support": "^0.4.11",
     "winston": "*",
-    "winston-papertrail": "^1.0.0"
+    "winston-papertrail": "^1.0.0",
+    "yamljs": "^0.2.8"
   },
   "devDependencies": {
-    "aws-sdk-mock": "^1.6.1",
+    "async": "^2.0.1",
+    "aws-sdk": "^2.7.21",
     "babel-core": "^6.21.0",
     "babel-loader": "^6.2.10",
     "babel-plugin-transform-runtime": "^6.15.0",
@@ -46,17 +45,14 @@
     "eslint-plugin-react": "^6.10.2",
     "mocha": "*",
     "mocha-webpack": "^0.7.0",
-    "moment": "^2.17.1",
     "mustache-loader": "^0.4.0",
-    "node-exec-promise": "^0.1.1",
     "request": "^2.79.0",
     "serverless-webpack": "^1.0.0-rc.3",
     "sinon": "^1.17.7",
     "unexpected": "^10.26.0",
     "wait-promise": "^0.4.1",
     "webpack": "^1.13.2",
-    "webpack-node-externals": "^1.5.4",
-    "yamljs": "^0.2.8"
+    "webpack-node-externals": "^1.5.4"
   },
   "scripts": {
     "test": "./node_modules/mocha-webpack/bin/mocha-webpack --timeout 0 --webpack-config webpack.config.js",

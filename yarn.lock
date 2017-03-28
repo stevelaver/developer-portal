@@ -155,14 +155,6 @@ arrify@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/arrify/-/arrify-1.0.1.tgz#898508da2226f380df904728456849c1501a4b0d"
 
-asn1.js@^4.5.2:
-  version "4.9.0"
-  resolved "https://registry.yarnpkg.com/asn1.js/-/asn1.js-4.9.0.tgz#f71a1243f3e79d46d7b07d7fbf4824ee73af054a"
-  dependencies:
-    bn.js "^4.0.0"
-    inherits "^2.0.1"
-    minimalistic-assert "^1.0.0"
-
 asn1@~0.2.0, asn1@~0.2.3:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/asn1/-/asn1-0.2.3.tgz#dac8787713c9966849fc8180777ebe9c1ddf3b86"
@@ -215,15 +207,7 @@ asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
 
-aws-sdk-mock@^1.6.1:
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/aws-sdk-mock/-/aws-sdk-mock-1.6.1.tgz#79dce665a8295f76fde7afa7b4a6ca03e1afaa62"
-  dependencies:
-    aws-sdk "^2.3.0"
-    sinon "^1.17.3"
-    traverse "^0.6.6"
-
-aws-sdk@^2.3.0, aws-sdk@^2.7.21:
+aws-sdk@^2.7.21:
   version "2.7.21"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.7.21.tgz#9abc790b3d2498482437172e5948988d4870f94f"
   dependencies:
@@ -916,10 +900,6 @@ bluebird@^3.1.1, bluebird@^3.2.1, bluebird@^3.4.0, bluebird@^3.4.1, bluebird@^3.
   version "3.4.7"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.4.7.tgz#f72d760be09b7f76d08ed8fae98b289a8d05fab3"
 
-bn.js@^4.0.0, bn.js@^4.4.0:
-  version "4.11.6"
-  resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.6.tgz#53344adb14617a13f6e8dd2ce28905d1c0ba3215"
-
 body-parser@^1.15.2:
   version "1.15.2"
   resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.15.2.tgz#d7578cf4f1d11d5f6ea804cef35dc7a7ff6dae67"
@@ -955,10 +935,6 @@ braces@^1.8.2:
     expand-range "^1.8.1"
     preserve "^0.2.0"
     repeat-element "^1.1.2"
-
-brorand@^1.0.1:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/brorand/-/brorand-1.0.6.tgz#4028706b915f91f7b349a2e0bf3c376039d216e5"
 
 browser-stdout@1.3.0:
   version "1.3.0"
@@ -1473,15 +1449,6 @@ ecdsa-sig-formatter@1.0.9:
 ee-first@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
-
-elliptic@^6.2.3:
-  version "6.3.2"
-  resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.3.2.tgz#e4c81e0829cf0a65ab70e998b8232723b5c1bc48"
-  dependencies:
-    bn.js "^4.4.0"
-    brorand "^1.0.1"
-    hash.js "^1.0.0"
-    inherits "^2.0.1"
 
 emoji-regex@^6.1.0:
   version "6.4.1"
@@ -2145,12 +2112,6 @@ has@^1.0.1:
   dependencies:
     function-bind "^1.0.2"
 
-hash.js@^1.0.0:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/hash.js/-/hash.js-1.0.3.tgz#1332ff00156c0a0ffdd8236013d07b77a0451573"
-  dependencies:
-    inherits "^2.0.1"
-
 hawk@~3.1.3:
   version "3.1.3"
   resolved "https://registry.yarnpkg.com/hawk/-/hawk-3.1.3.tgz#078444bd7c1640b0fe540d2c9b73d59678e8e1c4"
@@ -2628,14 +2589,6 @@ jwa@^1.1.4:
     ecdsa-sig-formatter "1.0.9"
     safe-buffer "^5.0.1"
 
-jwk-to-pem@^1.2.5:
-  version "1.2.6"
-  resolved "https://registry.yarnpkg.com/jwk-to-pem/-/jwk-to-pem-1.2.6.tgz#d507cece40089c5248e09ec68266a2030a9c6325"
-  dependencies:
-    asn1.js "^4.5.2"
-    elliptic "^6.2.3"
-    safe-buffer "^5.0.1"
-
 jws@^3.0.0:
   version "3.1.4"
   resolved "https://registry.yarnpkg.com/jws/-/jws-3.1.4.tgz#f9e8b9338e8a847277d6444b1464f61880e050a2"
@@ -2854,10 +2807,6 @@ mime@1.3.4:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.3.4.tgz#115f9e3b6b3daf2959983cb38f149a2d40eb5d53"
 
-minimalistic-assert@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/minimalistic-assert/-/minimalistic-assert-1.0.0.tgz#702be2dda6b37f4836bcb3f5db56641b64a1d3d3"
-
 "minimatch@2 || 3", minimatch@^3.0.0, minimatch@^3.0.2, minimatch@^3.0.3:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.3.tgz#2a4e4090b96b2db06a9d7df01055a62a77c9b774"
@@ -2986,10 +2935,6 @@ node-dir@^0.1.10:
   resolved "https://registry.yarnpkg.com/node-dir/-/node-dir-0.1.16.tgz#d2ef583aa50b90d93db8cdd26fcea58353957fe4"
   dependencies:
     minimatch "^3.0.2"
-
-node-exec-promise@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/node-exec-promise/-/node-exec-promise-0.1.1.tgz#3a83fc0b2588a00a66f396326d3d73e979de9f65"
 
 node-fs@~0.1.5:
   version "0.1.7"
@@ -3713,7 +3658,7 @@ simple-swizzle@^0.2.2:
   dependencies:
     is-arrayish "^0.3.1"
 
-sinon@^1.17.3, sinon@^1.17.7:
+sinon@^1.17.7:
   version "1.17.7"
   resolved "https://registry.yarnpkg.com/sinon/-/sinon-1.17.7.tgz#4542a4f49ba0c45c05eb2e9dd9d203e2b8efe0bf"
   dependencies:
@@ -3980,10 +3925,6 @@ tough-cookie@~2.3.0:
   resolved "https://registry.yarnpkg.com/tough-cookie/-/tough-cookie-2.3.2.tgz#f081f76e4c85720e6c37a5faced737150d84072a"
   dependencies:
     punycode "^1.4.1"
-
-traverse@^0.6.6:
-  version "0.6.6"
-  resolved "https://registry.yarnpkg.com/traverse/-/traverse-0.6.6.tgz#cbdf560fd7b9af632502fed40f918c157ea97137"
 
 tryit@^1.0.1:
   version "1.0.3"
