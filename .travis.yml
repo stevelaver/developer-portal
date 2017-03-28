@@ -9,7 +9,7 @@ before_script:
   - docker-compose build
 
 script:
-  #- docker-compose run deploy-testing
+  - docker-compose run deploy-testing
   - docker-compose run test
 
 deploy:
