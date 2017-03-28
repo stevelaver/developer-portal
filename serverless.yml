@@ -25,7 +25,7 @@ provider:
   name: aws
   region: ${file(./env.yml):REGION}
   stage: ${file(./env.yml):STAGE}
-  runtime: nodejs4.3
+  runtime: nodejs6.10
   memorySize: 256
   timeout: 30
   versionFunctions: false

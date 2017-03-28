@@ -5,7 +5,6 @@ import Repository from '../lib/repository';
 import Validation from '../lib/validation';
 
 require('longjohn');
-require('babel-polyfill');
 require('source-map-support').install();
 const aws = require('aws-sdk');
 const db = require('../lib/db');

@@ -6,7 +6,6 @@ import Identity from '../lib/identity';
 import Services from '../lib/Services';
 
 require('longjohn');
-require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
 const joi = require('joi');

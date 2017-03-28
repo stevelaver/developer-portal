@@ -4,7 +4,6 @@ import Icon from '../app/icon';
 import Services from '../lib/Services';
 
 require('longjohn');
-require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
 const sharp = require('sharp');

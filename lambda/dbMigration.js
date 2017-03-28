@@ -1,7 +1,6 @@
 'use strict';
 
 require('longjohn');
-require('babel-polyfill');
 require('source-map-support').install();
 const dbMigrate = require('db-migrate');
 require('db-migrate-mysql');

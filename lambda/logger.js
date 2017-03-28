@@ -3,7 +3,6 @@
 import Log from '../lib/log';
 
 require('longjohn');
-require('babel-polyfill');
 require('source-map-support').install();
 const _ = require('lodash');
 const papertrail = require('winston-papertrail').Papertrail;

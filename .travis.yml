@@ -10,7 +10,8 @@ before_script:
 
 script:
   - docker-compose run deploy-testing
-  - docker-compose run test
+  - docker-compose run test-unit
+  - docker-compose run test-functional
 
 deploy:
   provider: script
