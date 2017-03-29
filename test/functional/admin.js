@@ -347,6 +347,29 @@ describe('Admin', () => {
             expect(user.vendors, 'to contain', otherVendor);
           })
           .then(() => cb()),
+      (cb) => {
+        // Remove vendor
+        request.delete({
+          url: `${env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
+          cb();
+        });
+      },
+      cb =>
+        cognito.adminGetUser({
+          UserPoolId: env.COGNITO_POOL_ID,
+          Username: userEmail,
+        }).promise()
+          .then(data => Identity.formatUser(data))
+          .then((user) => {
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'not to contain', otherVendor);
+          })
+          .then(() => cb()),
     ], done);
   });
 

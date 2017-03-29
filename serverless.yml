@@ -152,6 +152,11 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
+          method: delete
+          path: "admin/users/{email}/vendors/{vendor}"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/vendors"
       -
@@ -236,6 +241,11 @@ functions:
         http:
           method: get
           path: "vendors/{vendor}/invitations/{email}/{code}"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: delete
+          path: "vendors/{vendor}/users/{email}"
 
   iconUpload:
     handler: iconUpload.upload

@@ -55,7 +55,7 @@ function createVendor(event, context, callback) {
     event,
     context,
     callback,
-    204
+    201
   );
 }
 
@@ -120,6 +120,26 @@ function acceptInvitation(event, context, callback) {
     .catch(err => request.htmlResponse(err, null, event, context, callback));
 }
 
+function removeUser(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['vendor', 'email'],
+  });
+
+  return request.responsePromise(
+    identity.getUser(event.headers.Authorization)
+      .then(user => vendorApp.removeUser(
+        event.pathParameters.vendor,
+        event.pathParameters.email,
+        user,
+      )),
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 
 module.exports.vendors = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -131,6 +151,8 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
       return sendInvitation(event, context, callback);
     case '/vendors/{vendor}/invitations/{email}/{code}':
       return acceptInvitation(event, context, callback);
+    case '/vendors/{vendor}/users/{email}':
+      return removeUser(event, context, callback);
     default:
       throw Services.getError().notFound();
   }

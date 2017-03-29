@@ -75,6 +75,31 @@ function addUserToVendor(event, context, callback) {
   );
 }
 
+function removeUserFromVendor(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['email', 'vendor'],
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(event.headers.Authorization))
+      .then(() => services.getUserPool()
+        .removeUserFromVendor(event.pathParameters.email, event.pathParameters.vendor))
+      .then(() => services.getEmail().send(
+        event.pathParameters.email,
+        'Removal from vendor',
+        'Keboola Developer Portal',
+        `Your account was removed from vendor ${event.pathParameters.vendor} by an administrator.`,
+      )),
+    db,
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 function approveApp(event, context, callback) {
   validation.validate(event, {
     auth: true,
@@ -249,6 +274,9 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
     case '/admin/users/{email}/admin':
       return makeUserAdmin(event, context, callback);
     case '/admin/users/{email}/vendors/{vendor}':
+      if (event.httpMethod === 'DELETE') {
+        return removeUserFromVendor(event, context, callback);
+      }
       return addUserToVendor(event, context, callback);
     case '/admin/apps/{id}/approve':
       return approveApp(event, context, callback);

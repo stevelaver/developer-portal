@@ -140,7 +140,7 @@ function signup(event, context, callback) {
     event,
     context,
     callback,
-    204
+    201
   );
 }
 

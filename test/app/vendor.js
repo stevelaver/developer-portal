@@ -39,9 +39,10 @@ appEnv.RDS_DATABASE = process.env.UNIT_RDS_DATABASE;
 appEnv.RDS_SSL = false;
 const services = new Services(appEnv);
 const vendorApp = new Vendor(services, db, appEnv, error);
+const userPool = services.getUserPool();
 
 const vendor = `v${Date.now()}`;
-const userEmail = `u${Date.now()}@test.com`;
+const userEmail = `test${Date.now()}@keboola.com`;
 const userPassword = 'uiOU.-jfdksfj88';
 
 const createUser = () =>
@@ -77,51 +78,79 @@ describe('Vendor App', () => {
       ))
       .then(() => createUser()));
 
-  it('Send Invitation', () =>
-    vendorApp.invite(vendor, userEmail, { name: 'User', email: process.env.FUNC_USER_EMAIL, vendors: [vendor] })
-      .then(() => rds.queryAsync('SELECT * FROM invitations WHERE vendor=? AND email=?', [vendor, userEmail]))
-      .then((data) => {
-        expect(data, 'to have length', 1);
-        expect(data[0], 'to have key', 'vendor');
-        expect(data[0].vendor, 'to be', vendor);
-        expect(data[0], 'to have key', 'email');
-        expect(data[0].email, 'to be', userEmail);
-      }));
-
-  it('Accept Invitation fails, user does not exist', () => {
-    const code = `c${Date.now()}`;
-    return rds.queryAsync('INSERT INTO invitations SET code=?, vendor=?, email=?', [code, vendor, userEmail])
-      .then(() => expect(vendorApp.acceptInvitation(vendor, 'test@test.com', code), 'to be rejected'));
+  describe('Send invitation', () => {
+    it('Send', () =>
+      vendorApp.invite(vendor, userEmail, { name: 'User', email: process.env.FUNC_USER_EMAIL, vendors: [vendor] })
+        .then(() => rds.queryAsync('SELECT * FROM invitations WHERE vendor=? AND email=?', [vendor, userEmail]))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'vendor');
+          expect(data[0].vendor, 'to be', vendor);
+          expect(data[0], 'to have key', 'email');
+          expect(data[0].email, 'to be', userEmail);
+        }));
   });
 
-  it('Accept Invitation fails, expired', () => {
-    const code = `c${Date.now()}`;
-    return rds.queryAsync('INSERT INTO invitations SET code=?, vendor=?, email=?', [code, vendor, userEmail])
-      .then(() => rds.queryAsync(
-        'UPDATE invitations SET createdOn=? WHERE code=?',
-        [moment().subtract(25, 'hours').format('YYYY-MM-DD HH:mm:ss'), code]
-      ))
-      .then(() => expect(vendorApp.acceptInvitation(vendor, userEmail, code), 'to be rejected'));
+  describe('Accept invitation', () => {
+    it('Fail, user does not exist', () => {
+      const code = `c${Date.now()}`;
+      return rds.queryAsync('INSERT INTO invitations SET code=?, vendor=?, email=?', [code, vendor, userEmail])
+        .then(() => expect(vendorApp.acceptInvitation(vendor, 'test@test.com', code), 'to be rejected'));
+    });
+
+    it('Fail, expired', () => {
+      const code = `c${Date.now()}`;
+      return rds.queryAsync('INSERT INTO invitations SET code=?, vendor=?, email=?', [code, vendor, userEmail])
+        .then(() => rds.queryAsync(
+          'UPDATE invitations SET createdOn=? WHERE code=?',
+          [moment().subtract(25, 'hours').format('YYYY-MM-DD HH:mm:ss'), code]
+        ))
+        .then(() => expect(vendorApp.acceptInvitation(vendor, userEmail, code), 'to be rejected'));
+    });
+
+    it('Success', () => {
+      const code = `c${Date.now()}`;
+      return rds.queryAsync('INSERT INTO invitations SET code=?, vendor=?, email=?', [code, vendor, userEmail])
+        .then(() => vendorApp.acceptInvitation(vendor, userEmail, code))
+        .then(() => rds.queryAsync('SELECT * FROM invitations WHERE code=?', [code]))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0], 'to have key', 'acceptedOn');
+          expect(data[0].acceptedOn, 'not to be null');
+        })
+        .then(() => cognito.adminGetUser({
+          UserPoolId: env.COGNITO_POOL_ID,
+          Username: userEmail,
+        }).promise()
+        .then(data => Identity.formatUser(data)))
+        .then((data) => {
+          expect(data.vendors, 'to contain', vendor);
+        });
+    });
   });
 
-  it('Accept Invitation success', () => {
-    const code = `c${Date.now()}`;
-    return rds.queryAsync('INSERT INTO invitations SET code=?, vendor=?, email=?', [code, vendor, userEmail])
-      .then(() => vendorApp.acceptInvitation(vendor, userEmail, code))
-      .then(() => rds.queryAsync('SELECT * FROM invitations WHERE code=?', [code]))
-      .then((data) => {
-        expect(data, 'to have length', 1);
-        expect(data[0], 'to have key', 'acceptedOn');
-        expect(data[0].acceptedOn, 'not to be null');
-      })
-      .then(() => cognito.adminGetUser({
-        UserPoolId: env.COGNITO_POOL_ID,
-        Username: userEmail,
-      }).promise()
-      .then(data => Identity.formatUser(data)))
-      .then((data) => {
-        expect(data.vendors, 'to contain', vendor);
-      });
+  describe('Remove user', () => {
+    it('User is not member of vendor', () =>
+      expect(
+        vendorApp.removeUser(
+          process.env.FUNC_VENDOR,
+          userEmail,
+          { name: 'User', email: process.env.FUNC_USER_EMAIL, vendors: [process.env.FUNC_VENDOR] }
+        ),
+        'to be rejected',
+      ));
+    it('Success', () =>
+      userPool.addUserToVendor(userEmail, vendor)
+        .catch(() => {})
+        .then(() => expect(vendorApp.removeUser(
+          vendor,
+          userEmail,
+          { name: 'User', email: process.env.FUNC_USER_EMAIL, vendors: [vendor] }
+        ), 'to be fulfilled'))
+        .then(() => userPool.getUser(userEmail))
+        .then((data) => {
+          expect(data.vendors, 'not to contain', vendor);
+        }));
   });
 
   after(() =>

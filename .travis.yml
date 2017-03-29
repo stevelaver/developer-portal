@@ -9,9 +9,12 @@ before_script:
   - docker-compose build
 
 script:
+  - docker-compose run lint
+  - docker-compose run -e TEST_DIR=test/lib test-unit
+  - docker-compose run -e TEST_DIR=test/app test-unit
   - docker-compose run deploy-testing
-  - docker-compose run test-unit
   - docker-compose run test-functional
+
 
 deploy:
   provider: script

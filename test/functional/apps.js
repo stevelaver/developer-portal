@@ -274,7 +274,7 @@ describe('Apps', () => {
               Authorization: token,
             },
           }, (err, res) => {
-            expect(res.statusCode, 'to be', 202);
+            expect(res.statusCode, 'to be', 204);
             cb();
           });
         }, 5000);
@@ -576,7 +576,7 @@ describe('Apps', () => {
             Authorization: token,
           },
         }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },

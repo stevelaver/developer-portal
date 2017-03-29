@@ -76,64 +76,13 @@ services:
       - "WARMUP_ENABLED=${DEPLOY_WARMUP_ENABLED}"
       - "BASTION_IP=${DEPLOY_BASTION_IP}"
 
-  test-functional:
+  lint:
     build:
       context: .
       dockerfile: Dockerfile.tests
-    links:
-      - mysql
-    environment:
-      - "AWS_ACCESS_KEY_ID=${TEST_AWS_ACCESS_KEY_ID}"
-      - "AWS_SECRET_ACCESS_KEY=${TEST_AWS_SECRET_ACCESS_KEY}"
-      - "FUNC_RDS_DATABASE=${TEST_RDS_DATABASE}"
-      - "FUNC_RDS_HOST=127.0.0.1"
-      - "FUNC_RDS_PASSWORD=${TEST_RDS_PASSWORD}"
-      - "FUNC_RDS_PORT=33060"
-      - "FUNC_RDS_SSL=${TEST_RDS_SSL}"
-      - "FUNC_RDS_USER=${TEST_RDS_USER}"
-      - FUNC_USER_EMAIL
-      - FUNC_USER_PASSWORD
-      - FUNC_VENDOR
-      - TEST_ACCOUNT_ID
-      - TEST_API_ENDPOINT
-      - TEST_BASTION_IP
-      - TEST_BASTION_SSH_KEY
-      - TEST_BASTION_USER
-      - TEST_CLOUDFRONT_URI
-      - TEST_COGNITO_CLIENT_ID
-      - TEST_COGNITO_POOL_ID
-      - TEST_KEBOOLA_STACK
-      - TEST_LOG_HOST
-      - TEST_LOG_PORT
-      - TEST_RDS_DATABASE
-      - TEST_RDS_HOST
-      - TEST_RDS_INSTANCE_CLASS
-      - TEST_RDS_PASSWORD
-      - TEST_RDS_PORT
-      - TEST_RDS_SECURITY_GROUP
-      - TEST_RDS_SSL
-      - TEST_RDS_SUBNET_GROUP
-      - TEST_RDS_USER
-      - TEST_REGION
-      - TEST_S3_BUCKET
-      - TEST_SERVICE_NAME
-      - TEST_SES_EMAIL_FROM
-      - TEST_SLACK_HOOK_URL
-      - TEST_STAGE
-      - TEST_VPC_CF_STACK_ID
-      - TEST_VPC_SECURITY_GROUP
-      - TEST_VPC_SUBNET1
-      - TEST_VPC_SUBNET2
-      - TEST_WARMUP_ENABLED
     command: >
              sh -c '
-             echo ${TEST_BASTION_SSH_KEY} | base64 -d > bastion_ssh.key
-             && chmod 400 bastion_ssh.key
-             && ssh -fN $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT
-             && sleep 10
-             && ./node_modules/.bin/eslint .
-             && node ./scripts/create-env.js ./env.yml TEST
-             && mocha --timeout 0 --compilers js:babel-core/register test/functional
+             ./node_modules/.bin/eslint .
              '
 
   test-unit:
@@ -190,13 +139,69 @@ services:
       - TEST_VPC_SUBNET1
       - TEST_VPC_SUBNET2
       - TEST_WARMUP_ENABLED
+      - TEST_DIR
     command: >
              sh -c '
              sleep 10
-             && ./node_modules/.bin/eslint .
              && node ./scripts/create-env.js ./env.yml TEST
-             && mocha --timeout 0 --compilers js:babel-core/register test/lib
-             && mocha --timeout 0 --compilers js:babel-core/register test/app
+             && mocha --timeout 0 --compilers js:babel-core/register $$TEST_DIR
+             '
+
+  test-functional:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    environment:
+      - "AWS_ACCESS_KEY_ID=${TEST_AWS_ACCESS_KEY_ID}"
+      - "AWS_SECRET_ACCESS_KEY=${TEST_AWS_SECRET_ACCESS_KEY}"
+      - "FUNC_RDS_DATABASE=${TEST_RDS_DATABASE}"
+      - "FUNC_RDS_HOST=127.0.0.1"
+      - "FUNC_RDS_PASSWORD=${TEST_RDS_PASSWORD}"
+      - "FUNC_RDS_PORT=33060"
+      - "FUNC_RDS_SSL=${TEST_RDS_SSL}"
+      - "FUNC_RDS_USER=${TEST_RDS_USER}"
+      - FUNC_USER_EMAIL
+      - FUNC_USER_PASSWORD
+      - FUNC_VENDOR
+      - TEST_ACCOUNT_ID
+      - TEST_API_ENDPOINT
+      - TEST_BASTION_IP
+      - TEST_BASTION_SSH_KEY
+      - TEST_BASTION_USER
+      - TEST_CLOUDFRONT_URI
+      - TEST_COGNITO_CLIENT_ID
+      - TEST_COGNITO_POOL_ID
+      - TEST_KEBOOLA_STACK
+      - TEST_LOG_HOST
+      - TEST_LOG_PORT
+      - TEST_RDS_DATABASE
+      - TEST_RDS_HOST
+      - TEST_RDS_INSTANCE_CLASS
+      - TEST_RDS_PASSWORD
+      - TEST_RDS_PORT
+      - TEST_RDS_SECURITY_GROUP
+      - TEST_RDS_SSL
+      - TEST_RDS_SUBNET_GROUP
+      - TEST_RDS_USER
+      - TEST_REGION
+      - TEST_S3_BUCKET
+      - TEST_SERVICE_NAME
+      - TEST_SES_EMAIL_FROM
+      - TEST_SLACK_HOOK_URL
+      - TEST_STAGE
+      - TEST_VPC_CF_STACK_ID
+      - TEST_VPC_SECURITY_GROUP
+      - TEST_VPC_SUBNET1
+      - TEST_VPC_SUBNET2
+      - TEST_WARMUP_ENABLED
+    command: >
+             sh -c '
+             echo ${TEST_BASTION_SSH_KEY} | base64 -d > bastion_ssh.key
+             && chmod 400 bastion_ssh.key
+             && ssh -fN $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT
+             && sleep 10
+             && node ./scripts/create-env.js ./env.yml TEST
+             && mocha --timeout 0 --compilers js:babel-core/register test/functional
              '
 
   mysql:

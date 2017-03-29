@@ -6,8 +6,8 @@ const moment = require('moment');
 const db = require('../lib/db');
 
 class Vendor {
-  constructor(init, dbIn, env, err) {
-    this.init = init;
+  constructor(services, dbIn, env, err) {
+    this.services = services;
     this.db = dbIn;
     this.env = env;
     this.err = err;
@@ -46,7 +46,7 @@ class Vendor {
   }
 
   join(user, vendor) {
-    const userPool = this.init.getUserPool();
+    const userPool = this.services.getUserPool();
     return this.db.connect(this.env)
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.end())
@@ -58,11 +58,11 @@ class Vendor {
   }
 
   invite(vendor, email, user) {
-    const emailLib = this.init.getEmail();
-    const userPool = this.init.getUserPool();
     if (user.vendors.indexOf(vendor) === -1) {
       throw this.err.forbidden('You do not have access to the vendor');
     }
+    const emailLib = this.services.getEmail();
+    const userPool = this.services.getUserPool();
     return db.connect(this.env)
       .then(() => db.checkVendorExists(vendor))
       .then(() => userPool.getUser(email))
@@ -73,6 +73,7 @@ class Vendor {
       })
       .catch((err) => {
         if (err.code !== 'UserNotFoundException') {
+          db.end();
           throw err;
         }
       })
@@ -93,7 +94,7 @@ class Vendor {
   }
 
   acceptInvitation(vendor, email, code) {
-    const userPool = this.init.getUserPool();
+    const userPool = this.services.getUserPool();
     let dbInvitations;
     return db.connect(this.env)
       .then(() => {
@@ -117,6 +118,44 @@ class Vendor {
         if (err.code === 'UserNotFoundException') {
           throw this.err.notFound('User account does not exist. Please signup first.');
         }
+        throw err;
+      });
+  }
+
+  removeUser(vendor, email, user) {
+    if (user.vendors.indexOf(vendor) === -1) {
+      throw this.err.forbidden('You do not have access to the vendor');
+    }
+    const userPool = this.services.getUserPool();
+    return db.connect(this.env)
+      .then(() => db.checkVendorExists(vendor))
+      .then(() => userPool.getUser(email))
+      .then((data) => {
+        if (data.vendors.indexOf(vendor) === -1) {
+          throw this.err.forbidden('The user is not member of the vendor');
+        }
+      })
+      .catch((err) => {
+        if (err.code !== 'UserNotFoundException') {
+          throw err;
+        }
+      })
+      .then(() => userPool.removeUserFromVendor(email, vendor))
+      .then(() => {
+        if (user.email !== email) {
+          const emailLib = this.services.getEmail();
+          return emailLib.send(
+            email,
+            `Removal from vendor ${vendor}`,
+            'Keboola Developer Portal',
+            `Your account was removed from vendor ${vendor} by ${user.name}.`
+          );
+        }
+      })
+      .then(() => db.end())
+      .catch((err) => {
+        db.end()
+          .catch(() => null);
         throw err;
       });
   }

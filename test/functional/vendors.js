@@ -90,7 +90,7 @@ describe('Vendors', () => {
             email: 'test@test.com',
           },
         }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },
@@ -115,7 +115,7 @@ describe('Vendors', () => {
     ], done);
   });
 
-  it('Join vendor', (done) => {
+  it('Join and remove from vendor', (done) => {
     async.waterfall([
       (cb) => {
         request.post({
@@ -152,6 +152,41 @@ describe('Vendors', () => {
           })
           .then(() => cb())
           .catch(err => cb(err)),
+      (cb) => {
+        request.post({
+          url: `${env.API_ENDPOINT}/auth/login`,
+          json: true,
+          body: {
+            email: process.env.FUNC_USER_EMAIL,
+            password: process.env.FUNC_USER_PASSWORD,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 200);
+          expect(res.body, 'to have key', 'token');
+          token = res.body.token;
+          cb();
+        });
+      },
+      (cb) => {
+        // Remove from vendor
+        request.delete({
+          url: `${env.API_ENDPOINT}/vendors/${vendor1}/users/${process.env.FUNC_USER_EMAIL}`,
+          headers: {
+            Authorization: token,
+          },
+        }, (err, res) => {
+          expect(res.statusCode, 'to be', 204);
+          cb();
+        });
+      },
+      cb =>
+        userPool.getUser(process.env.FUNC_USER_EMAIL)
+          .then((user) => {
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'not to contain', vendor1);
+          })
+          .then(() => cb())
+          .catch(err => cb(err)),
     ], done);
   });
 
@@ -166,10 +201,9 @@ describe('Vendors', () => {
             email: userEmail,
             password: 'uiOU.-jfdksfj88',
             name: 'Test',
-            vendor: vendor1,
           },
         }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
+          expect(res.statusCode, 'to be', 201);
           cb();
         });
       },
@@ -203,11 +237,10 @@ describe('Vendors', () => {
       },
       (cb) => {
         // 5) Check vendor in cognito
-        userPool.getUser(process.env.FUNC_USER_EMAIL)
+        userPool.getUser(userEmail)
           .then((user) => {
             expect(user, 'to have key', 'vendors');
             expect(user.vendors, 'to contain', vendor);
-            expect(user.vendors, 'to contain', vendor1);
           })
           .then(() => cb())
           .catch(err => cb(err));

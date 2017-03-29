@@ -11,6 +11,7 @@ to be passed in HTTP header `Authorization: {your token}`. Token has limited
 validity of 1 hour. Login call also returns refresh token which can be exchanged
 for fresh auth token.
 
+
 ### Create account [POST /auth/signup]
 
 Anyone can create account but needs to belong to a vendor to be able to manage apps.
@@ -28,12 +29,12 @@ Anyone can create account but needs to belong to a vendor to be able to manage a
             "password": "superSecret"
         }
 
-+ Response 204
++ Response 201
 
 
 ### Confirm account [POST /auth/confirm/{email}/{code}]
 
-Account needs to be confirmed by code from confirmation email sent on his email address.
+Account needs to be confirmed by a code from confirmation email sent on his email address.
 
 + Parameters
     + email (required)
@@ -87,6 +88,7 @@ Login returns three different tokens.
                 "expiresIn": 3600
             }
 
+
 ### Refresh token [GET /auth/token]
 
 Returns fresh auth token in exchange for refresh token recieved on login.
@@ -105,6 +107,7 @@ Returns fresh auth token in exchange for refresh token recieved on login.
                 "token": "{your token}",
                 "expiresIn": 3600
             }
+
 
 ### Get user profile [GET /auth/profile]
 
@@ -183,7 +186,8 @@ You can create a vendor, however you have to wait for our approval. You will rec
                 "email": "info@company.com"
             }
 
-+ Response 204 (application/json)
++ Response 201 (application/json)
+
 
 ### Request to join a vendor [POST /vendors/{vendor}/join]
 
@@ -199,6 +203,7 @@ Request to join a vendor. You will recieve an email confirmation once it is appr
             Authorization: {your_token}
 
 + Response 204 (application/json)
+
 
 ### Invite user to a vendor [POST /vendors/{vendor}/invitations/{email}]
 
@@ -216,6 +221,7 @@ Sends an email with a link to accept the invitation.
 
 + Response 204
 
+
 ### Accept invitation to a vendor [GET /vendors/{vendor}/invitations/{email}/{code}]
 
 Link to this resource is sent to an email.
@@ -226,6 +232,24 @@ Link to this resource is sent to an email.
     + code - verification code
 
 + Response 200 (text/html)
+
+
+### Remove user from a vendor [DELETE /vendors/{vendor}/users/{email}]
+
+Remove other user or yourself from the vendor
+
++ Parameters
+    + vendor
+    + email
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
 
 
 ## Apps [/vendors/{vendor}/apps]
@@ -246,6 +270,7 @@ stacks can be [fetched here](#reference/0/public-api/list-stacks).
 
 You may also exclude the app from public listing (by setting `isPublic` attribute to `false`) and specify KBC project
 ids where it will be available.
+
 
 ### Create app [POST /vendors/{vendor}/apps]
 
@@ -461,6 +486,7 @@ The icon should have dimensions 64x64px or it will be resized after upload.
                 "expires": "2016-08-12T16:16:27Z"
             }
 
+
 ### List all vendor apps [GET /vendors/{vendor}/apps?offset={offset}&limit={limit}]
 
 + Parameters
@@ -491,6 +517,7 @@ The icon should have dimensions 64x64px or it will be resized after upload.
                     "isApproved": true
                 }
             ]
+
 
 ### Get app detail [GET /vendors/{vendor}/apps/{app}]
 
@@ -585,7 +612,7 @@ Request will be sent only if the app has an icon uploaded and all these attribut
 
             Authorization: {your_token}
 
-+ Response 202
++ Response 204
 
 
 ### List versions [GET /vendors/{vendor}/apps/{app}/versions?offset={offset}&limit={limit}]
@@ -722,7 +749,7 @@ Takes settings from chosen version and creates new version with it.
 
             Authorization: {your_token}
 
-+ Response 204
++ Response 201
 
 
 
@@ -756,6 +783,7 @@ Shows all apps having flags `isApproved` and `isPublic` set to `true`.
                     }
                 }
             ]
+
 
 ### Get app detail [GET /apps/{vendor}/{app}]
 
@@ -909,6 +937,23 @@ Management of users and apps designated for Developer Portal staff only
 
 
 ### Add user to a vendor [POST /admin/users/{email}/vendors/{vendor}]
+
+It will send email confirmation to a user.
+
++ Parameters
+    + email
+    + vendor
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
+### Remove user from a vendor [DELETE /admin/users/{email}/vendors/{vendor}]
 
 It will send email confirmation to a user.
 
@@ -1176,7 +1221,10 @@ Allows to update apps across vendors
     + Body
 
             {
-                "shortDescription": "Reads reports defined by awql queries"
+                "id": "keboola",
+                "name": "Keboola",
+                "address": "Křižíkova 115, Prague, CZ",
+                "email": "info@keboola.com"
             }
 
 + Response 201
@@ -1199,7 +1247,7 @@ Allows to update apps across vendors
                 "newId": "vendor"
             }
 
-+ Response 201
++ Response 204
 
 
 ### List app changes [GET /admin/changes?since={since}&until={until}]
