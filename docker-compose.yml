@@ -199,7 +199,6 @@ services:
              echo ${TEST_BASTION_SSH_KEY} | base64 -d > bastion_ssh.key
              && chmod 400 bastion_ssh.key
              && ssh -fN $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT
-             && sleep 10
              && node ./scripts/create-env.js ./env.yml TEST
              && mocha --timeout 0 --compilers js:babel-core/register test/functional
              '
