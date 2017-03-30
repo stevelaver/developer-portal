@@ -262,7 +262,7 @@ function approveVendor(event, context, callback) {
     event,
     context,
     callback,
-    201
+    204
   );
 }
 

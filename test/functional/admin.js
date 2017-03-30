@@ -1,17 +1,18 @@
 'use strict';
 
 import Services from '../Services';
-import Identity from '../../lib/identity';
 
 const _ = require('lodash');
-const async = require('async');
-const aws = require('aws-sdk');
+const axios = require('axios');
 const expect = require('unexpected');
 const moment = require('moment');
 const mysql = require('mysql');
-const request = require('request');
+const Promise = require('bluebird');
 const db = require('../../lib/db');
 const env = require('../../lib/env').load();
+
+Promise.promisifyAll(mysql);
+Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const services = new Services(env);
 const userPool = services.getUserPool();
@@ -27,9 +28,6 @@ const rds = mysql.createConnection({
 });
 db.init(rds);
 
-const cognito = new aws.CognitoIdentityServiceProvider({
-  region: env.REGION,
-});
 const vendor = process.env.FUNC_VENDOR;
 const otherVendor = `${vendor}o1`;
 const appId = `app_admin_${Date.now()}`;
@@ -37,506 +35,296 @@ const userEmail = `u${Date.now()}.test@keboola.com`;
 let token;
 
 describe('Admin', () => {
-  before((done) => {
-    async.waterfall([
-      (cb) => {
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/login`,
-          json: true,
-          body: {
-            email: process.env.FUNC_USER_EMAIL,
-            password: process.env.FUNC_USER_PASSWORD,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'token');
-          token = res.body.token;
-          cb();
-        });
+  before(() =>
+    expect(axios({
+      method: 'post',
+      url: `${env.API_ENDPOINT}/auth/login`,
+      responseType: 'json',
+      data: {
+        email: process.env.FUNC_USER_EMAIL,
+        password: process.env.FUNC_USER_PASSWORD,
       },
-      (cb) => {
-        rds.query(
-          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
-          [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        rds.query(
-          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
-          [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        rds.query(
-          'DELETE FROM apps WHERE vendor=?',
-          vendor,
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        cognito.signUp({
-          ClientId: env.COGNITO_CLIENT_ID,
-          Username: userEmail,
-          Password: '123jfsklJFKLAD._.d-X',
-          UserAttributes: [
-            { Name: 'email', Value: userEmail },
-            { Name: 'name', Value: 'Test' },
-            { Name: 'profile', Value: 'test' },
-          ],
-        }, err => cb(err));
-      },
-      (cb) => {
-        cognito.adminConfirmSignUp({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }, err => cb(err));
-      },
-    ], done);
-  });
+    }), 'to be fulfilled')
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        token = res.data.token;
+      })
+      .then(() => rds.queryAsync(
+        'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+        [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+      ))
+      .then(() => rds.queryAsync(
+        'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+        [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+      ))
+      .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor]))
+      .then(() => userPool.signUp(userEmail, '123jfsklJFKLAD._.d-X', 'Test'))
+      .then(() => userPool.addUserToVendor(userEmail, 'test'))
+      .then(() => userPool.getCognito().adminConfirmSignUp({
+        UserPoolId: env.COGNITO_POOL_ID,
+        Username: userEmail,
+      }).promise()));
 
-  it('Create and Edit App', (done) => {
-    const appId2 = `${otherVendor}.${appId}-2`;
-    async.waterfall([
-      (cb) => {
-        rds.query(
-          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
-          [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        request.post({
-          url: `${env.API_ENDPOINT}/vendors/${otherVendor}/apps`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-          body: {
-            id: `${appId}-2`,
-            name: 'test',
-            type: 'extractor',
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 201);
-          cb();
+  const appId2 = `${otherVendor}.${appId}-2`;
+  it('Create and Edit App', () =>
+    rds.queryAsync(
+      'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+      [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+    )
+      // Create
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/vendors/${otherVendor}/apps`,
+        responseType: 'json',
+        headers: { Authorization: token },
+        data: {
+          id: `${appId}-2`,
+          name: 'test',
+          type: 'extractor',
+        },
+      }), 'to be fulfilled'))
+      // Get app detail
+      .then(() => expect(axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'forwardToken');
+        expect(res.data.forwardToken, 'to be false');
+      })
+      // Update app
+      .then(() => expect(axios({
+        method: 'patch',
+        url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+        data: {
+          forwardToken: true,
+        },
+      }), 'to be fulfilled'))
+      // Get app detail
+      .then(() => expect(axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'forwardToken');
+        expect(res.data.forwardToken, 'to be true');
+      })
+      // Get apps changes
+      .then(() => expect(axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/admin/changes?since=${moment().subtract(5, 'minutes').format('YYYY-MM-DD')}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data.length, 'to be greater than or equal to', 2);
+        expect(res.data, 'to have an item satisfying', (item) => {
+          expect(item.id, 'to be', appId2);
         });
-      },
-      (cb) => {
-        // Get app detail
-        request.get({
-          url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'forwardToken');
-          expect(res.body.forwardToken, 'to be false');
-          cb();
-        });
-      },
-      (cb) => {
-        // Update app
-        request.patch({
-          url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-          body: {
-            forwardToken: true,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      (cb) => {
-        // Get app detail
-        request.get({
-          url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'forwardToken');
-          expect(res.body.forwardToken, 'to be true');
-          cb();
-        });
-      },
-      (cb) => {
-        // Get apps changes
-        request.get({
-          url: `${env.API_ENDPOINT}/admin/changes?since=${moment().subtract(5, 'minutes').format('YYYY-MM-DD')}`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body.length, 'to be greater than or equal to', 2);
-          expect(res.body, 'to have an item satisfying', (item) => {
-            expect(item.id, 'to be', appId2);
-          });
-          cb();
-        });
-      },
-    ], done);
-  });
+      }));
 
-  it('Approve App', (done) => {
-    async.waterfall([
-      (cb) => {
-        rds.query(
-          'INSERT INTO `apps` SET id=?, vendor=?, name=?',
-          [appId, vendor, 'test'],
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        // Get app detail
-        request.get({
-          url: `${env.API_ENDPOINT}/admin/apps/${appId}`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'id');
-          expect(res.body.id, 'to be', appId);
-          cb();
-        });
-      },
-      (cb) => {
-        // List unapproved apps
-        request.get({
-          url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(_.map(res.body, app => app.id), 'to contain', appId);
-          cb();
-        });
-      },
-      (cb) => {
-        // Approve
-        request.post({
-          url: `${env.API_ENDPOINT}/admin/apps/${appId}/approve`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      (cb) => {
-        // List unapproved apps without the approved one
-        request.get({
-          url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(_.map(res.body, app => app.id), 'not to contain', appId);
-          cb();
-        });
-      },
-    ], done);
-  });
+  it('Approve App', () =>
+    rds.queryAsync(
+      'INSERT INTO `apps` SET id=?, vendor=?, name=?',
+      [appId, vendor, 'test'],
+    )
+      // Get app detail
+      .then(() => expect(axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/admin/apps/${appId}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'id');
+        expect(res.data.id, 'to be', appId);
+      })
+      // List unapproved apps
+      .then(() => expect(axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(_.map(res.data, app => app.id), 'to contain', appId);
+      })
+      // Update app
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/admin/apps/${appId}/approve`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      // List unapproved apps without the approved one
+      .then(() => expect(axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(_.map(res.data, app => app.id), 'not to contain', appId);
+      }));
 
-  it('Make User Admin', (done) => {
-    async.waterfall([
-      (cb) => {
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }, cb);
-      },
-      (user, cb) => {
-        let userIsAdmin = false;
-        _.each(user.UserAttributes, (item) => {
-          if (item.Name === 'custom:isAdmin') {
-            if (item.Value) {
-              userIsAdmin = true;
-            }
-          }
-        });
-        expect(userIsAdmin, 'to be false');
-        cb();
-      },
-      (cb) => {
-        // Make user admin
-        request.post({
-          url: `${env.API_ENDPOINT}/admin/users/${userEmail}/admin`,
-          headers: {
-            Authorization: token,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      (cb) => {
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }, cb);
-      },
-      function (user, cb) {
-        let userIsAdmin = false;
-        _.each(user.UserAttributes, (item) => {
-          if (item.Name === 'custom:isAdmin') {
-            if (item.Value) {
-              userIsAdmin = true;
-            }
-          }
-        });
-        expect(userIsAdmin, 'to be true');
-        cb();
-      },
-    ], done);
-  });
+  it('Make User Admin', () =>
+    userPool.getUser(userEmail)
+      .then((data) => {
+        expect(data.isAdmin, 'to be false');
+      })
+      // Make user admin
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/admin/users/${userEmail}/admin`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then(() => userPool.getUser(userEmail))
+      .then((data) => {
+        expect(data.isAdmin, 'to be true');
+      }));
 
-  it('Add User to a Vendor', (done) => {
-    async.waterfall([
-      cb =>
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }).promise()
-          .then(data => Identity.formatUser(data))
-          .then((user) => {
-            expect(user, 'to have key', 'vendors');
-            expect(user.vendors, 'not to contain', otherVendor);
-          })
-          .then(() => cb())
-          .catch(err => cb(err)),
-      (cb) => {
-        // Add vendor
-        request.post({
-          url: `${env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
-          headers: {
-            Authorization: token,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      cb =>
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }).promise()
-          .then(data => Identity.formatUser(data))
-          .then((user) => {
-            expect(user, 'to have key', 'vendors');
-            expect(user.vendors, 'to contain', otherVendor);
-          })
-          .then(() => cb()),
-      (cb) => {
-        // Remove vendor
-        request.delete({
-          url: `${env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
-          headers: {
-            Authorization: token,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      cb =>
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }).promise()
-          .then(data => Identity.formatUser(data))
-          .then((user) => {
-            expect(user, 'to have key', 'vendors');
-            expect(user.vendors, 'not to contain', otherVendor);
-          })
-          .then(() => cb()),
-    ], done);
-  });
+  it('Add User to a Vendor', () =>
+    userPool.getUser(userEmail)
+      .then((user) => {
+        expect(user, 'to have key', 'vendors');
+        expect(user.vendors, 'not to contain', otherVendor);
+      })
+      // Add vendor
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 204);
+      })
+      .then(() => userPool.getUser(userEmail))
+      .then((user) => {
+        expect(user, 'to have key', 'vendors');
+        expect(user.vendors, 'to contain', otherVendor);
+      })
+      // Remove vendor
+      .then(() => expect(axios({
+        method: 'delete',
+        url: `${env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 204);
+      })
+      .then(() => userPool.getUser(userEmail))
+      .then((user) => {
+        expect(user, 'to have key', 'vendors');
+        expect(user.vendors, 'not to contain', otherVendor);
+      }));
 
-  it('Create vendor', (done) => {
-    const aVendor = `${vendor}o2`;
-    async.waterfall([
-      (cb) => {
-        request.post({
-          url: `${env.API_ENDPOINT}/admin/vendors`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-          body: {
-            id: aVendor,
-            name: aVendor,
-            address: 'test',
-            email: process.env.FUNC_USER_EMAIL,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 201);
-          cb();
-        });
+  const vendor2 = `av2${Date.now()}`;
+  it('Create vendor', () =>
+    axios({
+      method: 'post',
+      url: `${env.API_ENDPOINT}/admin/vendors`,
+      responseType: 'json',
+      headers: { Authorization: token },
+      data: {
+        id: vendor2,
+        name: vendor2,
+        address: 'test',
+        email: process.env.FUNC_USER_EMAIL,
       },
-      (cb) => {
-        request.get({
-          url: `${env.API_ENDPOINT}/vendors/${aVendor}`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'name');
-          expect(res.body.name, 'to be', aVendor);
-          cb();
-        });
-      },
-      (cb) => {
-        rds.query(
-          'DELETE FROM apps WHERE vendor=?',
-          [aVendor],
-          err => cb(err)
-        );
-      },
-    ], done);
-  });
+    })
+      .then((res) => {
+        expect(res.status, 'to be', 201);
+      })
+      .then(() => axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/vendors/${vendor2}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'name');
+        expect(res.data.name, 'to be', vendor2);
+      })
+      .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor2])));
 
-  it('Approve vendor', (done) => {
-    const vendor1 = `${vendor}av1`;
-    async.waterfall([
-      (cb) => {
-        rds.query(
-          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?, isApproved=?',
-          [vendor1, 'test', 'test', process.env.FUNC_USER_EMAIL, 0, 0],
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        request.post({
-          url: `${env.API_ENDPOINT}/admin/vendors/${vendor1}/approve`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 201);
-          cb();
-        });
-      },
-      (cb) => {
-        rds.query('SELECT * FROM `vendors` WHERE id=?', [vendor1], (err, res) => cb(err, res));
-      },
-      (data, cb) => {
+  const vendor3 = `av3${Date.now()}`;
+  it('Approve vendor', () =>
+    rds.queryAsync(
+      'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?, isApproved=?',
+      [vendor3, 'test', 'test', process.env.FUNC_USER_EMAIL, 0, 0],
+    )
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/admin/vendors/${vendor3}/approve`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE id=?', [vendor3]))
+      .then((data) => {
         expect(data, 'to have length', 1);
         expect(data[0], 'to have key', 'id');
         expect(data[0], 'to have key', 'isApproved');
         expect(data[0].isApproved, 'to be', 1);
-        cb();
-      },
-      (cb) => {
-        rds.query(
-          'DELETE FROM apps WHERE vendor=?',
-          [vendor1],
-          err => cb(err)
-        );
-      },
-    ], done);
-  });
+      })
+      .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor3])));
 
-  it('Approve vendor with new id', (done) => {
-    const vendor1 = `av1${Date.now()}`;
-    const vendor2 = `av2${Date.now()}`;
-    async.waterfall([
-      (cb) => {
-        rds.query(
-          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?, isApproved=?, createdBy=?',
-          [vendor1, 'test', 'test', process.env.FUNC_USER_EMAIL, 0, 0, userEmail],
-          err => cb(err)
-        );
-      },
-      cb => userPool.addUserToVendor(userEmail, vendor1)
-        .then(() => cb()),
-      (cb) => {
-        request.post({
-          url: `${env.API_ENDPOINT}/admin/vendors/${vendor1}/approve`,
-          headers: {
-            Authorization: token,
-          },
-          body: {
-            newId: vendor2,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 201);
-          cb();
-        });
-      },
-      (cb) => {
-        rds.query('SELECT * FROM `vendors` WHERE id=?', [vendor1], (err, res) => cb(err, res));
-      },
-      (data, cb) => {
+  const vendor4 = `av4${Date.now()}`;
+  const vendor5 = `av5${Date.now()}`;
+  it('Approve vendor with new id', () =>
+    rds.queryAsync(
+      'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?, isApproved=?, createdBy=?',
+      [vendor4, 'test', 'test', process.env.FUNC_USER_EMAIL, 0, 0, userEmail],
+    )
+      .then(() => userPool.addUserToVendor(userEmail, vendor4))
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/admin/vendors/${vendor4}/approve`,
+        responseType: 'json',
+        headers: { Authorization: token },
+        data: {
+          newId: vendor5,
+        },
+      }), 'to be fulfilled'))
+      .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE id=?', [vendor4]))
+      .then((data) => {
         expect(data, 'to have length', 0);
-        cb();
-      },
-      (cb) => {
-        rds.query('SELECT * FROM `vendors` WHERE id=?', [vendor2], (err, res) => cb(err, res));
-      },
-      (data, cb) => {
+      })
+      .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE id=?', [vendor5]))
+      .then((data) => {
         expect(data, 'to have length', 1);
         expect(data[0], 'to have key', 'id');
         expect(data[0], 'to have key', 'isApproved');
         expect(data[0].isApproved, 'to be', 1);
-        cb();
-      },
-      cb => userPool.getUser(userEmail)
-        .then((data) => {
-          expect(data.vendors, 'not to contain', vendor1);
-          expect(data.vendors, 'to contain', vendor2);
-          cb();
-        })
-        .catch(err => cb(err)),
-      (cb) => {
-        rds.query(
-          'DELETE FROM apps WHERE vendor=?',
-          [vendor2],
-          err => cb(err)
-        );
-      },
-    ], done);
-  });
+      })
+      .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor3]))
+      .then(() => userPool.getUser(userEmail))
+      .then((data) => {
+        expect(data.vendors, 'not to contain', vendor4);
+        expect(data.vendors, 'to contain', vendor5);
+      })
+      .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor5])));
 
-  after((done) => {
-    async.waterfall([
-      (cb) => {
-        rds.query(
-          'DELETE FROM apps WHERE vendor=? OR vendor=?',
-          [vendor, otherVendor],
-          () => cb()
-        );
-      },
-      (cb) => {
-        cognito.adminDeleteUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }, () => cb());
-      },
-    ], done);
-  });
+  after(() =>
+    rds.queryAsync('DELETE FROM apps WHERE vendor=? OR vendor=?', [vendor, otherVendor])
+      .then(() => userPool.getCognito().adminDeleteUser({
+        UserPoolId: env.COGNITO_POOL_ID,
+        Username: userEmail,
+      }).promise()));
 });
