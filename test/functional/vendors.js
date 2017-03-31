@@ -6,6 +6,7 @@ require('longjohn');
 const axios = require('axios');
 const expect = require('unexpected');
 const mysql = require('mysql');
+const Promise = require('bluebird');
 const env = require('../../lib/env').load();
 
 Promise.promisifyAll(mysql);
