@@ -43,7 +43,7 @@ describe('Vendors', () => {
         },
       }))
       .then((res) => {
-        expect(res.statusCode, 'to be', 200);
+        expect(res.status, 'to be', 200);
         expect(res.data, 'to have key', 'token');
         token = res.data.token;
       })
@@ -92,10 +92,25 @@ describe('Vendors', () => {
         expect(user, 'to have key', 'vendors');
         expect(user.vendors, 'to contain', vendor1);
       })
+      .then(() => axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: process.env.FUNC_USER_EMAIL,
+          password: process.env.FUNC_USER_PASSWORD,
+        },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        token = res.data.token;
+      })
       // Remove from vendor
       .then(() => expect(axios({
         method: 'delete',
         url: `${env.API_ENDPOINT}/vendors/${vendor1}/users/${process.env.FUNC_USER_EMAIL}`,
+        headers: { Authorization: token },
         responseType: 'json',
       }), 'to be fulfilled'))
       .then(() => userPool.getUser(process.env.FUNC_USER_EMAIL))
@@ -144,5 +159,6 @@ describe('Vendors', () => {
   after(() =>
     rds.queryAsync('DELETE FROM `invitations` WHERE vendor=? AND email=?', [vendor, userEmail])
       .then(() => userPool.deleteUser(userEmail))
+      .catch(() => {})
       .then(() => userPool.updateUserAttribute(process.env.FUNC_USER_EMAIL, 'profile', vendor)));
 });
