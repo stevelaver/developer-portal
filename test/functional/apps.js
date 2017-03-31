@@ -1,5 +1,6 @@
 'use strict';
 
+require('longjohn');
 const _ = require('lodash');
 const async = require('async');
 const aws = require('aws-sdk');

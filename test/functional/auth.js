@@ -1,12 +1,20 @@
 'use strict';
 
-const async = require('async');
-const aws = require('aws-sdk');
+import Services from '../Services';
+
+require('longjohn');
+const axios = require('axios');
 const expect = require('unexpected');
 const mysql = require('mysql');
-const request = require('request');
+const Promise = require('bluebird');
+
+Promise.promisifyAll(mysql);
+Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const env = require('../../lib/env').load();
+
+const services = new Services(env);
+const userPool = services.getUserPool();
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST,
@@ -23,280 +31,229 @@ const userEmail = `u${Date.now()}@test.com`;
 const userPassword1 = 'uiOU.-jfdksfj88';
 const otherVendor = `${vendor}o1`;
 
-const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
-
 describe('Auth', () => {
-  before((done) => {
-    async.waterfall([
-      (cb) => {
-        rds.query(
-          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
-          [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        rds.query(
-          'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
-          [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
-          err => cb(err)
-        );
-      },
-    ], done);
-  });
+  before(() =>
+    rds.queryAsync(
+      'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+      [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+    )
+      .then(() => rds.queryAsync(
+        'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+        [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+      )));
 
-  it('Signup user', (done) => {
-    async.waterfall([
-      (cb) => {
-        // 1) Signup
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/signup`,
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1,
-            name: 'Test',
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 201);
-          cb();
-        });
+  it('Signup user', () =>
+    // 1) Signup
+    expect(axios({
+      method: 'post',
+      url: `${env.API_ENDPOINT}/auth/signup`,
+      responseType: 'json',
+      data: {
+        email: userEmail,
+        password: userPassword1,
+        name: 'Test',
       },
-      (cb) => {
-        // 2) Login without confirmation
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/login`,
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 401);
-          expect(res.body, 'to have key', 'errorType');
-          expect(res.body.errorType, 'to be', 'UserNotConfirmedException');
-          cb();
-        });
-      },
-      (cb) => {
-        // 3) Resend confirmation
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/confirm`,
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      (cb) => {
-        // 4) Confirm
-        // We can't get valid code so we try with some invalid to check that
-        // function works and confirm user manually
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/confirm/${process.env.FUNC_USER_EMAIL}/000`,
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 404);
-          expect(res.body, 'to have key', 'errorType');
-          expect(res.body.errorType, 'to be one of', ['CodeMismatchException', 'ExpiredCodeException']);
-          cb();
-        });
-      },
-      (cb) => {
-        cognito.adminConfirmSignUp(
-          { UserPoolId: env.COGNITO_POOL_ID, Username: userEmail },
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        // 5) Login
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/login`,
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'token');
-          cb(null, res.body.token);
-        });
-      },
-      (token, cb) => {
-        // 6) Get Profile
-        request.get({
-          url: `${env.API_ENDPOINT}/auth/profile`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'vendors');
-          cb(null, token);
-        });
-      },
-    ], done);
-  });
+    }), 'to be fulfilled')
+      // 2) Login without confirmation
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: userEmail,
+          password: userPassword1,
+        },
+      }), 'to be rejected'))
+      // 3) Resend confirmation
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/confirm`,
+        responseType: 'json',
+        data: {
+          email: userEmail,
+          password: userPassword1,
+        },
+      }), 'to be fulfilled'))
+      // 4) Confirm
+      // We can't get valid code so we try with some invalid to check that
+      // function works and confirm user manually
+      .then(() => axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/confirm/${process.env.FUNC_USER_EMAIL}/000`,
+        responseType: 'json',
+        data: {
+          email: userEmail,
+          password: userPassword1,
+        },
+      }))
+      .catch((err) => {
+        expect(err, 'to have key', 'response');
+        expect(err.response, 'to have key', 'status');
+        expect(err.response.status, 'to be', 404);
+      })
+      .then(() => userPool.confirmSignUp(userEmail))
+      // 5) Login
+      .then(() => axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: userEmail,
+          password: userPassword1,
+        },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        return res.data.token;
+      })
+      // 6) Get Profile
+      .then(token => axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/auth/profile`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'vendors');
+      }));
 
-  it('Forgot password', (done) => {
-    async.waterfall([
-      (cb) => {
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      (cb) => {
-        // Check with fake code - as we can't get real one from email
-        // so we just test if lambda function works
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}/confirm`,
-          json: true,
-          body: {
-            password: userPassword1,
-            code: '000000',
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 404);
-          expect(res.body, 'to have key', 'errorType');
-          expect(res.body.errorType, 'to be one of', ['CodeMismatchException', 'ExpiredCodeException']);
-          cb();
-        });
-      },
-    ], done);
-  });
+  it('Forgot password', () =>
+    expect(axios({
+      method: 'post',
+      url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
+      responseType: 'json',
+    }), 'to be fulfilled')
+      // Check with fake code - as we can't get real one from email
+      // so we just test if lambda function works
+      .then(() => axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}/confirm`,
+        responseType: 'json',
+        data: {
+          password: userPassword1,
+          code: '000000',
+        },
+      }))
+      .catch((err) => {
+        expect(err, 'to have key', 'response');
+        expect(err.response, 'to have key', 'status');
+        expect(err.response.status, 'to be', 404);
+      }));
 
-  it('Refresh token', (done) => {
-    async.waterfall([
-      (cb) => {
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/login`,
-          json: true,
-          body: {
-            email: process.env.FUNC_USER_EMAIL,
-            password: process.env.FUNC_USER_PASSWORD,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'refreshToken');
-          cb(null, res.body.refreshToken);
-        });
+
+  it('Refresh token', () =>
+    axios({
+      method: 'post',
+      url: `${env.API_ENDPOINT}/auth/login`,
+      responseType: 'json',
+      data: {
+        email: process.env.FUNC_USER_EMAIL,
+        password: process.env.FUNC_USER_PASSWORD,
       },
-      (token, cb) => {
-        request.get({
-          url: `${env.API_ENDPOINT}/auth/token`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'token');
-          cb(null, res.body.token);
-        });
+    })
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'refreshToken');
+        return res.data.refreshToken;
+      })
+      .then(token => axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/auth/token`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        return res.data.token;
+      })
+      .then(token => axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/auth/profile`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'name');
+        return res.data.token;
+      }));
+
+  it('MFA', () =>
+    // 1) Signup
+    expect(axios({
+      method: 'post',
+      url: `${env.API_ENDPOINT}/auth/signup`,
+      responseType: 'json',
+      data: {
+        email: userEmail,
+        password: userPassword1,
+        name: 'Test',
       },
-      (token, cb) => {
-        request.get({
-          url: `${env.API_ENDPOINT}/auth/profile`,
-          headers: {
-            Authorization: token,
-          },
-          json: true,
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'name');
-          cb(null, token);
-        });
-      },
-    ], done);
-  });
-/*
-  it('MFA', (done) => {
-    let token;
-    async.waterfall([
-      (cb) => {
-        // 1) Signup
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/signup`,
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1,
-            name: 'Test',
-            vendor,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      (cb) => {
-        cognito.adminConfirmSignUp(
-          { UserPoolId: env.COGNITO_POOL_ID, Username: userEmail },
-          err => cb(err)
-        );
-      },
-      (cb) => {
-        // 2) Login
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/login`,
-          json: true,
-          body: {
-            email: userEmail,
-            password: userPassword1,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 200);
-          expect(res.body, 'to have key', 'token');
-          token = res.body.token;
-          cb();
-        });
-      },
-      (cb) => {
-        // 3) Enable MFA
-        request.post({
-          url: `${env.API_ENDPOINT}/auth/mfa/+420777123456`,
-          headers: {
-            Authorization: token,
-          },
-        }, (err, res) => {
-          expect(res.statusCode, 'to be', 204);
-          cb();
-        });
-      },
-      cb =>
-        cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
-          Username: userEmail,
-        }).promise()
-          .then((data) => {
-            expect(data, 'to have key', 'UserAttributes');
-            expect(data.UserAttributes, 'to have an item satisfying', (item) => {
-              expect(item.Name, 'to be', 'phone_number');
-              expect(item.Value, 'to be', '+420777123456');
-            });
-          })
-          .then(() => cb())
-          .catch(err => cb(err)),
-    ], done);
-  });
-*/
-  afterEach((done) => {
-    async.waterfall([
-      (cb) => {
-        cognito.adminDeleteUser(
-          { UserPoolId: env.COGNITO_POOL_ID, Username: userEmail },
-          () => cb()
-        );
-      },
-    ], done);
-  });
+    }), 'to be fulfilled')
+      .then(() => userPool.confirmSignUp(userEmail))
+      // 2) Login
+      .then(() => axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: userEmail,
+          password: userPassword1,
+        },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        return res.data.token;
+      })
+      // 3) Enable MFA
+      .then(token => expect(axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/mfa/${process.env.FUNC_USER_PHONE}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then(() => userPool.getUser(userEmail)
+      .then((data) => {
+        expect(data, 'to have key', 'phone');
+        expect(data.phone, 'to be', process.env.FUNC_USER_PHONE);
+      }))
+      // 4) Login
+      .then(() => axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: userEmail,
+          password: userPassword1,
+        },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'session');
+        return res.data.session;
+      })
+      // 5) Login with MFA code
+      .then(session => axios({
+        method: 'post',
+        url: `${env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: userEmail,
+          session,
+          code: '000000',
+        },
+      }))
+      .catch((err) => {
+        expect(err, 'to have key', 'response');
+        expect(err.response, 'to have key', 'status');
+        expect(err.response.status, 'to be', 404);
+      }));
+
+  afterEach(() =>
+    userPool.deleteUser(userEmail)
+    .catch(() => {}));
 });

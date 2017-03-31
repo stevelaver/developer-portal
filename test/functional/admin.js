@@ -2,6 +2,7 @@
 
 import Services from '../Services';
 
+require('longjohn');
 const _ = require('lodash');
 const axios = require('axios');
 const expect = require('unexpected');
@@ -61,10 +62,7 @@ describe('Admin', () => {
       .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor]))
       .then(() => userPool.signUp(userEmail, '123jfsklJFKLAD._.d-X', 'Test'))
       .then(() => userPool.addUserToVendor(userEmail, 'test'))
-      .then(() => userPool.getCognito().adminConfirmSignUp({
-        UserPoolId: env.COGNITO_POOL_ID,
-        Username: userEmail,
-      }).promise()));
+      .then(() => userPool.confirmSignUp(userEmail)));
 
   const appId2 = `${otherVendor}.${appId}-2`;
   it('Create and Edit App', () =>
@@ -323,8 +321,5 @@ describe('Admin', () => {
 
   after(() =>
     rds.queryAsync('DELETE FROM apps WHERE vendor=? OR vendor=?', [vendor, otherVendor])
-      .then(() => userPool.getCognito().adminDeleteUser({
-        UserPoolId: env.COGNITO_POOL_ID,
-        Username: userEmail,
-      }).promise()));
+      .then(() => userPool.deleteUser(userEmail)));
 });

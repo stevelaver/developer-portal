@@ -43,7 +43,7 @@ class Auth {
 
   loginWithCode(email, code, session) {
     return this.userPool.getCognito().respondToAuthChallenge({
-      ChallengeName: 'SMS_MFA_CODE',
+      ChallengeName: 'SMS_MFA',
       Session: session,
       ClientId: this.env.COGNITO_CLIENT_ID,
       ChallengeResponses: {

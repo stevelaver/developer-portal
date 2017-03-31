@@ -66,15 +66,53 @@ Login returns three different tokens.
 - `accessToken` - is used to verify MFA setup with a code from text message
 - `refreshToken` - is used for refreshing an auth token using the API call below
 
+If your account has activated MFA, login with `email` and `password` returns `session` which is used in subsequent login call along with the code recieved in text message.
+
 + Attributes
     + email (required)
-    + password (required) - must contain at least 8 characters
+    + password
+    + session
+    + code
 
 + Request (application/json)
 
         {
             "email": "john@keboola.com",
             "password": "superSecret"
+        }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "token": "{your token}",
+                "accessToken": "{access token}",
+                "refreshToken": "{refresh token}"
+                "expiresIn": 3600
+            }
+
++ Request (application/json)
+
+        {
+            "email": "john@keboola.com",
+            "password": "superSecret"
+        }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "session": "{session}"
+            }
+
++ Request (application/json)
+
+        {
+            "email": "john@keboola.com",
+            "code": "{code}",
+            session: "{session}"
         }
 
 + Response 200 (application/json)

@@ -2,6 +2,7 @@
 
 import Services from '../Services';
 
+require('longjohn');
 const async = require('async');
 const expect = require('unexpected');
 const mysql = require('mysql');

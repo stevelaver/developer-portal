@@ -102,6 +102,7 @@ services:
       - "FUNC_RDS_USER=${TEST_RDS_USER}"
       - FUNC_USER_EMAIL
       - FUNC_USER_PASSWORD
+      - FUNC_USER_PHONE
       - FUNC_VENDOR
       - "UNIT_RDS_HOST=mysql"
       - "UNIT_RDS_PORT=3306"
@@ -162,6 +163,7 @@ services:
       - "FUNC_RDS_USER=${TEST_RDS_USER}"
       - FUNC_USER_EMAIL
       - FUNC_USER_PASSWORD
+      - FUNC_USER_PHONE
       - FUNC_VENDOR
       - TEST_ACCOUNT_ID
       - TEST_API_ENDPOINT
@@ -194,13 +196,14 @@ services:
       - TEST_VPC_SUBNET1
       - TEST_VPC_SUBNET2
       - TEST_WARMUP_ENABLED
+      - TEST_DIR
     command: >
              sh -c '
              echo ${TEST_BASTION_SSH_KEY} | base64 -d > bastion_ssh.key
              && chmod 400 bastion_ssh.key
              && ssh -fN $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT
              && node ./scripts/create-env.js ./env.yml TEST
-             && mocha --timeout 0 --compilers js:babel-core/register test/functional
+             && mocha --timeout 0 --compilers js:babel-core/register $$TEST_DIR
              '
 
   mysql:

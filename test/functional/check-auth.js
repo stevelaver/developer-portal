@@ -1,5 +1,6 @@
 'use strict';
 
+require('longjohn');
 const async = require('async');
 const expect = require('unexpected');
 const request = require('request');

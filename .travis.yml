@@ -13,7 +13,7 @@ script:
   - docker-compose run -e TEST_DIR=test/lib test-unit
   - docker-compose run -e TEST_DIR=test/app test-unit
   - docker-compose run deploy-testing
-  - docker-compose run test-functional
+  - docker-compose run -e TEST_DIR=test/functional test-functional
 
 
 deploy:
