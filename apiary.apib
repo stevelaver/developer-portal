@@ -198,6 +198,25 @@ Sends email with confirmation code which has to be used in the next API call
 + Response 204 (application/json)
 
 
+### Enable MFA [POST /auth/mfa/{phone}]
+
+Enable login using multi-factor authentication
+
++ Parameters
+    + phone
+
++ Response 204 (application/json)
+
+
+### Confirm MFA [POST /auth/mfa/confirm/{code}]
+
+Confirm multi-factor authentication using code from text message
+
++ Parameters
+    + code
+
++ Response 204 (application/json)
+
 
 ## Vendors [/vendors]
 
