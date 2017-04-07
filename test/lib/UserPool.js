@@ -60,9 +60,84 @@ describe('UserPool', () => {
       .then((data) => {
         expect(data, 'to have an item satisfying', { email });
       })
-      .then(() => userPool.listUsers())
+      .then(() => userPool.listUsers('unconfirmed'))
       .then((data) => {
         expect(data, 'to have an item satisfying', { email });
+      })
+      .then(() => cognito.adminConfirmSignUp({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then(() => userPool.listUsers('confirmed'))
+      .then((data) => {
+        expect(data, 'to have an item satisfying', { email });
+      })
+      .then(() => userPool.listUsers('enabled'))
+      .then((data) => {
+        expect(data, 'to have an item satisfying', { email });
+      })
+      .then(() => deleteUser()));
+
+  it('updateUserAttribute, addUserToVendor, removeUserFromVendor, makeUserAdmin', () =>
+    createUser()
+      .then(() => userPool.updateUserAttribute(email, 'profile', 'test'))
+      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then((data) => {
+        expect(data, 'to have key', 'UserAttributes');
+        expect(data.UserAttributes, 'to have an item satisfying', { Name: 'profile', Value: 'test' });
+      })
+      .then(() => userPool.addUserToVendor(email, 'test2'))
+      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then((data) => {
+        expect(data, 'to have key', 'UserAttributes');
+        expect(data.UserAttributes, 'to have an item satisfying', { Name: 'profile', Value: 'test,test2' });
+      })
+      .then(() => userPool.removeUserFromVendor(email, 'test2'))
+      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then((data) => {
+        expect(data, 'to have key', 'UserAttributes');
+        expect(data.UserAttributes, 'to have an item satisfying', { Name: 'profile', Value: 'test' });
+      })
+      .then(() => userPool.makeUserAdmin(email))
+      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then((data) => {
+        expect(data, 'to have key', 'UserAttributes');
+        expect(data.UserAttributes, 'to have an item satisfying', { Name: 'custom:isAdmin', Value: '1' });
+      })
+      .then(() => deleteUser()));
+
+  it('deleteUser', () =>
+    createUser()
+      .then(() => expect(
+        cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise(),
+        'to be fulfilled'
+      ))
+      .then(() => userPool.deleteUser(email))
+      .then(() => expect(
+        cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise(),
+        'to be rejected'
+      )));
+
+  it('signUp', () => {
+    const email2 = `devportal-2${Date.now()}@test.keboola.com`;
+    return userPool.signUp(email2, 'uifsdk129JDKS_DSJ', 'Test')
+      .then(() => cognito.adminConfirmSignUp({ UserPoolId: env.COGNITO_POOL_ID, Username: email2 }).promise())
+      .then(() => expect(
+        cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email2 }).promise(),
+        'to be fulfilled',
+      ))
+      .then(() => cognito.adminDeleteUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email2 }).promise());
+  });
+
+  it('confirmSignUp', () =>
+    createUser()
+      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then((data) => {
+        expect(data, 'to have key', 'UserStatus');
+        expect(data.UserStatus, 'to be', 'UNCONFIRMED');
+      })
+      .then(() => userPool.confirmSignUp(email))
+      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then((data) => {
+        expect(data, 'to have key', 'UserStatus');
+        expect(data.UserStatus, 'to be', 'CONFIRMED');
       })
       .then(() => deleteUser()));
 });
