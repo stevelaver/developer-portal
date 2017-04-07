@@ -2,7 +2,6 @@
 
 import App from '../lib/app';
 import Icon from '../app/icon';
-import Identity from '../lib/identity';
 import Services from '../lib/Services';
 
 require('longjohn');
@@ -14,8 +13,8 @@ const db = require('../lib/db');
 const request = require('../lib/request');
 
 const services = new Services(process.env);
-const app = new App(db, Identity, process.env, Services.getError());
 const identity = Services.getIdentity();
+const app = new App(db, identity, process.env, Services.getError());
 const validation = Services.getValidation();
 
 
@@ -223,7 +222,7 @@ function icon(event, context, callback) {
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
       .then(user => iconApp.getUploadLink(
-        Identity,
+        identity,
         event.pathParameters.app,
         event.pathParameters.vendor,
         user,

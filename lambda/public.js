@@ -1,7 +1,6 @@
 'use strict';
 
 import App from '../lib/app';
-import Identity from '../lib/identity';
 import Services from '../lib/Services';
 import Vendor from '../app/vendor';
 
@@ -15,7 +14,8 @@ const landingHtml = require('../views/landing.html');
 const request = require('../lib/request');
 
 const services = new Services(process.env);
-const app = new App(db, Identity, process.env, Services.getError());
+const identity = Services.getIdentity();
+const app = new App(db, identity, process.env, Services.getError());
 const validation = Services.getValidation();
 const vendorApp = new Vendor(services, db, process.env, Services.getError());
 

@@ -136,7 +136,8 @@ function signup(event, context, callback) {
   const body = JSON.parse(event.body);
 
   return request.responseAuthPromise(
-    app.signUp(body.email, body.password, body.name),
+    app.signUp(body.email, body.password, body.name)
+      .then(() => null),
     event,
     context,
     callback,

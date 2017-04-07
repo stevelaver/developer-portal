@@ -8,8 +8,8 @@ class Icon {
     this.err = err;
   }
 
-  getUploadLink(Identity, id, vendor, user) {
-    return Identity.checkVendorPermissions(user, vendor)
+  getUploadLink(identity, id, vendor, user) {
+    return identity.checkVendorPermissions(user, vendor)
       .then(() => this.db.checkAppAccess(id, vendor))
       .then(() => {
         const s3 = this.s3;
