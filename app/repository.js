@@ -30,11 +30,17 @@ class Repository {
             'ecr:InitiateLayerUpload',
             'ecr:UploadLayerPart',
             'ecr:CompleteLayerUpload',
-            'ecr:GetAuthorizationToken',
             'ecr:BatchCheckLayerAvailability',
-            //'cloudwatchlogs:*',
           ],
           Resource: `arn:aws:ecr:${this.env.REGION}:${this.env.ACCOUNT_ID}:repository/${this.getRepositoryName(appId)}`,
+        },
+        {
+          Effect: 'Allow',
+          Action: [
+            'ecr:GetAuthorizationToken',
+            //'cloudwatchlogs:*',
+          ],
+          Resource: '*',
         },
       ],
     });
