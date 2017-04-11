@@ -255,22 +255,20 @@ functions:
           bucket: "${file(./env.yml):S3_BUCKET}"
           event: "s3:ObjectCreated:Put"
           suffix: .png
-#  vendorAppsRepositoryCreate:
-#    handler: vendor-apps-repository.create
-#    events:
-#      -
-#        http:
-#          authorizer: ${self:custom.cognitoAuthorizer}
-#          method: post
-#          path: "vendors/{vendor}/apps/{app}/repository"
-#  vendorAppsRepositoryGet:
-#    handler: vendor-apps-repository.get
-#    events:
-#      -
-#        http:
-#          authorizer: ${self:custom.cognitoAuthorizer}
-#          method: get
-#          path: "vendors/{vendor}/apps/{app}/repository"
+
+  repositories:
+    handler: repositories.repositories
+    events:
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "vendors/{vendor}/apps/{app}/repository"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: get
+          path: "vendors/{vendor}/apps/{app}/repository"
 
   authEmailTrigger:
     handler: authEmail.emails
@@ -405,8 +403,7 @@ resources:
           Statement:
             - Effect: Allow
               Principal:
-                AWS:
-                  - "*"
+                AWS: ${file(./env.yml):ACCOUNT_ID}
               Action: sts:AssumeRole
         Policies:
           - PolicyName: "${file(./env.yml):SERVICE_NAME}-ecr-policy"

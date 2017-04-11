@@ -1,10 +1,10 @@
 
 class Auth {
-  constructor(init, db, env, err) {
+  constructor(services, db, env, err) {
     this.db = db;
     this.env = env;
     this.err = err;
-    this.userPool = init.getUserPool();
+    this.userPool = services.getUserPool();
   }
 
   forgot(email) {

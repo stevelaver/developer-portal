@@ -13,7 +13,7 @@ module.exports = {
     logger: ['babel-polyfill', './lambda/logger.js'],
     public: ['babel-polyfill', './lambda/public.js'],
     vendors: ['babel-polyfill', './lambda/vendors.js'],
-    // repositories: ['babel-polyfill', './lambda/repositories.js'],
+    repositories: ['babel-polyfill', './lambda/repositories.js'],
   },
   output: {
     path: path.join(__dirname, '.webpack'),

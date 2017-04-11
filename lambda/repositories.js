@@ -1,30 +1,21 @@
 'use strict';
 
-import Identity from '../lib/identity';
-import Repository from '../lib/repository';
-import Validation from '../lib/validation';
+import Repository from '../app/repository';
+import Services from '../lib/Services';
 
 require('longjohn');
 require('source-map-support').install();
-const aws = require('aws-sdk');
-const db = require('../lib/db');
-const error = require('../lib/error');
 const joi = require('joi');
-const jwt = require('jsonwebtoken');
-const Promise = require('bluebird');
+
+const db = require('../lib/db');
 const request = require('../lib/request');
 
-aws.config.setPromisesDependency(Promise);
-const ecr = new aws.ECR({ region: process.env.REGION });
+const identity = Services.getIdentity();
+const repository = new Repository(Services, db, process.env, Services.getError());
+const validation = Services.getValidation();
 
-const identity = new Identity(jwt, error);
-const repository = new Repository(db, ecr, aws, Identity, process.env, error);
-const validation = new Validation(joi, error);
 
-/**
- * Create repository
- */
-module.exports.create = (event, context, callback) => request.errorHandler(() => {
+function createRepository(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: {
@@ -47,12 +38,10 @@ module.exports.create = (event, context, callback) => request.errorHandler(() =>
     callback,
     204
   );
-}, event, context, (err, res) => db.endCallback(err, res, callback));
+}
 
-/**
- * Get repository
- */
-module.exports.get = (event, context, callback) => request.errorHandler(() => {
+
+function getRepository(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: {
@@ -65,7 +54,6 @@ module.exports.get = (event, context, callback) => request.errorHandler(() => {
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
       .then(user => repository.get(
-        new aws.STS({ region: process.env.REGION }),
         event.pathParameters.app,
         event.pathParameters.vendor,
         user,
@@ -75,4 +63,20 @@ module.exports.get = (event, context, callback) => request.errorHandler(() => {
     context,
     callback
   );
+}
+
+module.exports.repositories = (event, context, callback) => request.errorHandler(() => {
+  switch (event.resource) {
+    case '/vendors/{vendor}/apps/{app}/repository':
+      switch (event.httpMethod) {
+        case 'POST':
+          return createRepository(event, context, callback);
+        case 'GET':
+          return getRepository(event, context, callback);
+        default:
+          throw Services.getError().notFound();
+      }
+    default:
+      throw Services.getError().notFound();
+  }
 }, event, context, (err, res) => db.endCallback(err, res, callback));

@@ -1,16 +1,17 @@
 
 class Repository {
-  constructor(db, ecr, aws, Identity, env, err) {
+  constructor(Services, db, env, err) {
+    this.Services = Services;
     this.db = db;
-    this.ecr = ecr;
-    this.aws = aws;
-    this.Identity = Identity;
+    this.ecr = Services.getECR();
+    this.Identity = Services.getIdentity();
     this.env = env;
     this.err = err;
+    this.sts = Services.getSTS();
   }
 
   getRoleName() {
-    return `${this.env.SERVICE_NAME}_ecr_role`;
+    return `${this.env.SERVICE_NAME}-ecr-role`;
   }
 
   getRepositoryName(appId) {
@@ -31,7 +32,7 @@ class Repository {
             'ecr:CompleteLayerUpload',
             'ecr:GetAuthorizationToken',
             'ecr:BatchCheckLayerAvailability',
-            'cloudwatchlogs:*',
+            //'cloudwatchlogs:*',
           ],
           Resource: `arn:aws:ecr:${this.env.REGION}:${this.env.ACCOUNT_ID}:repository/${this.getRepositoryName(appId)}`,
         },
@@ -39,11 +40,11 @@ class Repository {
     });
   }
 
-  create(id, vendor, user) {
+  create(appId, vendor, user) {
     return this.Identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(id, vendor))
+      .then(() => this.db.checkAppAccess(appId, vendor))
       .then(() => this.ecr.createRepository({
-        repositoryName: this.getRepositoryName(id),
+        repositoryName: this.getRepositoryName(appId),
       }).promise())
       .catch((err) => {
         if (err.name !== 'RepositoryAlreadyExistsException') {
@@ -55,26 +56,23 @@ class Repository {
         repoUri: null,
         repoTag: null,
         repoOptions: null,
-      }, id, user))
+      }, appId, user))
       .then(() => null);
   }
 
-  get(sts, id, vendor, user) {
+  get(appId, vendor, user) {
     return this.Identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(id, vendor))
-      .then(() => sts.assumeRole({
+      .then(() => this.db.checkAppAccess(appId, vendor))
+      .then(() => this.sts.assumeRole({
         RoleSessionName: this.getRoleName(),
         RoleArn: `arn:aws:iam::${this.env.ACCOUNT_ID}:role/${this.getRoleName()}`,
-        Policy: this.getRolePolicy(id),
+        Policy: this.getRolePolicy(appId),
       }).promise())
       .then((res) => {
-        const ecr = new this.aws.ECR({
-          region: this.env.REGION,
-          credentials: {
-            accessKeyId: res.Credentials.AccessKeyId,
-            secretAccessKey: res.Credentials.SecretAccessKey,
-            sessionToken: res.Credentials.SessionToken,
-          },
+        const ecr = this.Services.getECR({
+          accessKeyId: res.Credentials.AccessKeyId,
+          secretAccessKey: res.Credentials.SecretAccessKey,
+          sessionToken: res.Credentials.SessionToken,
         });
         return ecr.getAuthorizationToken().promise();
       });
