@@ -51,7 +51,7 @@ class Setup {
   }
 
   static saveAccountId() {
-    exec('aws sts get-caller-identity --output text --query Account', (err, out) => {
+    exec('aws sts getCredentials-caller-identity --output text --query Account', (err, out) => {
       if (err) {
         console.error(`AWS get identity error: ${err}`);
         return done();

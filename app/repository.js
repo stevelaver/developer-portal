@@ -1,13 +1,14 @@
 
 class Repository {
   constructor(Services, db, env, err) {
-    this.Services = Services;
+    this.services = new Services(env);
     this.db = db;
-    this.ecr = Services.getECR();
+    this.ecr = this.services.getECR();
     this.Identity = Services.getIdentity();
     this.env = env;
     this.err = err;
-    this.sts = Services.getSTS();
+    this.sts = this.services.getSTS();
+    this.base64 = Services.getBase64();
   }
 
   getRoleName() {
@@ -25,12 +26,16 @@ class Repository {
         {
           Effect: 'Allow',
           Action: [
-            'ecr:GetDownloadUrlForLayer',
-            'ecr:PutImage',
-            'ecr:InitiateLayerUpload',
-            'ecr:UploadLayerPart',
-            'ecr:CompleteLayerUpload',
             'ecr:BatchCheckLayerAvailability',
+            'ecr:BatchDeleteImage',
+            'ecr:BatchGetImage',
+            'ecr:CompleteLayerUpload',
+            'ecr:DescribeImages',
+            'ecr:GetDownloadUrlForLayer',
+            'ecr:InitiateLayerUpload',
+            'ecr:ListImages',
+            'ecr:PutImage',
+            'ecr:UploadLayerPart',
           ],
           Resource: `arn:aws:ecr:${this.env.REGION}:${this.env.ACCOUNT_ID}:repository/${this.getRepositoryName(appId)}`,
         },
@@ -58,15 +63,15 @@ class Repository {
         }
       })
       .then(() => this.db.updateApp({
-        repoType: 'aws-ecr',
+        repoType: 'ecr',
         repoUri: null,
         repoTag: null,
         repoOptions: null,
-      }, appId, user))
+      }, appId, user.email))
       .then(() => null);
   }
 
-  get(appId, vendor, user) {
+  getCredentials(appId, vendor, user) {
     return this.Identity.checkVendorPermissions(user, vendor)
       .then(() => this.db.checkAppAccess(appId, vendor))
       .then(() => this.sts.assumeRole({
@@ -75,13 +80,21 @@ class Repository {
         Policy: this.getRolePolicy(appId),
       }).promise())
       .then((res) => {
-        const ecr = this.Services.getECR({
+        const ecr = this.services.getECR({
           accessKeyId: res.Credentials.AccessKeyId,
           secretAccessKey: res.Credentials.SecretAccessKey,
           sessionToken: res.Credentials.SessionToken,
         });
         return ecr.getAuthorizationToken().promise();
-      });
+      })
+      .then(data => this.base64.decode(data.authorizationData[0].authorizationToken).split(':'))
+      .then(token => ({
+        registry: `https://${this.env.ACCOUNT_ID}.dkr.ecr.${this.env.REGION}.amazonaws.com`,
+        credentials: {
+          username: token[0],
+          password: token[1],
+        },
+      }));
   }
 }
 

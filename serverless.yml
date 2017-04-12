@@ -68,27 +68,27 @@ functions:
     events:
       -
         http:
-          method: get
+          method: getCredentials
           path: "/"
       -
         http:
-          method: get
+          method: getCredentials
           path: "apps/{vendor}/{app}"
       -
         http:
-          method: get
+          method: getCredentials
           path: "apps"
       -
         http:
-          method: get
+          method: getCredentials
           path: "stacks"
       -
         http:
-          method: get
+          method: getCredentials
           path: "vendors"
       -
         http:
-          method: get
+          method: getCredentials
           path: "vendors/{vendor}"
       -
         schedule:
@@ -96,7 +96,7 @@ functions:
           enabled: ${file(./env.yml):WARMUP_ENABLED}
       -
         http:
-          method: get
+          method: getCredentials
           path: "{anything}"
       -
         http:
@@ -122,12 +122,12 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "admin/apps/{id}"
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "admin/apps"
       -
         http:
@@ -137,7 +137,7 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "admin/users"
       -
         http:
@@ -167,7 +167,7 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "admin/changes"
 
   apps:
@@ -181,12 +181,12 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "vendors/{vendor}/apps"
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "vendors/{vendor}/apps/{app}"
       -
         http:
@@ -201,12 +201,12 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "vendors/{vendor}/apps/{app}/versions"
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "vendors/{vendor}/apps/{app}/versions/{version}"
       -
         http:
@@ -239,7 +239,7 @@ functions:
           path: "vendors/{vendor}/invitations/{email}"
       -
         http:
-          method: get
+          method: getCredentials
           path: "vendors/{vendor}/invitations/{email}/{code}"
       -
         http:
@@ -267,7 +267,7 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "vendors/{vendor}/apps/{app}/repository"
 
   authEmailTrigger:
@@ -282,7 +282,7 @@ functions:
           path: "auth/login"
       -
         http:
-          method: get
+          method: getCredentials
           path: "auth/token"
       -
         http:
@@ -295,7 +295,7 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
+          method: getCredentials
           path: "auth/profile"
       -
         http:
@@ -307,7 +307,7 @@ functions:
           path: "auth/confirm/{email}/{code}"
       -
         http:
-          method: get
+          method: getCredentials
           path: "auth/confirm/{email}/{code}"
       -
         http:

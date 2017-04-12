@@ -138,7 +138,7 @@ describe('Vendors', () => {
         headers: { Authorization: token },
         responseType: 'json',
       }), 'to be fulfilled'))
-      // 3) Check existence in db and get code
+      // 3) Check existence in db and getCredentials code
       .then(() => rds.queryAsync('SELECT * FROM `invitations` WHERE vendor=? AND email=?', [vendor, userEmail]))
       .then((res) => {
         expect(res, 'to have length', 1);

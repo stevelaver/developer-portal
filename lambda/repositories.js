@@ -53,7 +53,7 @@ function getRepository(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => repository.get(
+      .then(user => repository.getCredentials(
         event.pathParameters.app,
         event.pathParameters.vendor,
         user,
