@@ -551,7 +551,7 @@ describe('Apps', () => {
    },
    (cb) => {
    // Get repository credentials
-   request.getCredentials({
+   request.get({
    url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId}/repository`,
    headers: {
    Authorization: token,

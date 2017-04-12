@@ -75,7 +75,7 @@ describe('Auth', () => {
         },
       }), 'to be fulfilled'))
       // 4) Confirm
-      // We can't getCredentials valid code so we try with some invalid to check that
+      // We can't get valid code so we try with some invalid to check that
       // function works and confirm user manually
       .then(() => axios({
         method: 'post',
@@ -125,7 +125,7 @@ describe('Auth', () => {
       url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
       responseType: 'json',
     }), 'to be fulfilled')
-      // Check with fake code - as we can't getCredentials real one from email
+      // Check with fake code - as we can't get real one from email
       // so we just test if lambda function works
       .then(() => axios({
         method: 'post',
