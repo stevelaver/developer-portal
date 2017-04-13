@@ -12,7 +12,7 @@ class Repository {
   }
 
   getRegistryName() {
-    return `https://${this.env.ACCOUNT_ID}.dkr.ecr.${this.env.REGION}.amazonaws.com`;
+    return `${this.env.ACCOUNT_ID}.dkr.ecr.${this.env.REGION}.amazonaws.com`;
   }
 
   getRoleName() {

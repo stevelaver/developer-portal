@@ -76,11 +76,17 @@ describe('Repository App', () => {
   it('Get repository credentials', () =>
       ecr.createRepository({ repositoryName: repositoryName2 }).promise()
         .then(() => repositoryApp.getCredentials(appId, vendorId, user))
-        .then(creds => registryRequest(`${repositoryName}/tags/list`, creds)
+        .then(creds => registryRequest(`${repositoryName}/tags/list`, {
+          registry: `https://${creds.registry}`,
+          credentials: creds.credentials,
+        })
           .then((res) => {
             expect(res, 'to have key', 'tags');
           })
-          .then(() => registryRequest(`${repositoryName2}/tags/list`, creds))
+          .then(() => registryRequest(`${repositoryName2}/tags/list`, {
+            registry: `https://${creds.registry}`,
+            credentials: creds.credentials,
+          }))
           .then((res) => {
             expect(res, 'to have key', 'errors');
             expect(res.errors, 'to have length', 1);
