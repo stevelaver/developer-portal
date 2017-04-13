@@ -11,6 +11,10 @@ class Repository {
     this.base64 = Services.getBase64();
   }
 
+  getRegistryName() {
+    return `https://${this.env.ACCOUNT_ID}.dkr.ecr.${this.env.REGION}.amazonaws.com`;
+  }
+
   getRoleName() {
     return `${this.env.SERVICE_NAME}-ecr-role`;
   }
@@ -51,29 +55,27 @@ class Repository {
     });
   }
 
-  create(appId, vendor, user) {
+  getCredentials(appId, vendor, user) {
+    const repositoryName = this.getRepositoryName(appId);
     return this.Identity.checkVendorPermissions(user, vendor)
       .then(() => this.db.checkAppAccess(appId, vendor))
-      .then(() => this.ecr.createRepository({
-        repositoryName: this.getRepositoryName(appId),
-      }).promise())
+      .then(() => this.ecr.describeRepositories({ repositoryNames: [repositoryName] }).promise())
       .catch((err) => {
-        if (err.name !== 'RepositoryAlreadyExistsException') {
+        if (err.name !== 'RepositoryNotFoundException') {
           throw err;
         }
+        return this.ecr.createRepository({ repositoryName }).promise();
       })
-      .then(() => this.db.updateApp({
-        repoType: 'ecr',
-        repoUri: null,
-        repoTag: null,
-        repoOptions: null,
-      }, appId, user.email))
-      .then(() => null);
-  }
-
-  getCredentials(appId, vendor, user) {
-    return this.Identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(appId, vendor))
+      .then(() => this.db.getApp(appId))
+      .then((data) => {
+        if (data.repository.type !== 'provisioned') {
+          return this.db.updateApp({
+            repoType: 'provisioned',
+            repoUri: `${this.getRegistryName()}/${this.getRepositoryName()}`,
+            repoOptions: null,
+          }, appId, user.email);
+        }
+      })
       .then(() => this.sts.assumeRole({
         RoleSessionName: this.getRoleName(),
         RoleArn: `arn:aws:iam::${this.env.ACCOUNT_ID}:role/${this.getRoleName()}`,
@@ -89,7 +91,8 @@ class Repository {
       })
       .then(data => this.base64.decode(data.authorizationData[0].authorizationToken).split(':'))
       .then(token => ({
-        registry: `https://${this.env.ACCOUNT_ID}.dkr.ecr.${this.env.REGION}.amazonaws.com`,
+        registry: this.getRegistryName(),
+        repository: this.getRepositoryName(appId),
         credentials: {
           username: token[0],
           password: token[1],

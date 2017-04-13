@@ -13,6 +13,7 @@ const wait = require('wait-promise');
 
 const env = require('../../lib/env').load();
 
+aws.config.setPromisesDependency(Promise);
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
@@ -513,66 +514,42 @@ describe('Apps', () => {
         expect(res.data[0].name, 'to be', testApp2);
       }));
 
-
-  /* it('ECR', (done) => {
-   const appName = `a3_${Date.now()}`;
-   const appId = `${vendor}.${appName}`;
-   async.waterfall([
-   (cb) => {
+  const ecr = new aws.ECR({ region: env.REGION });
+  const appName5 = `a3_${Date.now()}`;
+  const appId5 = `${vendor}.${appName5}`;
+  it('ECR', () =>
    // Create app
-   request.post({
-   url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
-   headers: {
-   Authorization: token,
-   },
-   json: true,
-   body: {
-   id: appName,
-   name: appName,
-   type: 'extractor',
-   },
-   }, (err, res, body) => {
-   expect(err).to.be.null();
-   expect(body, JSON.stringify(body)).to.be.empty();
-   cb();
-   });
-   },
-   (cb) => {
-   // Create repository
-   request.post({
-   url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId}/repository`,
-   headers: {
-   Authorization: token,
-   },
-   }, (err) => {
-   expect(err).to.be.null();
-   cb();
-   });
-   },
-   (cb) => {
-   // Get repository credentials
-   request.get({
-   url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId}/repository`,
-   headers: {
-   Authorization: token,
-   },
-   }, (err, res, bodyRaw) => {
-   const body = JSON.parse(bodyRaw);
-   expect(err).to.be.null();
-   expect(body).to.not.have.property('errorMessage');
-   cb();
-   });
-   },
-   (cb) => {
-   // Delete repository
-   const ecr = new aws.ECR({ region: env.REGION });
-   ecr.deleteRepository({
-   force: true,
-   repositoryName: `${env.SERVICE_NAME}/${appId}`,
-   }, callback);
-   },
-   ], done);
-   }); */
+    axios({
+      method: 'post',
+      url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+      headers: { Authorization: token },
+      responseType: 'json',
+      data: {
+        id: appName5,
+        name: appName5,
+        type: 'extractor',
+      },
+    })
+      .then((res) => {
+        expect(res.status, 'to be', 201);
+      })
+      // Get repository credentials
+      .then(() => axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId5}/repository`,
+        headers: { Authorization: token },
+        responseType: 'json',
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'registry');
+        expect(res.data, 'to have key', 'repository');
+        expect(res.data, 'to have key', 'credentials');
+        expect(res.data.credentials, 'to have key', 'username');
+        expect(res.data.credentials, 'to have key', 'password');
+      })
+      // Delete repository
+      .then(() => ecr.deleteRepository({ force: true, repositoryName: `${env.SERVICE_NAME}/${appId5}` }).promise()));
 
   const s3 = new aws.S3();
   after(() =>

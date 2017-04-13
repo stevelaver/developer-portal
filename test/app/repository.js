@@ -72,25 +72,9 @@ describe('Repository App', () => {
       ));
   });
 
-  it('Create repository', () =>
-    repositoryApp.create(appId, vendorId, user)
-      .then(() => ecr.describeRepositories({ repositoryNames: [repositoryName] }).promise())
-      .then((data) => {
-        expect(data, 'to have key', 'repositories');
-        expect(data.repositories, 'to have length', 1);
-      })
-      .then(() => rds.queryAsync('SELECT * FROM `apps` WHERE id=?', [appId]))
-      .then((data) => {
-        expect(data, 'to have length', 1);
-        expect(data[0].repoType, 'to be', 'ecr');
-      })
-      .then(() => ecr.deleteRepository({ repositoryName, force: true }).promise()));
-
   const repositoryName2 = repositoryApp.getRepositoryName(`app2${Date.now()}`);
   it('Get repository credentials', () =>
-      ecr.createRepository({ repositoryName }).promise()
-        .then(() => ecr.createRepository({ repositoryName: repositoryName2 }).promise())
-        .then(() => rds.queryAsync('UPDATE `apps` SET repoType=? WHERE id=?', ['ecr', appId]))
+      ecr.createRepository({ repositoryName: repositoryName2 }).promise()
         .then(() => repositoryApp.getCredentials(appId, vendorId, user))
         .then(creds => registryRequest(`${repositoryName}/tags/list`, creds)
           .then((res) => {
@@ -103,8 +87,19 @@ describe('Repository App', () => {
             expect(res.errors[0], 'to have key', 'code');
             expect(res.errors[0].code, 'to be', 'DENIED');
           }))
-        .then(() => ecr.deleteRepository({ repositoryName, force: true }).promise())
+        .then(() => ecr.describeRepositories({ repositoryNames: [repositoryName] }).promise())
+        .then((data) => {
+          expect(data, 'to have key', 'repositories');
+          expect(data.repositories, 'to have length', 1);
+        })
+        .then(() => rds.queryAsync('SELECT * FROM `apps` WHERE id=?', [appId]))
+        .then((data) => {
+          expect(data, 'to have length', 1);
+          expect(data[0].repoType, 'to be', 'provisioned');
+          expect(data[0].repoUri, 'to be', `${repositoryApp.getRegistryName()}/${repositoryApp.getRepositoryName()}`);
+        })
         .then(() => ecr.deleteRepository({ repositoryName: repositoryName2, force: true }).promise()));
 
-  // after(() =>
+  after(() =>
+    ecr.deleteRepository({ repositoryName, force: true }).promise());
 });

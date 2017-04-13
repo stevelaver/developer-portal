@@ -2,6 +2,7 @@
 
 import App from '../lib/app';
 import Icon from '../app/icon';
+import Repository from '../app/repository';
 import Services from '../lib/Services';
 
 require('longjohn');
@@ -234,6 +235,31 @@ function icon(event, context, callback) {
   );
 }
 
+function getRepository(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      vendor: joi.string().required(),
+      app: joi.string().required(),
+    },
+  });
+
+  const repository = new Repository(Services, db, process.env, Services.getError());
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getUser(event.headers.Authorization))
+      .then(user => repository.getCredentials(
+        event.pathParameters.app,
+        event.pathParameters.vendor,
+        user,
+      )),
+    db,
+    event,
+    context,
+    callback
+  );
+}
+
 module.exports.apps = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
     case '/vendors/{vendor}/apps':
@@ -256,6 +282,8 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
       return rollback(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/icon':
       return icon(event, context, callback);
+    case '/vendors/{vendor}/apps/{app}/repository':
+      return getRepository(event, context, callback);
     default:
       throw Services.getError().notFound();
   }

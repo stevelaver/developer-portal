@@ -218,6 +218,11 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps/{app}/icon"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: get
+          path: "vendors/{vendor}/apps/{app}/repository"
 
   vendors:
     handler: vendors.vendors
@@ -255,20 +260,6 @@ functions:
           bucket: "${file(./env.yml):S3_BUCKET}"
           event: "s3:ObjectCreated:Put"
           suffix: .png
-
-  repositories:
-    handler: repositories.repositories
-    events:
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: post
-          path: "vendors/{vendor}/apps/{app}/repository"
-      -
-        http:
-          authorizer: ${self:custom.cognitoAuthorizer}
-          method: get
-          path: "vendors/{vendor}/apps/{app}/repository"
 
   authEmailTrigger:
     handler: authEmail.emails

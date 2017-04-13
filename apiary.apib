@@ -809,6 +809,35 @@ Takes settings from chosen version and creates new version with it.
 + Response 201
 
 
+### Get credentials to ECR repository [GET /vendors/{vendor}/apps/{app}/repository]
+
+Returns credentials for `docker` commands valid for 12 hours. It initiates the repository if it does not exist yet and
+sets `repository.type` app attribute to `provisioned`.
+
++ Parameters
+    + vendor
+    + app
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "registry": "https://061240556736.dkr.ecr.eu-west-1.amazonaws.com",
+                "repository": "developer-portal/ex-adwords",
+                "credentials": {
+                    "username": "AWS",
+                    "password": "pass"
+                }
+            }
+
+
 
 ## Public API [/apps]
 
