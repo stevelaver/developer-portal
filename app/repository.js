@@ -71,7 +71,7 @@ class Repository {
         if (data.repository.type !== 'provisioned') {
           return this.db.updateApp({
             repoType: 'provisioned',
-            repoUri: `${this.getRegistryName()}/${this.getRepositoryName()}`,
+            repoUri: `${this.getRegistryName()}/${this.getRepositoryName(appId)}`,
             repoOptions: null,
           }, appId, user.email);
         }
