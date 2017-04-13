@@ -68,10 +68,11 @@ class Repository {
       })
       .then(() => this.db.getApp(appId))
       .then((data) => {
-        if (data.repository.type !== 'provisioned') {
+        const repoUri = `${this.getRegistryName()}/${this.getRepositoryName(appId)}`;
+        if (data.repository.type !== 'ecr' || data.repository.uri !== repoUri) {
           return this.db.updateApp({
-            repoType: 'provisioned',
-            repoUri: `${this.getRegistryName()}/${this.getRepositoryName(appId)}`,
+            repoType: 'ecr',
+            repoUri,
             repoOptions: null,
           }, appId, user.email);
         }
