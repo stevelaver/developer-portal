@@ -188,7 +188,7 @@ describe('Apps', () => {
           }), 'to be fulfilled'));
       })
       // Wait few seconds if icon handling lambda has delay
-      .then(() => wait.sleep(10000))
+      .then(() => wait.sleep(20000))
       // Approve should succeed
       .then(() => expect(axios({
         method: 'post',
