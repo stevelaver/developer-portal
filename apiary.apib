@@ -63,7 +63,7 @@ Account needs to be confirmed by a code from confirmation email sent on his emai
 Login returns three different tokens.
 
 - `token` - is used to authenticate most of the API calls, is valid for 1 hour
-- `accessToken` - is used to verify MFA setup with a code from text message, is valid for 1 hour
+- `accessToken` - is used to verify MFA setup or for logout, is valid for 1 hour
 - `refreshToken` - is used for refreshing an auth token using the API call below, is valid for 30 days
 
 If your account has activated MFA, login with `email` and `password` returns `session` which is used in subsequent login call along with the code recieved in text message.
@@ -125,6 +125,19 @@ If your account has activated MFA, login with `email` and `password` returns `se
                 "refreshToken": "{refresh token}"
                 "expiresIn": 3600
             }
+
+
+### Logout [POST /auth/logout]
+
+Invalidates all active access and refresh tokens
+
++ Request
+
+    + Headers
+
+            Authorization: {access_token}
+
++ Response 204
 
 
 ### Refresh token [GET /auth/token]
@@ -210,10 +223,16 @@ Enable login using multi-factor authentication
 
 ### Confirm MFA [POST /auth/mfa/confirm/{code}]
 
-Confirm multi-factor authentication using code from text message
+Confirm multi-factor authentication using code from text message and access token from login call
 
 + Parameters
     + code
+
++ Request
+
+    + Headers
+
+            Authorization: {access_token}
 
 + Response 204 (application/json)
 

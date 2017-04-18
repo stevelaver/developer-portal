@@ -59,6 +59,11 @@ class Auth {
       }));
   }
 
+  logout(token) {
+    return this.userPool.getCognito().globalSignOut({ AccessToken: token }).promise()
+      .then(() => null);
+  }
+
   refreshToken(token) {
     return this.userPool.getCognito().adminInitiateAuth({
       AuthFlow: 'REFRESH_TOKEN',

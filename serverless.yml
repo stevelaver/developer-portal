@@ -273,6 +273,10 @@ functions:
           path: "auth/login"
       -
         http:
+          method: post
+          path: "auth/logout"
+      -
+        http:
           method: get
           path: "auth/token"
       -

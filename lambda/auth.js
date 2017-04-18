@@ -45,6 +45,20 @@ function login(event, context, callback) {
   );
 }
 
+function logout(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+  });
+
+  return request.responseAuthPromise(
+    app.logout(event.headers.Authorization),
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 function refreshToken(event, context, callback) {
   validation.validate(event, {
     auth: true,
@@ -232,6 +246,8 @@ module.exports.auth = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
     case '/auth/login':
       return login(event, context, callback);
+    case '/auth/logout':
+      return logout(event, context, callback);
     case '/auth/token':
       return refreshToken(event, context, callback);
     case '/auth/forgot/{email}':

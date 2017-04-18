@@ -143,7 +143,7 @@ describe('Auth', () => {
       }));
 
 
-  it('Refresh token', () =>
+  it('Refresh token and logout', () =>
     axios({
       method: 'post',
       url: `${env.API_ENDPOINT}/auth/login`,
@@ -153,32 +153,44 @@ describe('Auth', () => {
         password: process.env.FUNC_USER_PASSWORD,
       },
     })
-      .then((res) => {
-        expect(res.status, 'to be', 200);
-        expect(res.data, 'to have key', 'refreshToken');
-        return res.data.refreshToken;
-      })
-      .then(token => axios({
-        method: 'get',
-        url: `${env.API_ENDPOINT}/auth/token`,
-        responseType: 'json',
-        headers: { Authorization: token },
-      }))
-      .then((res) => {
-        expect(res.status, 'to be', 200);
-        expect(res.data, 'to have key', 'token');
-        return res.data.token;
-      })
-      .then(token => axios({
-        method: 'get',
-        url: `${env.API_ENDPOINT}/auth/profile`,
-        responseType: 'json',
-        headers: { Authorization: token },
-      }))
-      .then((res) => {
-        expect(res.status, 'to be', 200);
-        expect(res.data, 'to have key', 'name');
-        return res.data.token;
+      .then((loginData) => {
+        expect(loginData.status, 'to be', 200);
+        expect(loginData.data, 'to have key', 'refreshToken');
+        return axios({
+          method: 'get',
+          url: `${env.API_ENDPOINT}/auth/token`,
+          responseType: 'json',
+          headers: { Authorization: loginData.data.refreshToken },
+        })
+          .then((res) => {
+            expect(res.status, 'to be', 200);
+            expect(res.data, 'to have key', 'token');
+            return res.data.token;
+          })
+          .then(token => axios({
+            method: 'get',
+            url: `${env.API_ENDPOINT}/auth/profile`,
+            responseType: 'json',
+            headers: { Authorization: token },
+          }))
+          .then((res) => {
+            expect(res.status, 'to be', 200);
+            expect(res.data, 'to have key', 'name');
+          })
+          .then(() => axios({
+            method: 'post',
+            url: `${env.API_ENDPOINT}/auth/logout`,
+            headers: { Authorization: loginData.data.accessToken },
+          }))
+          .then((res) => {
+            expect(res.status, 'to be', 204);
+          })
+          .then(() => expect(axios({
+            method: 'get',
+            url: `${env.API_ENDPOINT}/auth/token`,
+            responseType: 'json',
+            headers: { Authorization: loginData.data.refreshToken },
+          }), 'to be rejected'));
       }));
 
   it('MFA', () =>
