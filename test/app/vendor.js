@@ -73,8 +73,8 @@ describe('Vendor App', () => {
   before(() =>
     rds.queryAsync('DELETE FROM invitations WHERE vendor=?', [vendor])
       .then(() => rds.queryAsync(
-        'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?, isApproved=?',
-        [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0, 1],
+        'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+        [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
       ))
       .then(() => createUser()));
 

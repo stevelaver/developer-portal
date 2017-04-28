@@ -78,7 +78,6 @@ describe('db', () => {
         configurationSchema: '{"three":"four"}',
         actions: '[]',
         fees: 0,
-        isApproved: 1,
         vendorId: 'keboola',
         vendorName: 'Keboola',
         vendorAddress: 'Křižíkova 115, Praha',
@@ -93,7 +92,6 @@ describe('db', () => {
       expect(res, 'to have key', 'configurationSchema');
       expect(res, 'to have key', 'actions');
       expect(res, 'to have key', 'fees');
-      expect(res, 'to have key', 'isApproved');
       expect(res, 'to have key', 'vendor');
       expect(res.vendor, 'to have key', 'id');
       expect(res.vendor, 'to have key', 'name');
@@ -111,7 +109,6 @@ describe('db', () => {
       expect(res.configurationSchema, 'to equal', { three: 'four' });
       expect(res.actions, 'to equal', []);
       expect(res.fees, 'to be', false);
-      expect(res.isApproved, 'to be', true);
       expect(res.vendor.id, 'to be', 'keboola');
       expect(res.vendor.name, 'to be', 'Keboola');
       expect(res.vendor.address, 'to be', 'Křižíkova 115, Praha');
@@ -165,25 +162,6 @@ describe('db', () => {
 
     it('Does not exist', () =>
       expect(db.checkVendorExists(`vx-${Date.now()}`), 'to be rejected')
-    );
-  });
-
-  describe('checkAppCanBePublished', () => {
-    const vendor = `vcacbp-${Date.now()}`;
-    const app1 = `cacbp1-${Date.now()}`;
-    const app2 = `cacbp2-${Date.now()}`;
-    beforeEach(() =>
-      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app1, vendor, 'test', 1]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [app2, vendor, 'test', 0]))
-    );
-
-    it('Can be published', () =>
-      expect(db.checkAppCanBePublished(app1), 'to be fulfilled')
-    );
-
-    it('Cannot be published', () =>
-      expect(db.checkAppCanBePublished(app2), 'to be rejected')
     );
   });
 
@@ -335,9 +313,9 @@ describe('db', () => {
     beforeEach(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
         .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor2]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [appId, vendor, 'test', 1]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [`alafv2-${Date.now()}`, vendor2, 'test', 1]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?', [appId2, vendor, 'test', 0]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [`alafv2-${Date.now()}`, vendor2, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId2, vendor, 'test']))
     );
 
     it('List all', () =>
@@ -351,23 +329,14 @@ describe('db', () => {
         })
     );
 
-    it('List filtered', () =>
-      db.listApps('unapproved')
-        .then((data) => {
-          expect(data, 'to have length', 1);
-          expect(data[0], 'to have key', 'id');
-          expect(data[0].id, 'to be', appId2);
-        })
-    );
-
     it('List limited', () =>
-      db.listApps(null, 0, 1)
+      db.listApps(0, 1)
         .then((data) => {
           expect(data, 'to have length', 1);
           expect(data[0], 'to have key', 'id');
           expect(data[0].id, 'to contain', appId);
         })
-        .then(() => db.listApps(null, 1, 2))
+        .then(() => db.listApps(1, 2))
         .then((data) => {
           expect(data, 'to have length', 2);
           expect(data[0], 'to have key', 'id');
@@ -387,16 +356,16 @@ describe('db', () => {
     beforeEach(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
         .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor2]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?, isPublic=?', [appId, vendor, 'test', 1, 1]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?, isPublic=?', [`alafv2-${Date.now()}`, vendor2, 'test', 1, 0]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?, isPublic=?', [`alafv3-${Date.now()}`, vendor, 'test', 0, 1]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=?, isPublic=?', [appId2, vendor, 'test', 1, 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [appId, vendor, 'test', 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [`alafv2-${Date.now()}`, vendor2, 'test', 0]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [`alafv3-${Date.now()}`, vendor, 'test', 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [appId2, vendor, 'test', 1]))
     );
 
     it('List all', () =>
       db.listPublishedApps()
         .then((data) => {
-          expect(data, 'to have length', 2);
+          expect(data, 'to have length', 3);
           expect(data[0], 'to have key', 'id');
           expect(data[1], 'to have key', 'id');
           expect([data[0].id, data[1].id], 'to contain', appId);
@@ -413,7 +382,7 @@ describe('db', () => {
         })
         .then(() => db.listPublishedApps(1, 2))
         .then((data) => {
-          expect(data, 'to have length', 1);
+          expect(data, 'to have length', 2);
           expect(data[0], 'to have key', 'id');
           expect(data[0].id, 'to be', appId2);
         })
@@ -466,9 +435,18 @@ describe('db', () => {
 
     beforeEach(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, version=?', [appId, vendor, 'test2', 2]))
-        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 1, 'test1']))
-        .then(() => rds.queryAsync('INSERT INTO `appVersions` SET id=?, version=?, name=?', [appId, 2, 'test2']))
+        .then(() => rds.queryAsync(
+          'INSERT INTO `apps` SET id=?, vendor=?, name=?, version=?, isPublic=?',
+          [appId, vendor, 'test2', 2, 0],
+        ))
+        .then(() => rds.queryAsync(
+          'INSERT INTO `appVersions` SET id=?, version=?, name=?, isPublic=?',
+          [appId, 1, 'test1', 0],
+        ))
+        .then(() => rds.queryAsync(
+          'INSERT INTO `appVersions` SET id=?, version=?, name=?, isPublic=?',
+          [appId, 2, 'test2', 0],
+        ))
     );
 
     it('Get last version', () =>
@@ -497,7 +475,8 @@ describe('db', () => {
 
     it('Get public', () =>
       expect(db.getAppWithVendor(appId, 1, true, false), 'to be rejected')
-        .then(() => rds.queryAsync('UPDATE `apps` SET isPublic=1, isApproved=1 WHERE id=?', [appId]))
+        .then(() => rds.queryAsync('UPDATE `apps` SET isPublic=1 WHERE id=?', [appId]))
+        .then(() => rds.queryAsync('UPDATE `appVersions` SET isPublic=1 WHERE id=?', [appId]))
         .then(() => expect(db.getAppWithVendor(appId, 1, true, false), 'to be fulfilled'))
     );
 

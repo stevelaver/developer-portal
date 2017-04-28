@@ -9,6 +9,7 @@
     "url": "https://github.com/keboola/developer-portal.git"
   },
   "dependencies": {
+    "aws-xray-sdk": "^1.1.0",
     "babel-polyfill": "^6.16.0",
     "base-64": "^0.1.0",
     "bluebird": "^3.4.7",

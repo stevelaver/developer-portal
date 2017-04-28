@@ -52,13 +52,6 @@ describe('Validation', () => {
         type: 'writer',
         vendor: 'x',
       }, schema));
-      // Cannot set isApproved
-      expectFail(joi.validate({
-        id: 'id3',
-        name: 'Test',
-        type: 'writer',
-        isApproved: true,
-      }, schema));
       // Cannot set legacyUri
       expectFail(joi.validate({
         id: 'id3',
@@ -102,10 +95,6 @@ describe('Validation', () => {
       expectFail(joi.validate({
         vendor: 'x',
       }, schema));
-      // Cannot set isApproved
-      expectFail(joi.validate({
-        isApproved: true,
-      }, schema));
       // Cannot set legacyUri
       expectFail(joi.validate({
         legacyUri: 'x',
@@ -134,22 +123,6 @@ describe('Validation', () => {
         name: 'Test',
         type: 'writer',
       }, schema));
-    });
-
-    it('updateApprovedAppSchema', () => {
-      const schema = validation.updateApprovedAppSchema();
-      // Can set isPublic
-      expectOk(joi.validate({
-        name: 'Test',
-        type: 'writer',
-        isPublic: true,
-      }, schema));
-      // Cannot set id
-      expectFail(joi.validate({
-        id: 'id3',
-        name: 'Test',
-        type: 'writer',
-      }, schema));
       // Cannot set forwardToken
       expectFail(joi.validate({
         forwardToken: true,
@@ -174,22 +147,6 @@ describe('Validation', () => {
       expectFail(joi.validate({
         processTimeout: 250,
       }, schema));
-      // Cannot set vendor
-      expectFail(joi.validate({
-        vendor: 'x',
-      }, schema));
-      // Cannot set isApproved
-      expectFail(joi.validate({
-        isApproved: true,
-      }, schema));
-      // Cannot set legacyUri
-      expectFail(joi.validate({
-        legacyUri: 'x',
-      }, schema));
-      // Cannot set icon32
-      expectFail(joi.validate({
-        icon32: 'x',
-      }, schema));
       expectOk(joi.validate({
         name: 'Test',
         type: 'writer',
@@ -213,7 +170,6 @@ describe('Validation', () => {
         requiredMemory: '5GB',
         processTimeout: 250,
         vendor: 'x',
-        isApproved: true,
         legacyUri: 'x',
       }, schema));
     });

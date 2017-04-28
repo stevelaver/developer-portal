@@ -3,7 +3,6 @@
 import Services from '../Services';
 
 require('longjohn');
-const _ = require('lodash');
 const axios = require('axios');
 const expect = require('unexpected');
 const moment = require('moment');
@@ -133,8 +132,8 @@ describe('Admin', () => {
 
   it('Approve App', () =>
     rds.queryAsync(
-      'INSERT INTO `apps` SET id=?, vendor=?, name=?',
-      [appId, vendor, 'test'],
+      'INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?',
+      [appId, vendor, 'test', 0],
     )
       // Get app detail
       .then(() => expect(axios({
@@ -145,19 +144,8 @@ describe('Admin', () => {
       }), 'to be fulfilled'))
       .then((res) => {
         expect(res.status, 'to be', 200);
-        expect(res.data, 'to have key', 'id');
-        expect(res.data.id, 'to be', appId);
-      })
-      // List unapproved apps
-      .then(() => expect(axios({
-        method: 'get',
-        url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,
-        responseType: 'json',
-        headers: { Authorization: token },
-      }), 'to be fulfilled'))
-      .then((res) => {
-        expect(res.status, 'to be', 200);
-        expect(_.map(res.data, app => app.id), 'to contain', appId);
+        expect(res.data, 'to have key', 'isPublic');
+        expect(res.data.isPublic, 'to be', false);
       })
       // Update app
       .then(() => expect(axios({
@@ -166,16 +154,17 @@ describe('Admin', () => {
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
-      // List unapproved apps without the approved one
+      // Get app detail
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/admin/apps?filter=unapproved`,
+        url: `${env.API_ENDPOINT}/admin/apps/${appId}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
       .then((res) => {
         expect(res.status, 'to be', 200);
-        expect(_.map(res.data, app => app.id), 'not to contain', appId);
+        expect(res.data, 'to have key', 'isPublic');
+        expect(res.data.isPublic, 'to be', true);
       }));
 
   it('Make User Admin', () =>

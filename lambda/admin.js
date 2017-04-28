@@ -134,7 +134,6 @@ function listApps(event, context, callback) {
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
       .then(() => app.listApps(
-        _.get(event, 'queryStringParameters.filter', null),
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null)
       )),

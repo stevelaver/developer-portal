@@ -589,8 +589,7 @@ The icon should have dimensions 64x64px or it will be resized after upload.
                     "name": "Google Adwords Reports",
                     "type": "extractor",
                     "createdOn": "2016-09-09T09:26:15.000Z",
-                    "createdBy": "keboola.dev.portal.test@gmail.com",
-                    "isApproved": true
+                    "createdBy": "keboola.dev.portal.test@gmail.com"
                 }
             ]
 
@@ -655,7 +654,6 @@ The icon should have dimensions 64x64px or it will be resized after upload.
                 "logger": "standard",
                 "loggerConfiguration": null,
                 "stagingStorageInput": "local",
-                "isApproved": true,
                 "createdOn": "2016-09-09T09:26:15.000Z",
                 "createdBy": "keboola.dev.portal.test@gmail.com",
                 "isPublic": false,
@@ -669,7 +667,8 @@ The icon should have dimensions 64x64px or it will be resized after upload.
 
 ### Request approval [POST /vendors/{vendor}/apps/{app}/approve]
 
-Request will be sent only if the app has an icon uploaded and all these attributes set:
+This is a request for publishing the app to public listing. It will be sent only if the app has an icon uploaded and all
+these attributes set:
 - name
 - type
 - repository
@@ -862,7 +861,7 @@ sets `repository.type` app attribute to `ecr`.
 
 ### List published apps [GET /apps?offset={offset}&limit={limit}]
 
-Shows all apps having flags `isApproved` and `isPublic` set to `true`.
+Shows all apps having flags `isPublic` set to `true`.
 
 + Parameters
     + offset (optional) - pagination offset
@@ -892,7 +891,7 @@ Shows all apps having flags `isApproved` and `isPublic` set to `true`.
 
 ### Get app detail [GET /apps/{vendor}/{app}]
 
-Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
+Shows the app if it's flag `isPublic` is set to `true`
 
 + Parameters
     + vendor
@@ -951,8 +950,7 @@ Shows the app if it's flags `isApproved` and `isPublic` are set to `true`
                 "limits": null,
                 "logger": "standard",
                 "loggerConfiguration": {},
-                "stagingStorageInput": "local",
-                "isApproved": true
+                "stagingStorageInput": "local"
             }
 
 
@@ -1089,12 +1087,7 @@ It will send email confirmation to a user.
 + Response 204
 
 
-### List apps [GET /admin/apps?filter={filter}]
-
-+ Parameters
-    + filter (optional)
-        + Members
-            + unapproved
+### List apps [GET /admin/apps]
 
 + Request
 
@@ -1113,8 +1106,7 @@ It will send email confirmation to a user.
                     "name": "Forecast.io Augmentation",
                     "type": "extractor",
                     "createdOn": "2016-09-26T16:02:57.000Z",
-                    "createdBy": "support@keboola.com",
-                    "isApproved": false
+                    "createdBy": "support@keboola.com"
                 }
             ]
 
@@ -1178,7 +1170,6 @@ It will send email confirmation to a user.
                 "logger": "standard",
                 "loggerConfiguration": {},
                 "stagingStorageInput": "local",
-                "isApproved": true,
                 "createdOn": "2016-09-09T09:26:15.000Z",
                 "createdBy": "keboola.dev.portal.test@gmail.com",
                 "isPublic": false,
@@ -1260,7 +1251,6 @@ Allows to update apps across vendors
            + `s3`
         + Default: `local`
     + vendor (optional, string)
-    + isApproved (optional, boolean) - Flag setting whether the app is approved (i.e. publicly visible if `isPublic=true`)
     + forwardToken (optional, boolean)
     + forwardTokenDetails (optional, boolean)
     + injectEnvironment (optional, boolean)
@@ -1274,7 +1264,7 @@ Allows to update apps across vendors
             + `yaml`
         + Default: `json`
     + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
-        + Default: `true`
+        + Default: `false`
     + permissions (optional, array) - List of specific permissions for the app. You may choose specific KBC stacks
         + (object)
             + stack (string, required) - name of the stack

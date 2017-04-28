@@ -66,7 +66,7 @@ describe('Apps', () => {
         id: appName1,
         name: appName1,
         type: 'extractor',
-        isApproved: true,
+        isPublic: true,
       },
     }), 'to be rejected with error satisfying', { response: { status: 422 } })
     // Create app
@@ -196,7 +196,7 @@ describe('Apps', () => {
         headers: { Authorization: token },
       }), 'to be fulfilled'))
       // Manual approval
-      .then(() => rds.queryAsync('UPDATE apps SET isApproved=1, isPublic=1 WHERE id=?', [appId1]))
+      .then(() => rds.queryAsync('UPDATE apps SET isPublic=1 WHERE id=?', [appId1]))
       // Public app profile should exist now
       .then(() => expect(axios({
         method: 'get',
@@ -333,8 +333,6 @@ describe('Apps', () => {
         expect(res.data.permissions[0], 'to have key', 'projects');
         expect(res.data.permissions[0].projects, 'to equal', [2, 3]);
       })
-      // Manual approval
-      .then(() => rds.queryAsync('UPDATE apps SET isApproved=1 WHERE id=?', [appId3]))
       // Public app profile should not exist
       .then(() => expect(axios({
         method: 'get',
@@ -417,11 +415,11 @@ describe('Apps', () => {
   let testApp2;
   it('Public Apps Listing', () =>
     rds.queryAsync(
-      'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+      'INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=1',
       [`${vendor}.${appId1}List1`, vendor, 'test1'],
     )
       .then(() => rds.queryAsync(
-        'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+        'INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=1',
         [`${vendor}.${appId1}List2`, vendor, 'test2'],
       ))
       // Public list all
@@ -465,11 +463,11 @@ describe('Apps', () => {
 
   it('Vendor Apps Listing', () =>
     rds.queryAsync(
-      'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+      'INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=1',
       [`${vendor}.${appId1}List3`, vendor, 'test1'],
     )
       .then(() => rds.queryAsync(
-        'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+        'INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=1',
         [`${vendor}.${appId1}List4`, vendor, 'test2'],
       ))
       // Vendor list all

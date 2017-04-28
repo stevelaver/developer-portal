@@ -67,7 +67,7 @@ describe('Icon App', () => {
         [vendorId, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
       ))
       .then(() => rds.queryAsync(
-        'INSERT INTO `apps` SET id=?, vendor=?, name=?, isApproved=1',
+        'INSERT INTO `apps` SET id=?, vendor=?, name=?',
         [appId, vendorId, 'test1']
       ));
   });
