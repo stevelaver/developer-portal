@@ -327,6 +327,29 @@ Remove other user or yourself from the vendor
 + Response 204
 
 
+### Generate credentials for service account [POST /vendors/{vendor}/credentials]
+
+Generates username and password for a service account which can be used e.g. for continuous integration. Notice that
+each call to this API call invalidates previously generated password.
+
++ Parameters
+    + vendor
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                username: "service.vendor",
+                password: "{password}"
+            }
+
 
 ## Apps [/vendors/{vendor}/apps]
 
