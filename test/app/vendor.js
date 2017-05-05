@@ -7,6 +7,7 @@ import Vendor from '../../app/vendor';
 const _ = require('lodash');
 const aws = require('aws-sdk');
 const expect = require('unexpected');
+const generator = require('generate-password');
 const moment = require('moment');
 const mysql = require('mysql');
 const Promise = require('bluebird');
@@ -151,6 +152,30 @@ describe('Vendor App', () => {
         .then((data) => {
           expect(data.vendors, 'not to contain', vendor);
         }));
+  });
+
+  describe('Create service credentials', () => {
+    let pass1;
+    it('Create', () =>
+      vendorApp.createCredentials(vendor, { vendors: [vendor] }, generator)
+        .then((data) => {
+          expect(data, 'to have key', 'username');
+          expect(data, 'to have key', 'password');
+          pass1 = data.password;
+          return userPool.login(data.username, data.password);
+        })
+        .then((data) => {
+          expect(data, 'to have key', 'token');
+        })
+        .then(() => vendorApp.createCredentials(vendor, { vendors: [vendor] }, generator))
+        .then((data) => {
+          expect(data, 'to have key', 'username');
+          expect(data, 'to have key', 'password');
+          expect(data.password, 'not to be', pass1);
+          return expect(userPool.login(data.username, data.password), 'to be fulfilled');
+        })
+        .then(() => expect(userPool.login(`service.${vendor}`, pass1), 'to be rejected'))
+        .then(() => userPool.deleteUser(`service.${vendor}`)));
   });
 
   after(() =>

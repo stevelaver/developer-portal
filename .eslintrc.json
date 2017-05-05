@@ -1,8 +1,6 @@
 {
   "extends": "airbnb",
-  "plugins": [
-    "flowtype"
-  ],
+  "plugins": [],
   "rules": {
     "func-names": 0,
     "no-console": 0,

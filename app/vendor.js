@@ -159,6 +159,35 @@ class Vendor {
         throw err;
       });
   }
+
+  createCredentials(vendor, user, generator) {
+    if (user.vendors.indexOf(vendor) === -1) {
+      throw this.err.forbidden('You do not have access to the vendor');
+    }
+    const userPool = this.services.getUserPool();
+    const username = `service.${vendor}`;
+    const password = generator.generate({
+      length: 24,
+      numbers: true,
+      symbols: true,
+      uppercase: true,
+    });
+
+    return userPool.getUser(username)
+      .then(() => userPool.deleteUser(username))
+      .catch((err) => {
+        if (err.code !== 'UserNotFoundException') {
+          throw err;
+        }
+      })
+      .then(() => userPool.signUp(username, password, `Service ${vendor}`, false))
+      .then(() => userPool.confirmSignUp(username))
+      .then(() => userPool.addUserToVendor(username, vendor))
+      .then(() => ({
+        username,
+        password,
+      }));
+  }
 }
 
 export default Vendor;

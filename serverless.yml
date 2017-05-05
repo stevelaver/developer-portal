@@ -251,6 +251,11 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: delete
           path: "vendors/{vendor}/users/{email}"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "vendors/{vendor}/credentials"
 
   iconUpload:
     handler: iconUpload.upload

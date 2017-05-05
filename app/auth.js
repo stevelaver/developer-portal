@@ -16,29 +16,7 @@ class Auth {
   }
 
   login(email, password) {
-    return this.userPool.getCognito().adminInitiateAuth({
-      AuthFlow: 'ADMIN_NO_SRP_AUTH',
-      ClientId: this.env.COGNITO_CLIENT_ID,
-      UserPoolId: this.env.COGNITO_POOL_ID,
-      AuthParameters: {
-        USERNAME: email,
-        PASSWORD: password,
-      },
-    }).promise()
-      .then((data) => {
-        if ('ChallengeName' in data && data.ChallengeName === 'SMS_MFA') {
-          return {
-            message: 'Verification code has been sent to your mobile phone',
-            session: data.Session,
-          };
-        }
-        return {
-          token: data.AuthenticationResult.IdToken,
-          accessToken: data.AuthenticationResult.AccessToken,
-          refreshToken: data.AuthenticationResult.RefreshToken,
-          expiresIn: data.AuthenticationResult.ExpiresIn,
-        };
-      });
+    return this.userPool.login(email, password);
   }
 
   loginWithCode(email, code, session) {

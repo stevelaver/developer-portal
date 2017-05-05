@@ -6,6 +6,7 @@ import Vendor from '../app/vendor';
 require('longjohn');
 require('source-map-support').install();
 const joi = require('joi');
+const generator = require('generate-password');
 
 const db = require('../lib/db');
 const request = require('../lib/request');
@@ -140,6 +141,25 @@ function removeUser(event, context, callback) {
   );
 }
 
+function createCredentials(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['vendor'],
+  });
+
+  return request.responsePromise(
+    identity.getUser(event.headers.Authorization)
+      .then(user => vendorApp.createCredentials(
+        event.pathParameters.vendor,
+        user,
+        generator,
+      )),
+    event,
+    context,
+    callback
+  );
+}
+
 
 module.exports.vendors = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -153,6 +173,8 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
       return acceptInvitation(event, context, callback);
     case '/vendors/{vendor}/users/{email}':
       return removeUser(event, context, callback);
+    case '/vendors/{vendor}/credentials':
+      return createCredentials(event, context, callback);
     default:
       throw Services.getError().notFound();
   }

@@ -20,8 +20,7 @@ const validation = Services.getValidation();
 function login(event, context, callback) {
   validation.validate(event, {
     body: {
-      email: joi.string().email().required()
-        .error(Error('Parameter email is required and should have format of email address')),
+      email: joi.string().required().error(Error('Parameter email must be a string')),
       password: joi.string().error(Error('Parameter password must be a string')),
       code: joi.string().error(Error('Parameter code must be a string')),
       session: joi.string().error(Error('Parameter code must be a string')),
