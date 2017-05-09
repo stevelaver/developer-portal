@@ -21,11 +21,11 @@ function createVendor(event, context, callback) {
   validation.validate(event, {
     body: {
       name: joi.string().max(64).required()
-        .error(Error('Parameter vendor.name is required string with max length 64 when vendor is object')),
+        .error(Error('Parameter vendor.name is required string with max length 64')),
       address: joi.string().required()
-        .error(Error('Parameter vendor.address is required string when vendor is object')),
+        .error(Error('Parameter vendor.address is required string')),
       email: joi.string().email().required()
-        .error(Error('Parameter vendor.email is required email address when vendor is object')),
+        .error(Error('Parameter vendor.email is required email address')),
     },
   });
   const body = JSON.parse(event.body);
@@ -145,12 +145,17 @@ function createCredentials(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: ['vendor'],
+    body: {
+      description: joi.string().required().error(Error('Parameter description is required string')),
+    },
   });
+  const body = JSON.parse(event.body);
 
   return request.responsePromise(
     identity.getUser(event.headers.Authorization)
       .then(user => vendorApp.createCredentials(
         event.pathParameters.vendor,
+        body.description,
         user,
         generator,
       )),

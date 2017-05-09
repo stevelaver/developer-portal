@@ -155,27 +155,33 @@ describe('Vendor App', () => {
   });
 
   describe('Create service credentials', () => {
-    let pass1;
+    let password;
+    let username;
+    let username2;
     it('Create', () =>
-      vendorApp.createCredentials(vendor, { vendors: [vendor] }, generator)
+      vendorApp.createCredentials(vendor, 'description', { vendors: [vendor] }, generator)
         .then((data) => {
           expect(data, 'to have key', 'username');
           expect(data, 'to have key', 'password');
-          pass1 = data.password;
+          username = data.username;
+          password = data.password;
           return userPool.login(data.username, data.password);
         })
         .then((data) => {
           expect(data, 'to have key', 'token');
         })
-        .then(() => vendorApp.createCredentials(vendor, { vendors: [vendor] }, generator))
+        .then(() => vendorApp.createCredentials(vendor, 'description', { vendors: [vendor] }, generator))
         .then((data) => {
           expect(data, 'to have key', 'username');
           expect(data, 'to have key', 'password');
-          expect(data.password, 'not to be', pass1);
+          expect(data.username, 'not to be', username);
+          expect(data.password, 'not to be', password);
+          username2 = data.username;
           return expect(userPool.login(data.username, data.password), 'to be fulfilled');
         })
-        .then(() => expect(userPool.login(`service.${vendor}`, pass1), 'to be rejected'))
-        .then(() => userPool.deleteUser(`service.${vendor}`)));
+        .then(() => expect(userPool.login(`service.${vendor}`, password), 'to be rejected'))
+        .then(() => userPool.deleteUser(username))
+        .then(() => userPool.deleteUser(username2)));
   });
 
   after(() =>
