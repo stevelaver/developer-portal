@@ -187,7 +187,7 @@ class Vendor {
     const password = Vendor.generatePassword(generator);
     console.log('SERVICE', [username, password]);
 
-    while (true) {
+    while (true) { // eslint-disable-line no-constant-condition
       return userPool.signUp(username, password, `Service ${vendor}`, description, false)
         .catch((err) => {
           if (err.code !== 'NotAuthorizedException') {
