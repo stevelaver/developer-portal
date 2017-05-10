@@ -329,24 +329,32 @@ Remove other user or yourself from the vendor
 
 ### Generate credentials for service account [POST /vendors/{vendor}/credentials]
 
-Generates username and password for a service account which can be used e.g. for continuous integration. Notice that
-each call to this API call invalidates previously generated password.
+Generates a service account which can be used e.g. for continuous integration and returns its username and password.
 
 + Parameters
     + vendor
 
-+ Request
++ Attributes
+    + description (required) - Max length 256 chars
+
++ Request (application/json)
 
     + Headers
 
             Authorization: {your_token}
+
+    + Body
+
+            {
+                "description": "Service user for Travis CI"
+            }
 
 + Response 200 (application/json)
 
     + Body
 
             {
-                username: "service.vendor",
+                username: "service.{vendor}.{id}",
                 password: "{password}"
             }
 

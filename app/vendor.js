@@ -160,26 +160,44 @@ class Vendor {
       });
   }
 
-  createCredentials(vendor, description, user, generator) {
-    if (user.vendors.indexOf(vendor) === -1) {
-      throw this.err.forbidden('You do not have access to the vendor');
-    }
-    const userPool = this.services.getUserPool();
-    const username = `service.${vendor}.${Math.random()}`;
-    const password = generator.generate({
+  static generateUsername(generator, vendor) {
+    return `service.${vendor}.${generator.generate({
+      length: 12,
+      numbers: true,
+      symbols: false,
+      uppercase: false,
+    })}`;
+  }
+
+  static generatePassword(generator) {
+    return generator.generate({
       length: 24,
       numbers: true,
       symbols: true,
       uppercase: true,
     });
+  }
 
-    return userPool.signUp(username, password, `Service ${vendor}`, description, false)
-      .then(() => userPool.confirmSignUp(username))
-      .then(() => userPool.addUserToVendor(username, vendor))
-      .then(() => ({
-        username,
-        password,
-      }));
+  createCredentials(vendor, description, user, generator) {
+    if (user.vendors.indexOf(vendor) === -1) {
+      throw this.err.forbidden('You do not have access to the vendor');
+    }
+    const userPool = this.services.getUserPool();
+    const username = Vendor.generateUsername(generator, vendor);
+    const password = Vendor.generatePassword(generator);
+    console.log('SERVICE', [username, password]);
+
+    while (true) {
+      return userPool.signUp(username, password, `Service ${vendor}`, description, false)
+        .catch((err) => {
+          if (err.code !== 'NotAuthorizedException') {
+            throw err;
+          }
+        })
+        .then(() => userPool.confirmSignUp(username))
+        .then(() => userPool.addUserToVendor(username, vendor))
+        .then(() => ({ username, password }));
+    }
   }
 }
 
