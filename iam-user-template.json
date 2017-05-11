@@ -104,7 +104,8 @@
         "ec2:DescribeVpcs",
         "ec2:DescribeAccountAttributes",
         "iam:GetUser",
-        "iam:GetRole"
+        "iam:GetRole",
+        "iam:AttachRolePolicy"
       ],
       "Resource":[
         "*"

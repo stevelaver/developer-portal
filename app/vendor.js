@@ -160,40 +160,30 @@ class Vendor {
       });
   }
 
-  static generateUsername(generator, vendor) {
-    return `service.${vendor}.${generator.generate({
-      length: 12,
-      numbers: true,
-      symbols: false,
-      uppercase: false,
-    })}`;
-  }
-
   static generatePassword(generator) {
     return generator.generate({
-      length: 24,
+      length: 64,
       numbers: true,
       symbols: true,
       uppercase: true,
     });
   }
 
-  createCredentials(vendor, description, user, generator) {
+  createCredentials(vendor, name, description, user, generator) {
     if (user.vendors.indexOf(vendor) === -1) {
       throw this.err.forbidden('You do not have access to the vendor');
     }
     const userPool = this.services.getUserPool();
-    const username = Vendor.generateUsername(generator, vendor);
+    const username = `${vendor}+${name}`;
     const password = Vendor.generatePassword(generator);
-    console.log('SERVICE', [username, password]);
 
     while (true) { // eslint-disable-line no-constant-condition
       return userPool.signUp(username, password, `Service ${vendor}`, description, false)
-        .catch((err) => {
+         /* .catch((err) => {
           if (err.code !== 'NotAuthorizedException') {
             throw err;
           }
-        })
+        })*/
         .then(() => userPool.confirmSignUp(username))
         .then(() => userPool.addUserToVendor(username, vendor))
         .then(() => ({ username, password }));

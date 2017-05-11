@@ -146,7 +146,9 @@ function createCredentials(event, context, callback) {
     auth: true,
     path: ['vendor'],
     body: {
-      description: joi.string().required().error(Error('Parameter description is required string')),
+      name: joi.string().token().max(64).required()
+        .error(Error('Parameter name is required and can only contain a-z, A-Z, 0-9, and underscore _ and has max length 64 chars')),
+      description: joi.string().max(256).error(Error('Parameter description is required string with max length 256 chars')),
     },
   });
   const body = JSON.parse(event.body);
@@ -155,6 +157,7 @@ function createCredentials(event, context, callback) {
     identity.getUser(event.headers.Authorization)
       .then(user => vendorApp.createCredentials(
         event.pathParameters.vendor,
+        body.name,
         body.description,
         user,
         generator,

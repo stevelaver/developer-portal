@@ -159,7 +159,7 @@ describe('Vendor App', () => {
     let username;
     let username2;
     it('Create', () =>
-      vendorApp.createCredentials(vendor, 'description', { vendors: [vendor] }, generator)
+      vendorApp.createCredentials(vendor, 'user1', 'description', { vendors: [vendor] }, generator)
         .then((data) => {
           expect(data, 'to have key', 'username');
           expect(data, 'to have key', 'password');
@@ -170,7 +170,7 @@ describe('Vendor App', () => {
         .then((data) => {
           expect(data, 'to have key', 'token');
         })
-        .then(() => vendorApp.createCredentials(vendor, 'description', { vendors: [vendor] }, generator))
+        .then(() => vendorApp.createCredentials(vendor, 'user2', 'description', { vendors: [vendor] }, generator))
         .then((data) => {
           expect(data, 'to have key', 'username');
           expect(data, 'to have key', 'password');
