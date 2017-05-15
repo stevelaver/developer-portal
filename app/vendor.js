@@ -34,15 +34,13 @@ class Vendor {
   }
 
   approve(id, newId = null) {
-    return this.db.getVendor(id)
-      .then((data) => {
-        if (!newId) {
-          return this.db.updateVendor(id, { isApproved: true });
-        }
-        return this.db.checkVendorNotExists(newId)
-          .then(() => this.db.updateVendor(id, { id: newId, isApproved: true }))
-          .then(() => data.createdBy);
-      });
+    if (!newId) {
+      return this.db.updateVendor(id, { isApproved: true })
+        .then(() => this.db.getVendor(id));
+    }
+    return this.db.checkVendorNotExists(newId)
+      .then(() => this.db.updateVendor(id, { id: newId, isApproved: true }))
+      .then(() => this.db.getVendor(newId));
   }
 
   join(user, vendor) {
@@ -166,6 +164,7 @@ class Vendor {
       numbers: true,
       symbols: true,
       uppercase: true,
+      exclude: '!@#$%^&*()+_-=}{[]|:;"/?.><,`~',
     });
   }
 

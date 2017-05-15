@@ -248,20 +248,23 @@ function approveVendor(event, context, callback) {
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
       .then(() => vendorApp.approve(event.pathParameters.vendor, _.get(body, 'newId', null)))
-      .then((user) => {
-        if (_.has(body, 'newId') && user) {
-          const userPool = services.getUserPool();
-          return userPool.addUserToVendor(user, body.newId)
-            .then(() => userPool.removeUserFromVendor(user, event.pathParameters.vendor));
+      .then((vendor) => {
+        if (vendor.createdBy) {
+          const emailPromise = services.getEmail().send(
+            vendor.createdBy,
+            'Vendor approval in Keboola Developer Portal',
+            'Keboola Developer Portal',
+            `Your vendor has been approved with id <strong>${_.get(body, 'newId', null)}</strong>.`,
+          );
+          if (_.has(body, 'newId')) {
+            const userPool = services.getUserPool();
+            return userPool.addUserToVendor(vendor.createdBy, body.newId)
+              .then(() => userPool.removeUserFromVendor(vendor.createdBy, event.pathParameters.vendor))
+              .then(() => emailPromise);
+          }
+          return emailPromise;
         }
-        return user;
       })
-      .then(user => services.getEmail().send(
-        user,
-        'App approval in Keboola Developer Portal',
-        'Keboola Developer Portal',
-        `Your vendor has been approved with id <strong>${_.get(body, 'newId', null)}</strong>.`,
-      ))
       .then(() => null),
     db,
     event,
