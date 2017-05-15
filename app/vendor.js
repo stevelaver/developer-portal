@@ -178,11 +178,12 @@ class Vendor {
 
     while (true) { // eslint-disable-line no-constant-condition
       return userPool.signUp(username, password, `Service ${vendor}`, description, false)
-         /* .catch((err) => {
-          if (err.code !== 'NotAuthorizedException') {
-            throw err;
-          }
-        })*/
+       .catch((err) => {
+         if (err.code === 'UsernameExistsException') {
+           throw this.err.badRequest(`User with name ${username} already exists`);
+         }
+         throw err;
+       })
         .then(() => userPool.confirmSignUp(username))
         .then(() => userPool.addUserToVendor(username, vendor))
         .then(() => ({ username, password }));
