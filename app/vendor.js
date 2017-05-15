@@ -164,7 +164,7 @@ class Vendor {
       numbers: true,
       symbols: true,
       uppercase: true,
-      exclude: '!@#$%^&*()+_-=}{[]|:;"/?.><,`~',
+      exclude: '!@#$%^&*()\\=}{[]|:;"/?><,`~',
     });
   }
 
