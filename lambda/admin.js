@@ -254,7 +254,14 @@ function approveVendor(event, context, callback) {
           return userPool.addUserToVendor(user, body.newId)
             .then(() => userPool.removeUserFromVendor(user, event.pathParameters.vendor));
         }
+        return user;
       })
+      .then(user => services.getEmail().send(
+        user,
+        'App approval in Keboola Developer Portal',
+        'Keboola Developer Portal',
+        `Your vendor has been approved with id <strong>${_.get(body, 'newId', null)}</strong>.`,
+      ))
       .then(() => null),
     db,
     event,
