@@ -2,16 +2,15 @@ const _ = require('lodash');
 const Promise = require('bluebird');
 
 class App {
-  constructor(db, identity, env, err) {
+  constructor(Services, db, env) {
     this.db = db;
-    this.identity = identity;
+    this.access = Services.getAccess(db);
     this.env = env;
-    this.err = err;
+    this.err = Services.getError();
   }
 
   requestApproval(id, vendor, user) {
-    return this.identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(id, vendor))
+    return this.access.checkApp(user, vendor, id)
       .then(() => this.db.getApp(id))
       .then((app) => {
         if (app.isPublic) {
@@ -45,13 +44,12 @@ class App {
   }
 
   listAppsForVendor(vendor, user, offset = 0, limit = 1000) {
-    return this.identity.checkVendorPermissions(user, vendor)
+    return this.access.checkVendor(user, vendor)
       .then(() => this.db.listAppsForVendor(vendor, offset, limit));
   }
 
   getAppForVendor(id, vendor, user, version = null) {
-    return this.identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(id, vendor))
+    return this.access.checkApp(user, vendor, id)
       .then(() => this.getApp(id, version));
   }
 
@@ -67,7 +65,7 @@ class App {
     body.id = `${vendor}.${body.id}`;
     body.isPublic = 0;
 
-    return this.identity.checkVendorPermissions(user, vendor)
+    return this.access.checkVendor(user, vendor)
       .then(() => this.db.checkAppNotExists(body.id))
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.insertApp(body))
@@ -75,8 +73,7 @@ class App {
   }
 
   updateApp(id, vendor, body, user) {
-    return this.identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(id, vendor))
+    return this.access.checkApp(user, vendor, id)
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.updateApp(body, id, user.email))
       .then(() => null);
@@ -87,9 +84,14 @@ class App {
       .then(() => null);
   }
 
+  deleteApp(id, vendor, user, moment) {
+    return this.access.checkApp(user, vendor, id)
+      .then(() => this.db.updateApp({ deletedOn: moment().format('YYYY-MM-DD HH:mm:ss') }, id, user.email))
+      .then(() => null);
+  }
+
   listAppVersions(id, vendor, user, offset = 0, limit = 1000) {
-    return this.identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(id, vendor))
+    return this.access.checkApp(user, vendor, id)
       .then(() => this.db.listVersions(id, offset, limit));
   }
 
@@ -172,8 +174,7 @@ class App {
   }
 
   rollbackAppVersion(id, vendor, user, version) {
-    return this.identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(id, vendor))
+    return this.access.checkApp(user, vendor, id)
       .then(() => this.db.getApp(id, version))
       .then((appIn) => {
         const app = appIn;

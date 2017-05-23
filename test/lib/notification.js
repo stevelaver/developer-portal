@@ -1,6 +1,6 @@
 'use strict';
 
-import Notification from '../../lib/notification';
+import Notification from '../../lib/Notification';
 
 const Promise = require('bluebird');
 

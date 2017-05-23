@@ -18,7 +18,6 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const db = require('../../lib/db');
 const env = require('../../lib/env').load();
-const error = require('../../lib/error');
 
 let rds;
 const dbConnectParams = {
@@ -40,7 +39,7 @@ appEnv.RDS_USER = process.env.UNIT_RDS_USER;
 appEnv.RDS_PASSWORD = process.env.UNIT_RDS_PASSWORD;
 appEnv.RDS_DATABASE = process.env.UNIT_RDS_DATABASE;
 appEnv.RDS_SSL = false;
-const repositoryApp = new Repository(Services, db, appEnv, error);
+const repositoryApp = new Repository(Services, db, appEnv);
 const ecr = new aws.ECR({ region: appEnv.REGION });
 
 const vendorId = `v${Date.now()}`;

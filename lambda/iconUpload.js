@@ -11,7 +11,7 @@ const sharp = require('sharp');
 const db = require('../lib/db');
 const request = require('../lib/request');
 
-const app = new Icon(Services.getS3(), db, process.env, Services.getError());
+const app = new Icon(Services, db, process.env);
 
 
 module.exports.upload = (event, context, callback) => request.errorHandler(() => {

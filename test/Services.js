@@ -1,9 +1,9 @@
-import Identity from '../lib/identity';
+import Access from '../lib/Access';
+import Identity from '../lib/Identity';
 import UserPool from '../lib/UserPool';
 
 const aws = require('aws-sdk');
 const base64 = require('base-64');
-const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
 
 const error = require('../lib/error');
@@ -40,8 +40,8 @@ class Services {
     );
   }
 
-  static getIdentity() {
-    return new Identity(jwt, error);
+  static getAccess(db) {
+    return new Access(db, error);
   }
 
   getECR(credentials) {
@@ -50,6 +50,14 @@ class Services {
 
   getSTS() {
     return new aws.STS({ region: this.env.REGION });
+  }
+
+  static getS3() {
+    return new aws.S3();
+  }
+
+  static getError() {
+    return error;
   }
 
   static getBase64() {

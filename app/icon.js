@@ -1,16 +1,16 @@
 const Promise = require('bluebird');
 
 class Icon {
-  constructor(s3, db, env, err) {
-    this.s3 = s3;
+  constructor(Services, db, env) {
+    this.access = Services.getAccess(db);
+    this.s3 = Services.getS3();
     this.db = db;
     this.env = env;
-    this.err = err;
+    this.err = Services.getError();
   }
 
-  getUploadLink(identity, id, vendor, user) {
-    return identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(id, vendor))
+  getUploadLink(user, vendor, id) {
+    return this.access.checkApp(user, vendor, id)
       .then(() => {
         const s3 = this.s3;
         const getSignedUrl = Promise.promisify(s3.getSignedUrl.bind(s3));

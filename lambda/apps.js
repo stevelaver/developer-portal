@@ -1,6 +1,6 @@
 'use strict';
 
-import App from '../lib/app';
+import App from '../app/app';
 import Icon from '../app/icon';
 import Repository from '../app/repository';
 import Services from '../lib/Services';
@@ -9,13 +9,14 @@ require('longjohn');
 require('source-map-support').install();
 const _ = require('lodash');
 const joi = require('joi');
+const moment = require('moment');
 
 const db = require('../lib/db');
 const request = require('../lib/request');
 
 const services = new Services(process.env);
 const identity = Services.getIdentity();
-const app = new App(db, identity, process.env, Services.getError());
+const app = new App(Services, db, process.env);
 const validation = Services.getValidation();
 
 
@@ -122,6 +123,31 @@ function detail(event, context, callback) {
   );
 }
 
+function deleteApp(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      vendor: joi.string().required(),
+      app: joi.string().required(),
+    },
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getUser(event.headers.Authorization))
+      .then(user => app.deleteApp(
+        event.pathParameters.app,
+        event.pathParameters.vendor,
+        user,
+        moment,
+      )),
+    db,
+    event,
+    context,
+    callback
+  );
+}
+
 function approve(event, context, callback) {
   validation.validate(event, {
     auth: true,
@@ -211,15 +237,14 @@ function icon(event, context, callback) {
     },
   });
 
-  const iconApp = new Icon(Services.getS3(), db, process.env, Services.getError());
+  const iconApp = new Icon(Services, db, process.env);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
       .then(user => iconApp.getUploadLink(
-        identity,
-        event.pathParameters.app,
-        event.pathParameters.vendor,
         user,
+        event.pathParameters.vendor,
+        event.pathParameters.app,
       )),
     db,
     event,
@@ -237,7 +262,7 @@ function getRepository(event, context, callback) {
     },
   });
 
-  const repository = new Repository(Services, db, process.env, Services.getError());
+  const repository = new Repository(Services, db, process.env);
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
@@ -261,10 +286,14 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
       }
       return create(event, context, callback);
     case '/vendors/{vendor}/apps/{app}':
-      if (event.httpMethod === 'GET') {
-        return detail(event, context, callback);
+      switch (event.httpMethod) {
+        case 'GET':
+          return detail(event, context, callback);
+        case 'DELETE':
+          return deleteApp(event, context, callback);
+        default:
+          return update(event, context, callback);
       }
-      return update(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/approve':
       return approve(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/versions':

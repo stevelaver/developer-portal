@@ -1,6 +1,7 @@
 'use strict';
 
 import Icon from '../../app/icon';
+import Services from '../Services';
 
 require('longjohn');
 const _ = require('lodash');
@@ -19,7 +20,6 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const db = require('../../lib/db');
 const env = require('../../lib/env').load();
-const error = require('../../lib/error');
 
 let rds;
 const dbConnectParams = {
@@ -42,7 +42,7 @@ appEnv.RDS_USER = process.env.UNIT_RDS_USER;
 appEnv.RDS_PASSWORD = process.env.UNIT_RDS_PASSWORD;
 appEnv.RDS_DATABASE = process.env.UNIT_RDS_DATABASE;
 appEnv.RDS_SSL = false;
-const iconApp = new Icon(s3, db, appEnv, error);
+const iconApp = new Icon(Services, db, appEnv);
 
 const vendorId = `v${Date.now()}`;
 const appId = `app${Date.now()}`;

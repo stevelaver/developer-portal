@@ -1,6 +1,6 @@
 'use strict';
 
-import Log from '../lib/log';
+import Log from '../lib/Log';
 
 require('longjohn');
 require('source-map-support').install();

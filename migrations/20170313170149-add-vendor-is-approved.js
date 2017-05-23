@@ -1,3 +1,5 @@
 'use strict';
+
 const migrate = require('../scripts/migrate-sql');
-exports.up = (db) => migrate.migrate(db, '20170313170149-add-vendor-is-approved.sql');
+
+exports.up = db => migrate.migrate(db, '20170313170149-add-vendor-is-approved.sql');

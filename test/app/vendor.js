@@ -1,6 +1,6 @@
 'use strict';
 
-import Identity from '../../lib/identity';
+import Identity from '../../lib/Identity';
 import Services from '../Services';
 import Vendor from '../../app/vendor';
 

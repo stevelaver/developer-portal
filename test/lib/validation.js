@@ -1,6 +1,6 @@
 'use strict';
 
-import Validation from '../../lib/validation';
+import Validation from '../../lib/Validation';
 
 const expect = require('unexpected');
 const joi = require('joi');

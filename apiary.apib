@@ -568,6 +568,21 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
 + Response 204
 
 
+### Delete app [DELETE /vendors/{vendor}/apps/{app}]
+
++ Parameters
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
 ### Generate link for icon upload [POST /vendors/{vendor}/apps/{app}/icon]
 
 API call generates pre-signed url to S3. You can upload e.g. using such curl command:

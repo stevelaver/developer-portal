@@ -1,12 +1,12 @@
 
 class Repository {
-  constructor(Services, db, env, err) {
+  constructor(Services, db, env) {
     this.services = new Services(env);
     this.db = db;
     this.ecr = this.services.getECR();
-    this.Identity = Services.getIdentity();
+    this.access = Services.getAccess(db);
     this.env = env;
-    this.err = err;
+    this.err = Services.getError();
     this.sts = this.services.getSTS();
     this.base64 = Services.getBase64();
   }
@@ -57,8 +57,7 @@ class Repository {
 
   getCredentials(appId, vendor, user) {
     const repositoryName = this.getRepositoryName(appId);
-    return this.Identity.checkVendorPermissions(user, vendor)
-      .then(() => this.db.checkAppAccess(appId, vendor))
+    return this.access.checkApp(user, vendor, appId)
       .then(() => this.ecr.describeRepositories({ repositoryNames: [repositoryName] }).promise())
       .catch((err) => {
         if (err.name !== 'RepositoryNotFoundException') {

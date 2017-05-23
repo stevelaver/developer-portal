@@ -191,6 +191,11 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
+          method: delete
+          path: "vendors/{vendor}/apps/{app}"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
           method: patch
           path: "vendors/{vendor}/apps/{app}"
       -
