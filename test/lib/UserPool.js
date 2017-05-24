@@ -29,6 +29,10 @@ const createUser = () => {
         Name: 'name',
         Value: 'Test User',
       },
+      {
+        Name: 'profile',
+        Value: 'test1,test2',
+      },
     ],
   }).promise();
 };
@@ -54,7 +58,7 @@ describe('UserPool', () => {
       })
       .then(() => deleteUser()));
 
-  it('listUsers', () =>
+  it('listUsers, listUsersForVendor', () =>
     createUser()
       .then(() => userPool.listUsers())
       .then((data) => {
@@ -72,6 +76,14 @@ describe('UserPool', () => {
       .then(() => userPool.listUsers('enabled'))
       .then((data) => {
         expect(data, 'to have an item satisfying', { email });
+      })
+      .then(() => userPool.listUsersForVendor('test1'))
+      .then((data) => {
+        expect(data, 'to have an item satisfying', { email });
+      })
+      .then(() => userPool.listUsersForVendor('testX'))
+      .then((data) => {
+        expect(data, 'to have length', 0);
       })
       .then(() => deleteUser()));
 

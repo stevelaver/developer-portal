@@ -254,6 +254,11 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
+          method: get
+          path: "vendors/{vendor}/users"
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
           method: delete
           path: "vendors/{vendor}/users/{email}"
       -

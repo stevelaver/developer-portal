@@ -62,7 +62,7 @@ describe('App', () => {
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
         [vendorId, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
       ))
-      .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=1', ['test', vendorId, 'test']));
+      .then(() => rds.queryAsync('INSERT IGNORE INTO `apps` SET id=?, vendor=?, name=?, isPublic=1', ['test', vendorId, 'test']));
   });
 
   it('Create, get and Delete', () =>

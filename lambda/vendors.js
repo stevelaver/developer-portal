@@ -168,12 +168,34 @@ function createCredentials(event, context, callback) {
   );
 }
 
+function listUsers(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    pagination: true,
+    path: ['vendor'],
+  });
+
+  return request.responsePromise(
+    identity.getUser(event.headers.Authorization)
+      .then(user => vendorApp.listUsers(
+        event.pathParameters.vendor,
+        user
+      )),
+    event,
+    context,
+    callback
+  );
+}
+
 
 module.exports.vendors = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
     case '/vendors':
       return createVendor(event, context, callback);
     case '/vendors/{vendor}/users':
+      if (event.httpMethod === 'GET') {
+        return listUsers(event, context, callback);
+      }
       return requestJoinVendor(event, context, callback);
     case '/vendors/{vendor}/invitations/{email}':
       return sendInvitation(event, context, callback);
