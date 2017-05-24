@@ -10,10 +10,9 @@ before_script:
 
 script:
   - docker-compose run lint
-  - docker-compose run -e TEST_DIR=test/lib test-unit
-  - docker-compose run -e TEST_DIR=test/app test-unit
+  - docker-compose run ci-test-unit
   - docker-compose run deploy-testing
-  - docker-compose run -e TEST_DIR=test/functional test-functional
+  - docker-compose run ci-test-functional
 
 
 deploy:
