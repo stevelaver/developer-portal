@@ -38,7 +38,7 @@ describe('Access', () => {
       .then(() => db.init(rds));
   });
 
-  it('checkVendor', () => {
+  it('checkVendorAccess', () => {
     const access = new Access(db, error);
     return expect(access.checkVendor({ vendors: ['v1', 'vendor'] }, 'vendor'), 'to be fulfilled')
       .then(() => expect(access.checkVendor({ vendors: ['v1'], isAdmin: true }, 'vendor'), 'to be fulfilled'))

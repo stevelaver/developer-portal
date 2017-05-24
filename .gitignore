@@ -50,3 +50,4 @@ _meta
 deploy.sh
 deploy-*.sh
 test.sh
+bastion_ssh.key

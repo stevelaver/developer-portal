@@ -44,7 +44,7 @@ class App {
   }
 
   listAppsForVendor(vendor, user, offset = 0, limit = 1000) {
-    return this.access.checkVendor(user, vendor)
+    return this.access.checkVendorAccess(user, vendor)
       .then(() => this.db.listAppsForVendor(vendor, offset, limit));
   }
 
@@ -65,7 +65,7 @@ class App {
     body.id = `${vendor}.${body.id}`;
     body.isPublic = 0;
 
-    return this.access.checkVendor(user, vendor)
+    return this.access.checkVendorAccess(user, vendor)
       .then(() => this.db.checkAppNotExists(body.id))
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.insertApp(body))

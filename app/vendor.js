@@ -56,7 +56,7 @@ class Vendor {
   }
 
   invite(vendor, email, user) {
-    Vendor.checkVendor(user, vendor);
+    this.checkVendorAccess(user, vendor);
     const emailLib = this.services.getEmail();
     const userPool = this.services.getUserPool();
     return db.connect(this.env)
@@ -119,7 +119,7 @@ class Vendor {
   }
 
   removeUser(vendor, email, user) {
-    Vendor.checkVendor(user, vendor);
+    this.checkVendorAccess(user, vendor);
     const userPool = this.services.getUserPool();
     return db.connect(this.env)
       .then(() => db.checkVendorExists(vendor))
@@ -165,7 +165,7 @@ class Vendor {
   }
 
   createCredentials(vendor, name, description, user, generator) {
-    Vendor.checkVendor(user, vendor);
+    this.checkVendorAccess(user, vendor);
     const userPool = this.services.getUserPool();
     const username = `${vendor}+${name}`;
     const password = Vendor.generatePassword(generator);
@@ -185,12 +185,12 @@ class Vendor {
   }
 
   listUsers(vendor, user) {
-    Vendor.checkVendor(user, vendor);
+    this.checkVendorAccess(user, vendor);
     const userPool = this.services.getUserPool();
-    return userPool.listUsers();
+    return userPool.listUsersForVendor(vendor);
   }
 
-  static checkVendor(user, vendor) {
+  checkVendorAccess(user, vendor) {
     if (user.vendors.indexOf(vendor) === -1) {
       throw this.err.forbidden('You do not have access to the vendor');
     }

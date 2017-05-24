@@ -3,6 +3,7 @@
 import Services from '../Services';
 
 require('longjohn');
+const _ = require('lodash');
 const axios = require('axios');
 const expect = require('unexpected');
 const mysql = require('mysql');
@@ -50,7 +51,15 @@ describe('Vendors', () => {
       .then(() => rds.queryAsync(
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
         [vendor1, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
-      )));
+      ))
+      .then(() => userPool.listUsersForVendor(vendor))
+      .then((data) => {
+        _.each(data, (user) => {
+          if (user.email !== process.env.FUNC_USER_EMAIL) {
+            userPool.deleteUser(user.email);
+          }
+        });
+      }));
 
   const vendorName = `vendor.${Date.now()}`;
   it('Create vendor', () =>
@@ -156,9 +165,30 @@ describe('Vendors', () => {
         expect(user.vendors, 'to contain', vendor);
       }));
 
+  it('Create service user, list and delete', () =>
+    expect(axios({
+      method: 'post',
+      url: `${env.API_ENDPOINT}/vendors/${vendor}/credentials`,
+      headers: { Authorization: token },
+      responseType: 'json',
+      data: {
+        name: 'test',
+        description: 'Test desc',
+      },
+    }), 'to be fulfilled')
+      .then(() => axios({
+        method: 'get',
+        url: `${env.API_ENDPOINT}/vendors/${vendor}/users`,
+        headers: { Authorization: token },
+        responseType: 'json',
+      }))
+      .then((res) => {
+        expect(res.data, 'to have an item satisfying',
+          { name: 'Service test', email: `${vendor}+test`, description: 'Test desc' });
+      })
+  );
+
   after(() =>
     rds.queryAsync('DELETE FROM `invitations` WHERE vendor=? AND email=?', [vendor, userEmail])
-      .then(() => userPool.deleteUser(userEmail))
-      .catch(() => {})
-      .then(() => userPool.updateUserAttribute(process.env.FUNC_USER_EMAIL, 'profile', vendor)));
+  );
 });

@@ -360,6 +360,32 @@ Generates a service account which can be used e.g. for continuous integration an
             }
 
 
+### List users [GET /vendors/{vendor}/users]
+
+Lists all users of the vendor including service accounts
+
++ Parameters
+    + vendor
+
++ Request
+
+    + Headers
+
+            Authorization: {token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "email": "test@keboola.com",
+                    "name": "Test User",
+                    "description": ""
+                }
+            ]
+
+
 ## Apps [/vendors/{vendor}/apps]
 
 Manual approval from Keboola is required before an app is allowed to be published.
@@ -408,7 +434,7 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
             + server (optional) - Custom server for private DockerHub
             + region (optional) - AWS region for ECR repository
     + shortDescription (optional) - One sentence describing your app or the app you are integrating
-    + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
+    + longDescription (optional) - Markdown describing what the component does (shown on the application intro page)
     + licenseUrl (optional) - Can be included in your public source repository
     + documentationUrl (optional) - Instructions to help end-user configure the application (linked from application configuration page) and payment information (if any)
     + encryption (optional, boolean) - All parameter attributes with keys prefixed by `#` will be encrypted. If you pass sensitive data in configuration (credentials, tokens), it is encouraged to turn the encryption on
@@ -1079,6 +1105,7 @@ Management of users and apps designated for Developer Portal staff only
                     "email": "test@keboola.com",
                     "name": "Test User",
                     "vendors": ["keboola"],
+                    "description": "",
                     "createdOn": "2016-08-10T19:02:46.361Z",
                     "isEnabled": true,
                     "status": "CONFIRMED",
