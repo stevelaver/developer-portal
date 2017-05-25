@@ -408,8 +408,8 @@ ids where it will be available.
 
 ### Create app [POST /vendors/{vendor}/apps]
 
-After the app is created, it's id is prefixed by vendor. E.g. if you identify
-the app as `ex-adwords`, it's identifier for subsequent API calls will be
+After the app is created, its id is prefixed by vendor. E.g. if you identify
+the app as `ex-adwords`, its identifier for subsequent API calls will be
 `keboola.ex-adwords`.
 
 + Parameters
@@ -453,10 +453,20 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
         + Default: `in`
     + uiOptions (optional, array) - Which UI helpers to use
         + Members
-            + `tableInput`
-            + `tableOutput`
-            + `fileInput`
-            + `fileOutput`
+            + `genericUI` - show editation field for JSON of root node of the configuration
+            + `genericDockerUI` - show editation field for JSON of `parameters` node of the configuration or show edit form if there is a configuration schema
+            + `genericDockerUI-runtime` - show editation field for JSON of `runtime` node of the configuration
+            + `genericDockerUI-tableInput` - UI editor for tables input mapping, it is saved to `storage.input.tables` node
+            + `genericDockerUI-fileInput` - UI editor for files input mapping, it is saved to `storage.input.files` node
+            + `genericDockerUI-tableOutput` - UI editor for tables output mapping, it is saved to `storage.output.tables` node
+            + `genericDockerUI-fileOutput` - UI editor for files output mapping, it is saved to `storage.output.files` node
+            + `genericDockerUI-authorization` - show button for oauth flow (the app needs to have oauth-v2 integrated and have `genericDockerUI` flag)
+            + `genericShinyUI` - initial UI for shiny applications configuration
+            + `genericTemplatesUI` - show editation field for JSON of `params` without jobs according to appropriate schema from https://github.com/keboola/kbc-ui-templates
+            + `appInfo.dataIn` - show visual notification that the app imports data from outside network
+            + `appInfo.dataOut` - show visual notification that the app exports data to outside network
+            + `deprecated` - add deprecation message to the app page in KBC and disable adding new configurations
+            + `excludeRun` - hide Run button for its configurations in KBC
     + imageParameters (optional, object) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
     + testConfiguration (optional, object) - JSON configuration to test the application
     + configurationSchema (optional, object) - JSON schema describing the configuration
@@ -545,10 +555,20 @@ the app as `ex-adwords`, it's identifier for subsequent API calls will be
         + Default: `in`
     + uiOptions (optional, array) - Which UI helpers to use
         + Members
-            + `tableInput`
-            + `tableOutput`
-            + `fileInput`
-            + `fileOutput`
+            + `genericUI` - show editation field for JSON of root node of the configuration
+            + `genericDockerUI` - show editation field for JSON of `parameters` node of the configuration or show edit form if there is a configuration schema
+            + `genericDockerUI-runtime` - show editation field for JSON of `runtime` node of the configuration
+            + `genericDockerUI-tableInput` - UI editor for tables input mapping, it is saved to `storage.input.tables` node
+            + `genericDockerUI-fileInput` - UI editor for files input mapping, it is saved to `storage.input.files` node
+            + `genericDockerUI-tableOutput` - UI editor for tables output mapping, it is saved to `storage.output.tables` node
+            + `genericDockerUI-fileOutput` - UI editor for files output mapping, it is saved to `storage.output.files` node
+            + `genericDockerUI-authorization` - show button for oauth flow (the app needs to have oauth-v2 integrated and have `genericDockerUI` flag)
+            + `genericShinyUI` - initial UI for shiny applications configuration
+            + `genericTemplatesUI` - show editation field for JSON of `params` without jobs according to appropriate schema from https://github.com/keboola/kbc-ui-templates
+            + `appInfo.dataIn` - show visual notification that the app imports data from outside network
+            + `appInfo.dataOut` - show visual notification that the app exports data to outside network
+            + `deprecated` - add deprecation message to the app page in KBC and disable adding new configurations
+            + `excludeRun` - hide Run button for its configurations in KBC
     + imageParameters (optional, object) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
     + testConfiguration (optional, object) - JSON configuration to test the application
     + configurationSchema (optional, object) - JSON schema describing the configuration
@@ -964,7 +984,7 @@ Shows all apps having flags `isPublic` set to `true`.
 
 ### Get app detail [GET /apps/{vendor}/{app}]
 
-Shows the app if it's flag `isPublic` is set to `true`
+Shows the app if its flag `isPublic` is set to `true`
 
 + Parameters
     + vendor
