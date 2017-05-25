@@ -10,11 +10,11 @@ RUN curl --silent --location https://rpm.nodesource.com/setup_6.x | bash -
 RUN curl --silent https://dl.yarnpkg.com/rpm/yarn.repo > /etc/yum.repos.d/yarn.repo
 RUN yum -y install nodejs npm yarn python27
 
-# serverless
-RUN npm install -g serverless@1.12
-
 # sharp
 RUN npm install -g node-gyp
+
+# serverless
+RUN npm install -g serverless@1.14
 
 # working directory
 ADD ./ /code
