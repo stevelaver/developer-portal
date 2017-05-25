@@ -130,7 +130,10 @@ services:
       context: .
       dockerfile: Dockerfile.tests
     volumes:
-      - .:/code
+      - .:/code/app
+      - .:/code/lambda
+      - .:/code/lib
+      - .:/code/test
     working_dir: /code
     links:
       - mysql
@@ -196,7 +199,10 @@ services:
       context: .
       dockerfile: Dockerfile.tests
     volumes:
-      - .:/code
+      - .:/code/app
+      - .:/code/lambda
+      - .:/code/lib
+      - .:/code/test
     working_dir: /code
     environment:
       - "AWS_ACCESS_KEY_ID=${TEST_AWS_ACCESS_KEY_ID}"
