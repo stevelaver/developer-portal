@@ -228,7 +228,6 @@ const getData = function (callbackMain) {
       result.push({
         id: app.id,
         vendor: app.vendor,
-        isApproved: 1,
         isPublic: !_.includes(app.flags, 'excludeFromNewList'),
         createdBy: 'support@keboola.com',
         version: 1,
@@ -292,7 +291,6 @@ const saveData = function (data, callbackMain) {
                 throw err;
               }
               delete dbAppVersion.vendor;
-              delete dbAppVersion.isApproved;
               rds.query('INSERT IGNORE INTO appVersions SET ?', dbAppVersion, (err2) => {
                 if (err2) {
                   console.log(resApp);
