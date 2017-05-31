@@ -629,6 +629,35 @@ the app as `ex-adwords`, its identifier for subsequent API calls will be
 + Response 204
 
 
+### Deprecate app [POST /vendors/{vendor}/apps/{app}/deprecate]
+
+This call sets `isDeprecated` flag to `true` and `isPublic` to `false`. The app is hidden from the list of new
+extractors / writers in the ui and deprecation warning is shown within list of existing app configurations. In addition
+you can set date of expiration when you want the app to be switched off and replacement to this app if any.
+
++ Parameters
+    + vendor
+    + app
+
++ Attributes
+    + expiredOn (optional) - date when the app is expected to be shut down, in format YYYY-mm-dd
+    + replacementApp (optional) - id of app which is expected to replace this one
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "expiredOn": "2017-12-12"
+            }
+
++ Response 204
+
+
 ### Generate link for icon upload [POST /vendors/{vendor}/apps/{app}/icon]
 
 API call generates pre-signed url to S3. You can upload e.g. using such curl command:

@@ -227,6 +227,26 @@ class App {
     return this.db.listPublishedApps(offset, limit)
     .then(res => res.map(r => App.addIcons(r, cfUri)));
   }
+
+  deprecate(appId, vendor, user, expire = null, replace = null) {
+    return this.access.checkApp(user, vendor, appId)
+      .then(() => this.db.getApp(appId))
+      .then((app) => {
+        if (app.isDeprecated) {
+          throw this.err.badRequest('The app is already set as deprecated');
+        }
+        if (replace) {
+          return this.db.getApp(replace);
+        }
+      })
+      .then(() => this.db.updateApp({
+        isPublic: 0,
+        isDeprecated: 1,
+        expiredOn: expire,
+        replacementApp: replace,
+      }, appId, user.email))
+      .then(() => null);
+  }
 }
 
 export default App;

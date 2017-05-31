@@ -278,6 +278,38 @@ function getRepository(event, context, callback) {
   );
 }
 
+function deprecateApp(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: {
+      vendor: joi.string().required(),
+      app: joi.string().required(),
+    },
+    body: {
+      expiredOn: joi.date().iso().error(Error('Parameter expiredOn must be a valid date in format YYYY-mm-dd')),
+      replacementApp: validation.validateStringMaxLength('replacementApp', 128),
+    },
+  });
+
+  const body = JSON.parse(event.body);
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getUser(event.headers.Authorization))
+      .then(user => app.deprecate(
+        event.pathParameters.app,
+        event.pathParameters.vendor,
+        user,
+        _.get(body, 'expiredOn', null),
+        _.get(body, 'replacementApp', null)
+      )),
+    db,
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 module.exports.apps = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
     case '/vendors/{vendor}/apps':
@@ -306,6 +338,8 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
       return icon(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/repository':
       return getRepository(event, context, callback);
+    case '/vendors/{vendor}/apps/{app}/deprecate':
+      return deprecateApp(event, context, callback);
     default:
       throw Services.getError().notFound();
   }

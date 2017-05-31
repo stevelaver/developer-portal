@@ -42,6 +42,8 @@ const app = new App(Services, db, appEnv);
 const vendorId = `v${Date.now()}`;
 const appName = `app${Date.now()}`;
 const appId = `${vendorId}.${appName}`;
+const appName2 = `app2${Date.now()}`;
+const appId2 = `${vendorId}.${appName2}`;
 const user = { email: 'test', vendors: [vendorId] };
 
 describe('App', () => {
@@ -96,4 +98,17 @@ describe('App', () => {
       .then(data => expect(data, 'to have items satisfying', (item) => {
         expect(item.id, 'not to be', appId);
       })));
+
+  it('Deprecate', () =>
+    app.createApp({ id: appName2, name: 'test' }, vendorId, user)
+      .then(() => app.updateApp(appId2, vendorId, { isPublic: true }, user))
+      .then(() => expect(app.deprecate(appId2, vendorId, user, '2017-01-01', 'test'), 'to be fulfilled'))
+      .then(() => app.getApp(appId2))
+      .then((data) => {
+        expect(data.isDeprecated, 'to be', true);
+        expect(data.isPublic, 'to be', false);
+        expect(data.replacementApp, 'to be', 'test');
+        expect(data.expiredOn.toISOString(), 'to be', (new Date('2017-01-01')).toISOString());
+      })
+      .then(() => app.deleteApp(appId2, vendorId, user, moment)));
 });
