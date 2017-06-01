@@ -30,15 +30,15 @@ function landing(event, context, callback) {
 function detail(event, context, callback) {
   validation.validate(event, {
     path: {
-      vendor: joi.string().required(),
-      app: joi.string().required(),
+      vendorOrApp: joi.string().required(),
+      app: joi.string().optional(),
     },
   });
 
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => app.getAppWithVendor(
-        event.pathParameters.app,
+        _.get(event.pathParameters, 'app', event.pathParameters.vendorOrApp),
         null,
         true
       )),
@@ -127,7 +127,8 @@ module.exports.public = (event, context, callback) => request.errorHandler(() =>
       return landing(event, context, callback);
     case '/apps':
       return list(event, context, callback);
-    case '/apps/{vendor}/{app}':
+    case '/apps/{vendorOrApp}':
+    case '/apps/{vendorOrApp}/{app}':
       return detail(event, context, callback);
     case '/stacks':
       return stacks(event, context, callback);

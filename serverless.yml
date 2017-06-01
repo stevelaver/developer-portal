@@ -73,7 +73,11 @@ functions:
       -
         http:
           method: get
-          path: "apps/{vendor}/{app}"
+          path: "apps/{vendorOrApp}"
+      -
+        http:
+          method: get
+          path: "apps/{vendorOrApp}/{app}"
       -
         http:
           method: get
