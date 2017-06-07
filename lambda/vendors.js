@@ -73,9 +73,9 @@ function requestJoinVendor(event, context, callback) {
           return vendorApp.join(user, event.pathParameters.vendor);
         }
         return services.getNotification().approveJoinVendor({
+          name: user.name,
           email: user.email,
-          vendor: event.pathParameters.vendor,
-        });
+        }, event.pathParameters.vendor);
       }),
     event,
     context,
