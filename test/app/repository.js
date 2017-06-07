@@ -97,12 +97,6 @@ describe('Repository App', () => {
           expect(data, 'to have key', 'repositories');
           expect(data.repositories, 'to have length', 1);
         })
-        .then(() => rds.queryAsync('SELECT * FROM `apps` WHERE id=?', [appId]))
-        .then((data) => {
-          expect(data, 'to have length', 1);
-          expect(data[0].repoType, 'to be', 'ecr');
-          expect(data[0].repoUri, 'to be', `${repositoryApp.getRegistryName()}/${repositoryName}`);
-        })
         .then(() => ecr.deleteRepository({ repositoryName: repositoryName2, force: true }).promise()));
 
   after(() =>

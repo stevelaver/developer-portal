@@ -65,17 +65,6 @@ class Repository {
         }
         return this.ecr.createRepository({ repositoryName }).promise();
       })
-      .then(() => this.db.getApp(appId))
-      .then((data) => {
-        const repoUri = `${this.getRegistryName()}/${this.getRepositoryName(appId)}`;
-        if (data.repository.type !== 'ecr' || data.repository.uri !== repoUri) {
-          return this.db.updateApp({
-            repoType: 'ecr',
-            repoUri,
-            repoOptions: null,
-          }, appId, user.email);
-        }
-      })
       .then(() => this.sts.assumeRole({
         RoleSessionName: this.getRoleName(),
         RoleArn: `arn:aws:iam::${this.env.ACCOUNT_ID}:role/${this.getRoleName()}`,
