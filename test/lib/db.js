@@ -458,6 +458,9 @@ describe('db', () => {
           expect(data, 'to have key', 'vendor');
           expect(data.vendor, 'to have key', 'name');
           expect(data.vendor.name, 'to be', 'test');
+          expect(data, 'to have key', 'isDeprecated');
+          expect(data, 'to have key', 'expiredOn');
+          expect(data, 'to have key', 'replacementApp');
         })
     );
 
@@ -470,6 +473,9 @@ describe('db', () => {
           expect(data, 'to have key', 'vendor');
           expect(data.vendor, 'to have key', 'name');
           expect(data.vendor.name, 'to be', 'test');
+          expect(data, 'to have key', 'isDeprecated');
+          expect(data, 'to have key', 'expiredOn');
+          expect(data, 'to have key', 'replacementApp');
         })
     );
 
