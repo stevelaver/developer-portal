@@ -58,13 +58,19 @@ functions:
 
   logger:
       handler: logger.handler
+      tags:
+        KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
 
   dbMigration:
       timeout: 300
       handler: dbMigration.handler
+      tags:
+        KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
 
   public:
     handler: public.public
+    tags:
+      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
     events:
       -
         http:
@@ -117,6 +123,8 @@ functions:
 
   admin:
     handler: admin.admin
+    tags:
+      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
     events:
       -
         http:
@@ -176,6 +184,8 @@ functions:
 
   apps:
     handler: apps.apps
+    tags:
+      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
     events:
       -
         http:
@@ -240,6 +250,8 @@ functions:
 
   vendors:
     handler: vendors.vendors
+    tags:
+      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
     events:
       -
         http:
@@ -278,6 +290,8 @@ functions:
 
   iconUpload:
     handler: iconUpload.upload
+    tags:
+      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
     events:
       -
         s3:
@@ -287,9 +301,13 @@ functions:
 
   authEmailTrigger:
     handler: authEmail.emails
+    tags:
+      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
 
   auth:
     handler: auth.auth
+    tags:
+      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
     events:
       -
         http:
@@ -451,6 +469,10 @@ resources:
         DBSubnetGroupName: "${file(./env.yml):RDS_SUBNET_GROUP}"
         VPCSecurityGroups:
           - ${file(./env.yml):RDS_SECURITY_GROUP}
+        Tags:
+          -
+            Key: KeboolaStack
+            Value: ${file(./env.yml):KEBOOLA_STACK}
     CloudFront:
       Type: AWS::CloudFront::Distribution
       Properties:

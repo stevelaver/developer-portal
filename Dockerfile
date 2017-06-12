@@ -14,7 +14,7 @@ RUN yum -y install nodejs npm yarn python27
 RUN npm install -g node-gyp
 
 # serverless
-RUN npm install -g serverless@1.14
+RUN npm install -g serverless@1.15
 
 # working directory
 ADD ./ /code
