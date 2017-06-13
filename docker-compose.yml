@@ -130,10 +130,10 @@ services:
       context: .
       dockerfile: Dockerfile.tests
     volumes:
-      - .:/code/app
-      - .:/code/lambda
-      - .:/code/lib
-      - .:/code/test
+      - ./app:/code/app
+      - ./lambda:/code/lambda
+      - ./lib:/code/lib
+      - ./test:/code/test
     working_dir: /code
     links:
       - mysql
@@ -191,7 +191,6 @@ services:
              sh -c '
              sleep 10
              && node ./scripts/create-env.js ./env.yml TEST
-             && ls -la $$TEST_PATH
              && mocha --timeout 0 --compilers js:babel-core/register $$TEST_PATH
              '
 
@@ -200,10 +199,10 @@ services:
       context: .
       dockerfile: Dockerfile.tests
     volumes:
-      - .:/code/app
-      - .:/code/lambda
-      - .:/code/lib
-      - .:/code/test
+      - ./app:/code/app
+      - ./lambda:/code/lambda
+      - ./lib:/code/lib
+      - ./test:/code/test
     working_dir: /code
     environment:
       - "AWS_ACCESS_KEY_ID=${TEST_AWS_ACCESS_KEY_ID}"

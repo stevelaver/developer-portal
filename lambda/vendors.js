@@ -60,6 +60,36 @@ function createVendor(event, context, callback) {
   );
 }
 
+function updateVendor(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['vendor'],
+    body: {
+      name: joi.string().max(64)
+        .error(Error('Parameter vendor.name is required string with max length 64')),
+      address: joi.string()
+        .error(Error('Parameter vendor.address is required string')),
+      email: joi.string().email()
+        .error(Error('Parameter vendor.email is required email address')),
+      id: joi.forbidden(),
+    },
+  });
+
+  const body = JSON.parse(event.body);
+  return request.responsePromise(
+    identity.getUser(event.headers.Authorization)
+      .then(user => vendorApp.updateVendor(
+        event.pathParameters.vendor,
+        body,
+        user,
+      )),
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 function requestJoinVendor(event, context, callback) {
   validation.validate(event, {
     auth: true,
@@ -192,6 +222,8 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
   switch (event.resource) {
     case '/vendors':
       return createVendor(event, context, callback);
+    case '/vendors/{vendor}':
+      return updateVendor(event, context, callback);
     case '/vendors/{vendor}/users':
       if (event.httpMethod === 'GET') {
         return listUsers(event, context, callback);

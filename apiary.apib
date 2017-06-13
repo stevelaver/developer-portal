@@ -265,6 +265,33 @@ You can create a vendor, however you have to wait for our approval. You will rec
 + Response 201 (application/json)
 
 
+### Update vendor [POST /vendors/{vendor}]
+
++ Parameters
+    + vendor
+
++ Attributes
+    + name
+    + address
+    + email
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "name": "Company ltd.",
+                "address": "410 Terry Ave. North, Seattle, WA",
+                "email": "info@company.com"
+            }
+
++ Response 204 (application/json)
+
+
 ### Request to join a vendor [POST /vendors/{vendor}/users]
 
 Request to join a vendor. You will recieve an email confirmation once it is approved.

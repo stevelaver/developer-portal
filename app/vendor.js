@@ -24,7 +24,8 @@ class Vendor {
   create(body, isApproved = true) {
     const params = _.clone(body);
     params.isApproved = isApproved;
-    return this.db.createVendor(params)
+    return this.db.connect(this.env)
+      .then(() => this.db.createVendor(params))
       .catch((err) => {
         if (_.startsWith('ER_DUP_ENTRY', err.message)) {
           throw this.err.badRequest('The vendor already exists');
@@ -33,12 +34,20 @@ class Vendor {
       .then(() => null);
   }
 
+  updateVendor(vendor, data, user) {
+    this.checkVendorAccess(user, vendor);
+    return this.db.connect(this.env)
+      .then(() => this.db.updateVendor(vendor, data));
+  }
+
   approve(id, newId = null) {
     if (!newId) {
-      return this.db.updateVendor(id, { isApproved: true })
+      return this.db.connect(this.env)
+        .then(() => this.db.updateVendor(id, { isApproved: true }))
         .then(() => this.db.getVendor(id));
     }
-    return this.db.checkVendorNotExists(newId)
+    return this.db.connect(this.env)
+      .then(() => this.db.checkVendorNotExists(newId))
       .then(() => this.db.updateVendor(id, { id: newId, isApproved: true }))
       .then(() => this.db.getVendor(newId));
   }
@@ -191,7 +200,7 @@ class Vendor {
   }
 
   checkVendorAccess(user, vendor) {
-    if (user.vendors.indexOf(vendor) === -1) {
+    if (!user.isAdmin && user.vendors.indexOf(vendor) === -1) {
       throw this.err.forbidden('You do not have access to the vendor');
     }
   }
