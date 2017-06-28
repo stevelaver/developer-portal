@@ -71,7 +71,7 @@ class Vendor {
       .then((data) => {
         if (data.vendors.indexOf(vendor) !== -1) {
           db.end();
-          throw this.err.forbidden('The user is already member of the vendor');
+          throw this.err.unprocessable('The user is already member of the vendor');
         }
       })
       .catch((err) => {
