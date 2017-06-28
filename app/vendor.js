@@ -24,8 +24,7 @@ class Vendor {
   create(body, isApproved = true) {
     const params = _.clone(body);
     params.isApproved = isApproved;
-    return this.db.connect(this.env)
-      .then(() => this.db.createVendor(params))
+    return this.db.createVendor(params)
       .catch((err) => {
         if (_.startsWith('ER_DUP_ENTRY', err.message)) {
           throw this.err.badRequest('The vendor already exists');
@@ -42,12 +41,10 @@ class Vendor {
 
   approve(id, newId = null) {
     if (!newId) {
-      return this.db.connect(this.env)
-        .then(() => this.db.updateVendor(id, { isApproved: true }))
+      return this.db.updateVendor(id, { isApproved: true })
         .then(() => this.db.getVendor(id));
     }
-    return this.db.connect(this.env)
-      .then(() => this.db.checkVendorNotExists(newId))
+    return this.db.checkVendorNotExists(newId)
       .then(() => this.db.updateVendor(id, { id: newId, isApproved: true }))
       .then(() => this.db.getVendor(newId));
   }
