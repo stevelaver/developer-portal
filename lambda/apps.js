@@ -81,6 +81,7 @@ function list(event, context, callback) {
     },
   });
 
+  const cfUri = process.env.CLOUDFRONT_URI;
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
@@ -89,7 +90,8 @@ function list(event, context, callback) {
         user,
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null),
-      )),
+      ))
+      .then(res => res.map(r => App.addIcons(r, cfUri))),
     db,
     event,
     context,

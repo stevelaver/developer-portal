@@ -225,7 +225,7 @@ class App {
   listPublishedApps(offset = 0, limit = 1000) {
     const cfUri = this.env.CLOUDFRONT_URI;
     return this.db.listPublishedApps(offset, limit)
-    .then(res => res.map(r => App.addIcons(r, cfUri)));
+      .then(res => res.map(r => App.addIcons(r, cfUri)));
   }
 
   deprecate(appId, vendor, user, expire = null, replace = null) {

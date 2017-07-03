@@ -105,7 +105,8 @@
         "ec2:DescribeAccountAttributes",
         "iam:GetUser",
         "iam:GetRole",
-        "iam:AttachRolePolicy"
+        "iam:AttachRolePolicy",
+        "cloudformation:ValidateTemplate"
       ],
       "Resource":[
         "*"
