@@ -14,13 +14,10 @@ RUN yum -y install nodejs npm yarn python27
 RUN npm install -g node-gyp
 
 # serverless
-RUN npm install -g serverless@1.15
+RUN npm install -g serverless@1.18
 
 # working directory
 ADD ./ /code
 WORKDIR /code
 
 RUN yarn install
-
-# deploy
-CMD node ./scripts/create-env.js ./env.yml && sls deploy

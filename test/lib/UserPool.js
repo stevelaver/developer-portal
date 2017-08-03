@@ -6,18 +6,17 @@ import UserPool from '../../lib/UserPool';
 const aws = require('aws-sdk');
 const expect = require('unexpected');
 const Promise = require('bluebird');
-const env = require('../../lib/env').load();
 const err = require('../../lib/error');
 
 aws.config.setPromisesDependency(Promise);
-const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
-const userPool = new UserPool(cognito, env.COGNITO_POOL_ID, env.COGNITO_CLIENT_ID, Identity, err);
+const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
+const userPool = new UserPool(cognito, process.env.COGNITO_POOL_ID, process.env.COGNITO_CLIENT_ID, Identity, err);
 let email;
 
 const createUser = () => {
   email = `devportal-${Date.now()}@test.keboola.com`;
   return cognito.signUp({
-    ClientId: env.COGNITO_CLIENT_ID,
+    ClientId: process.env.COGNITO_CLIENT_ID,
     Username: email,
     Password: 'uifsdk129JDKS_DSJ',
     UserAttributes: [
@@ -38,7 +37,7 @@ const createUser = () => {
 };
 
 const deleteUser = () =>
-  cognito.adminDeleteUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise();
+  cognito.adminDeleteUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise();
 
 
 describe('UserPool', () => {
@@ -68,7 +67,7 @@ describe('UserPool', () => {
       .then((data) => {
         expect(data, 'to have an item satisfying', { email });
       })
-      .then(() => cognito.adminConfirmSignUp({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then(() => cognito.adminConfirmSignUp({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise())
       .then(() => userPool.listUsers('confirmed'))
       .then((data) => {
         expect(data, 'to have an item satisfying', { email });
@@ -90,25 +89,25 @@ describe('UserPool', () => {
   it('updateUserAttribute, addUserToVendor, removeUserFromVendor, makeUserAdmin', () =>
     createUser()
       .then(() => userPool.updateUserAttribute(email, 'profile', 'test'))
-      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then(() => cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise())
       .then((data) => {
         expect(data, 'to have key', 'UserAttributes');
         expect(data.UserAttributes, 'to have an item satisfying', { Name: 'profile', Value: 'test' });
       })
       .then(() => userPool.addUserToVendor(email, 'test2'))
-      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then(() => cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise())
       .then((data) => {
         expect(data, 'to have key', 'UserAttributes');
         expect(data.UserAttributes, 'to have an item satisfying', { Name: 'profile', Value: 'test,test2' });
       })
       .then(() => userPool.removeUserFromVendor(email, 'test2'))
-      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then(() => cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise())
       .then((data) => {
         expect(data, 'to have key', 'UserAttributes');
         expect(data.UserAttributes, 'to have an item satisfying', { Name: 'profile', Value: 'test' });
       })
       .then(() => userPool.makeUserAdmin(email))
-      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then(() => cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise())
       .then((data) => {
         expect(data, 'to have key', 'UserAttributes');
         expect(data.UserAttributes, 'to have an item satisfying', { Name: 'custom:isAdmin', Value: '1' });
@@ -118,35 +117,35 @@ describe('UserPool', () => {
   it('deleteUser', () =>
     createUser()
       .then(() => expect(
-        cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise(),
+        cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise(),
         'to be fulfilled'
       ))
       .then(() => userPool.deleteUser(email))
       .then(() => expect(
-        cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise(),
+        cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise(),
         'to be rejected'
       )));
 
   it('signUp', () => {
     const email2 = `devportal-2${Date.now()}@test.keboola.com`;
     return userPool.signUp(email2, 'uifsdk129JDKS_DSJ', 'Test')
-      .then(() => cognito.adminConfirmSignUp({ UserPoolId: env.COGNITO_POOL_ID, Username: email2 }).promise())
+      .then(() => cognito.adminConfirmSignUp({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise())
       .then(() => expect(
-        cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email2 }).promise(),
+        cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise(),
         'to be fulfilled',
       ))
-      .then(() => cognito.adminDeleteUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email2 }).promise());
+      .then(() => cognito.adminDeleteUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise());
   });
 
   it('confirmSignUp', () =>
     createUser()
-      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then(() => cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise())
       .then((data) => {
         expect(data, 'to have key', 'UserStatus');
         expect(data.UserStatus, 'to be', 'UNCONFIRMED');
       })
       .then(() => userPool.confirmSignUp(email))
-      .then(() => cognito.adminGetUser({ UserPoolId: env.COGNITO_POOL_ID, Username: email }).promise())
+      .then(() => cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise())
       .then((data) => {
         expect(data, 'to have key', 'UserStatus');
         expect(data.UserStatus, 'to be', 'CONFIRMED');

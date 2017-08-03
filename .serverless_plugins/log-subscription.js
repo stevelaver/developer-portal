@@ -2,9 +2,6 @@
 
 const _ = require('lodash');
 const aws = require('aws-sdk');
-const yaml = require('yamljs');
-
-const env = yaml.load(`${__dirname}/../env.yml`);
 
 class logSubscription {
   constructor(serverless) {
@@ -12,7 +9,7 @@ class logSubscription {
 
     this.provider = this.serverless.getProvider('aws');
     aws.config.update({
-      region: env.REGION
+      region: process.env.REGION
     });
 
     this.hooks = {
@@ -37,8 +34,8 @@ class logSubscription {
           Properties: {
             FunctionName: loggerFunctionData.name,
             Action: 'lambda:InvokeFunction',
-            Principal: `logs.${env.REGION}.amazonaws.com`,
-            SourceArn: `arn:aws:logs:${env.REGION}:${env.ACCOUNT_ID}:log-group:/aws/lambda/*`
+            Principal: `logs.${process.env.REGION}.amazonaws.com`,
+            SourceArn: `arn:aws:logs:${process.env.REGION}:${process.env.ACCOUNT_ID}:log-group:/aws/lambda/*`
           },
           DependsOn: [loggerLogicalId]
         }

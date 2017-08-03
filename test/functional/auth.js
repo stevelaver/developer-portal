@@ -11,9 +11,7 @@ const Promise = require('bluebird');
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
-const env = require('../../lib/env').load();
-
-const services = new Services(env);
+const services = new Services(process.env);
 const userPool = services.getUserPool();
 
 const rds = mysql.createConnection({
@@ -46,7 +44,7 @@ describe('Auth', () => {
     // 1) Signup
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/auth/signup`,
+      url: `${process.env.API_ENDPOINT}/auth/signup`,
       responseType: 'json',
       data: {
         email: userEmail,
@@ -57,7 +55,7 @@ describe('Auth', () => {
       // 2) Login without confirmation
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/login`,
+        url: `${process.env.API_ENDPOINT}/auth/login`,
         responseType: 'json',
         data: {
           email: userEmail,
@@ -67,7 +65,7 @@ describe('Auth', () => {
       // 3) Resend confirmation
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/confirm`,
+        url: `${process.env.API_ENDPOINT}/auth/confirm`,
         responseType: 'json',
         data: {
           email: userEmail,
@@ -79,7 +77,7 @@ describe('Auth', () => {
       // function works and confirm user manually
       .then(() => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/confirm/${process.env.FUNC_USER_EMAIL}/000`,
+        url: `${process.env.API_ENDPOINT}/auth/confirm/${process.env.FUNC_USER_EMAIL}/000`,
         responseType: 'json',
         data: {
           email: userEmail,
@@ -95,7 +93,7 @@ describe('Auth', () => {
       // 5) Login
       .then(() => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/login`,
+        url: `${process.env.API_ENDPOINT}/auth/login`,
         responseType: 'json',
         data: {
           email: userEmail,
@@ -110,7 +108,7 @@ describe('Auth', () => {
       // 6) Get Profile
       .then(token => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/auth/profile`,
+        url: `${process.env.API_ENDPOINT}/auth/profile`,
         responseType: 'json',
         headers: { Authorization: token },
       }))
@@ -122,14 +120,14 @@ describe('Auth', () => {
   it('Forgot password', () =>
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
+      url: `${process.env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}`,
       responseType: 'json',
     }), 'to be fulfilled')
       // Check with fake code - as we can't get real one from email
       // so we just test if lambda function works
       .then(() => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}/confirm`,
+        url: `${process.env.API_ENDPOINT}/auth/forgot/${process.env.FUNC_USER_EMAIL}/confirm`,
         responseType: 'json',
         data: {
           password: userPassword1,
@@ -146,7 +144,7 @@ describe('Auth', () => {
   it('Refresh token and logout', () =>
     axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/auth/login`,
+      url: `${process.env.API_ENDPOINT}/auth/login`,
       responseType: 'json',
       data: {
         email: process.env.FUNC_USER_EMAIL,
@@ -158,7 +156,7 @@ describe('Auth', () => {
         expect(loginData.data, 'to have key', 'refreshToken');
         return axios({
           method: 'get',
-          url: `${env.API_ENDPOINT}/auth/token`,
+          url: `${process.env.API_ENDPOINT}/auth/token`,
           responseType: 'json',
           headers: { Authorization: loginData.data.refreshToken },
         })
@@ -169,7 +167,7 @@ describe('Auth', () => {
           })
           .then(token => axios({
             method: 'get',
-            url: `${env.API_ENDPOINT}/auth/profile`,
+            url: `${process.env.API_ENDPOINT}/auth/profile`,
             responseType: 'json',
             headers: { Authorization: token },
           }))
@@ -179,7 +177,7 @@ describe('Auth', () => {
           })
           .then(() => axios({
             method: 'post',
-            url: `${env.API_ENDPOINT}/auth/logout`,
+            url: `${process.env.API_ENDPOINT}/auth/logout`,
             headers: { Authorization: loginData.data.accessToken },
           }))
           .then((res) => {
@@ -187,7 +185,7 @@ describe('Auth', () => {
           })
           .then(() => expect(axios({
             method: 'get',
-            url: `${env.API_ENDPOINT}/auth/token`,
+            url: `${process.env.API_ENDPOINT}/auth/token`,
             responseType: 'json',
             headers: { Authorization: loginData.data.refreshToken },
           }), 'to be rejected'));
@@ -197,7 +195,7 @@ describe('Auth', () => {
     // 1) Signup
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/auth/signup`,
+      url: `${process.env.API_ENDPOINT}/auth/signup`,
       responseType: 'json',
       data: {
         email: userEmail,
@@ -209,7 +207,7 @@ describe('Auth', () => {
       // 2) Login
       .then(() => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/login`,
+        url: `${process.env.API_ENDPOINT}/auth/login`,
         responseType: 'json',
         data: {
           email: userEmail,
@@ -224,7 +222,7 @@ describe('Auth', () => {
       // 3) Enable MFA
       .then(token => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/mfa/${process.env.FUNC_USER_PHONE}`,
+        url: `${process.env.API_ENDPOINT}/auth/mfa/${process.env.FUNC_USER_PHONE}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -236,7 +234,7 @@ describe('Auth', () => {
       // 4) Login
       .then(() => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/login`,
+        url: `${process.env.API_ENDPOINT}/auth/login`,
         responseType: 'json',
         data: {
           email: userEmail,
@@ -251,7 +249,7 @@ describe('Auth', () => {
       // 5) Login with MFA code
       .then(session => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/login`,
+        url: `${process.env.API_ENDPOINT}/auth/login`,
         responseType: 'json',
         data: {
           email: userEmail,

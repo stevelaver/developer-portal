@@ -4,9 +4,6 @@ require('longjohn');
 const axios = require('axios');
 const expect = require('unexpected');
 
-const env = require('../../lib/env').load();
-
-
 const checkAuth = (method, url) =>
   expect(axios({ method, url }), 'to be rejected with error satisfying', { response: { status: 401 } });
 
@@ -14,51 +11,51 @@ const checkAuth = (method, url) =>
 describe('Check if all intended endpoints have auth required', () => {
   it('Check Auth', () =>
     // User profile
-    checkAuth('get', `${env.API_ENDPOINT}/auth/profile`)
+    checkAuth('get', `${process.env.API_ENDPOINT}/auth/profile`)
       // Enable MFA
-      .then(() => checkAuth('post', `${env.API_ENDPOINT}/auth/mfa/phone`)));
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/auth/mfa/phone`)));
 
   it('Check Apps', () =>
     // Create app
-    checkAuth('post', `${env.API_ENDPOINT}/vendors/keboola/apps`)
+    checkAuth('post', `${process.env.API_ENDPOINT}/vendors/keboola/apps`)
       // List apps
-      .then(() => checkAuth('get', `${env.API_ENDPOINT}/vendors/keboola/apps`))
+      .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/vendors/keboola/apps`))
       // Get app
-      .then(() => checkAuth('get', `${env.API_ENDPOINT}/vendors/keboola/apps/app`))
+      .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app`))
       // Update app
-      .then(() => checkAuth('patch', `${env.API_ENDPOINT}/vendors/keboola/apps/app`))
+      .then(() => checkAuth('patch', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app`))
       // Approve app
-      .then(() => checkAuth('post', `${env.API_ENDPOINT}/vendors/keboola/apps/app/approve`))
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app/approve`))
       // List versions
-      .then(() => checkAuth('get', `${env.API_ENDPOINT}/vendors/keboola/apps/versions`))
+      .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/vendors/keboola/apps/versions`))
       // Get version
-      .then(() => checkAuth('get', `${env.API_ENDPOINT}/vendors/keboola/apps/app/versions/1`))
+      .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app/versions/1`))
       // Rollback version
-      .then(() => checkAuth('post', `${env.API_ENDPOINT}/vendors/keboola/apps/app/versions/1/rollback`))
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app/versions/1/rollback`))
       // Request icon upload
-      .then(() => checkAuth('post', `${env.API_ENDPOINT}/vendors/keboola/apps/app/icon`)));
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app/icon`)));
 
   it('Check Admin', () =>
     // Approve app
-    checkAuth('post', `${env.API_ENDPOINT}/admin/apps/appId/approve`)
+    checkAuth('post', `${process.env.API_ENDPOINT}/admin/apps/appId/approve`)
       // Get app
-      .then(() => checkAuth('get', `${env.API_ENDPOINT}/admin/apps/appId`))
+      .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/admin/apps/appId`))
       // List apps
-      .then(() => checkAuth('get', `${env.API_ENDPOINT}/admin/apps`))
+      .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/admin/apps`))
       // Update app
-      .then(() => checkAuth('patch', `${env.API_ENDPOINT}/admin/apps/appId`))
+      .then(() => checkAuth('patch', `${process.env.API_ENDPOINT}/admin/apps/appId`))
       // List users
-      .then(() => checkAuth('get', `${env.API_ENDPOINT}/admin/users`))
+      .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/admin/users`))
       // Make user admin
-      .then(() => checkAuth('post', `${env.API_ENDPOINT}/admin/users/test@test.com/admin`))
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/admin/users/test@test.com/admin`))
       // Add user to vendor
-      .then(() => checkAuth('post', `${env.API_ENDPOINT}/admin/users/user@email.com/vendors/keboola`))
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/admin/users/user@email.com/vendors/keboola`))
       // Remove user from vendor
-      .then(() => checkAuth('delete', `${env.API_ENDPOINT}/admin/users/user@email.com/vendors/keboola`))
+      .then(() => checkAuth('delete', `${process.env.API_ENDPOINT}/admin/users/user@email.com/vendors/keboola`))
       // Create vendor
-      .then(() => checkAuth('post', `${env.API_ENDPOINT}/admin/vendors`))
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/admin/vendors`))
       // Approve vendor
-      .then(() => checkAuth('post', `${env.API_ENDPOINT}/admin/vendors/keboola/approve`))
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/admin/vendors/keboola/approve`))
       // List app changes
-      .then(() => checkAuth('get', `${env.API_ENDPOINT}/admin/changes`)));
+      .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/admin/changes`)));
 });

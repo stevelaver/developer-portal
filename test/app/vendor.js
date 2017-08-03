@@ -16,11 +16,10 @@ Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const db = require('../../lib/db');
-const env = require('../../lib/env').load();
 const error = require('../../lib/error');
 
 aws.config.setPromisesDependency(Promise);
-const cognito = new aws.CognitoIdentityServiceProvider({ region: env.REGION });
+const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
 const rds = mysql.createConnection({
   host: process.env.UNIT_RDS_HOST,
   port: process.env.UNIT_RDS_PORT,
@@ -31,7 +30,7 @@ const rds = mysql.createConnection({
   multipleStatements: true,
 });
 
-const appEnv = _.clone(env);
+const appEnv = _.clone(process.env);
 appEnv.RDS_HOST = process.env.UNIT_RDS_HOST;
 appEnv.RDS_PORT = process.env.UNIT_RDS_PORT;
 appEnv.RDS_USER = process.env.UNIT_RDS_USER;
@@ -48,7 +47,7 @@ const userPassword = 'uiOU.-jfdksfj88';
 
 const createUser = () =>
   cognito.signUp({
-    ClientId: env.COGNITO_CLIENT_ID,
+    ClientId: process.env.COGNITO_CLIENT_ID,
     Username: userEmail,
     Password: userPassword,
     UserAttributes: [
@@ -68,7 +67,7 @@ const createUser = () =>
   }).promise();
 
 const deleteUser = () =>
-  cognito.adminDeleteUser({ UserPoolId: env.COGNITO_POOL_ID, Username: userEmail }).promise();
+  cognito.adminDeleteUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: userEmail }).promise();
 
 describe('Vendor App', () => {
   before(() =>
@@ -163,7 +162,7 @@ describe('Vendor App', () => {
           expect(data[0].acceptedOn, 'not to be null');
         })
         .then(() => cognito.adminGetUser({
-          UserPoolId: env.COGNITO_POOL_ID,
+          UserPoolId: process.env.COGNITO_POOL_ID,
           Username: userEmail,
         }).promise()
         .then(data => Identity.formatUser(data)))

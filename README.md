@@ -5,7 +5,7 @@
 
 Application based on Serverless framework utilizing AWS Lamda, API Gateway and Cognito services.
 
-
+*Note: File env.yml is no longer used. Instead pass the variables directly in the environment or save them to .env file.*
 
 ### Installation
 

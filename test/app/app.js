@@ -16,7 +16,6 @@ Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const db = require('../../lib/db');
-const env = require('../../lib/env').load();
 
 let rds;
 const dbConnectParams = {
@@ -30,7 +29,7 @@ const dbConnectParams = {
   multipleStatements: true,
 };
 
-const appEnv = _.clone(env);
+const appEnv = _.clone(process.env);
 appEnv.RDS_HOST = process.env.UNIT_RDS_HOST;
 appEnv.RDS_PORT = process.env.UNIT_RDS_PORT;
 appEnv.RDS_USER = process.env.UNIT_RDS_USER;

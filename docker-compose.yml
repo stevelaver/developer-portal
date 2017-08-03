@@ -41,6 +41,10 @@ services:
       - "API_ENDPOINT=${TEST_API_ENDPOINT}"
       - "WARMUP_ENABLED=${TEST_WARMUP_ENABLED}"
       - "BASTION_IP=${TEST_BASTION_IP}"
+    command: >
+             sh -c '
+             serverless deploy
+             '
 
   deploy-testing:
     build:
@@ -78,6 +82,10 @@ services:
       - "API_ENDPOINT=${TEST_API_ENDPOINT}"
       - "WARMUP_ENABLED=${TEST_WARMUP_ENABLED}"
       - "BASTION_IP=${TEST_BASTION_IP}"
+    command: >
+             sh -c '
+             serverless deploy
+             '
 
   deploy-production:
     build:
@@ -115,11 +123,15 @@ services:
       - "API_ENDPOINT=${DEPLOY_API_ENDPOINT}"
       - "WARMUP_ENABLED=${DEPLOY_WARMUP_ENABLED}"
       - "BASTION_IP=${DEPLOY_BASTION_IP}"
+    command: >
+             sh -c '
+             serverless deploy
+             '
 
   lint:
     build:
       context: .
-      dockerfile: Dockerfile.tests
+      dockerfile: Dockerfile
     command: >
              sh -c '
              ./node_modules/.bin/eslint .
@@ -128,7 +140,7 @@ services:
   test-unit:
     build:
       context: .
-      dockerfile: Dockerfile.tests
+      dockerfile: Dockerfile
     volumes:
       - ./app:/code/app
       - ./lambda:/code/lambda
@@ -155,49 +167,46 @@ services:
       - "UNIT_RDS_USER=user"
       - "UNIT_RDS_PASSWORD=password"
       - "UNIT_RDS_DATABASE=dev_portal"
-      - TEST_ACCOUNT_ID
-      - TEST_API_ENDPOINT
-      - TEST_BASTION_IP
-      - TEST_BASTION_SSH_KEY
-      - TEST_BASTION_USER
-      - TEST_CLOUDFRONT_URI
-      - TEST_COGNITO_CLIENT_ID
-      - TEST_COGNITO_POOL_ID
-      - TEST_KEBOOLA_STACK
-      - TEST_LOG_HOST
-      - TEST_LOG_PORT
-      - TEST_RDS_DATABASE
-      - TEST_RDS_HOST
-      - TEST_RDS_INSTANCE_CLASS
-      - TEST_RDS_PASSWORD
-      - TEST_RDS_PORT
-      - TEST_RDS_SECURITY_GROUP
-      - TEST_RDS_SSL
-      - TEST_RDS_SUBNET_GROUP
-      - TEST_RDS_USER
-      - TEST_REGION
-      - TEST_S3_BUCKET
-      - TEST_SERVICE_NAME
-      - TEST_SES_EMAIL_FROM
-      - TEST_SLACK_HOOK_URL
-      - TEST_STAGE
-      - TEST_VPC_CF_STACK_ID
-      - TEST_VPC_SECURITY_GROUP
-      - TEST_VPC_SUBNET1
-      - TEST_VPC_SUBNET2
-      - TEST_WARMUP_ENABLED
+      - "SERVICE_NAME=${TEST_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${TEST_KEBOOLA_STACK}"
+      - "REGION=${TEST_REGION}"
+      - "STAGE=${TEST_STAGE}"
+      - "SES_EMAIL_FROM=${TEST_SES_EMAIL_FROM}"
+      - "RDS_INSTANCE_CLASS=${TEST_RDS_INSTANCE_CLASS}"
+      - "RDS_DATABASE=${TEST_RDS_DATABASE}"
+      - "RDS_USER=${TEST_RDS_USER}"
+      - "RDS_PASSWORD=${TEST_RDS_PASSWORD}"
+      - "RDS_HOST=${TEST_RDS_HOST}"
+      - "RDS_PORT=${TEST_RDS_PORT}"
+      - "RDS_SSL=${TEST_RDS_SSL}"
+      - "RDS_SECURITY_GROUP=${TEST_RDS_SECURITY_GROUP}"
+      - "S3_BUCKET=${TEST_S3_BUCKET}"
+      - "LOG_HOST=${TEST_LOG_HOST}"
+      - "LOG_PORT=${TEST_LOG_PORT}"
+      - "SLACK_HOOK_URL=${TEST_SLACK_HOOK_URL}"
+      - "ACCOUNT_ID=${TEST_ACCOUNT_ID}"
+      - "VPC_CF_STACK_ID=${TEST_VPC_CF_STACK_ID}"
+      - "VPC_SECURITY_GROUP=${TEST_VPC_SECURITY_GROUP}"
+      - "VPC_SUBNET1=${TEST_VPC_SUBNET1}"
+      - "VPC_SUBNET2=${TEST_VPC_SUBNET2}"
+      - "RDS_SUBNET_GROUP=${TEST_RDS_SUBNET_GROUP}"
+      - "COGNITO_POOL_ID=${TEST_COGNITO_POOL_ID}"
+      - "COGNITO_CLIENT_ID=${TEST_COGNITO_CLIENT_ID}"
+      - "CLOUDFRONT_URI=${TEST_CLOUDFRONT_URI}"
+      - "API_ENDPOINT=${TEST_API_ENDPOINT}"
+      - "WARMUP_ENABLED=${TEST_WARMUP_ENABLED}"
+      - "BASTION_IP=${TEST_BASTION_IP}"
       - TEST_PATH
     command: >
              sh -c '
              sleep 10
-             && node ./scripts/create-env.js ./env.yml TEST
-             && mocha --timeout 0 --compilers js:babel-core/register $$TEST_PATH
+             && ./node_modules/.bin/mocha --timeout 0 --compilers js:babel-core/register $$TEST_PATH
              '
 
   test-functional:
     build:
       context: .
-      dockerfile: Dockerfile.tests
+      dockerfile: Dockerfile
     volumes:
       - ./app:/code/app
       - ./lambda:/code/lambda
@@ -217,51 +226,48 @@ services:
       - FUNC_USER_PASSWORD
       - FUNC_USER_PHONE
       - FUNC_VENDOR
-      - TEST_ACCOUNT_ID
-      - TEST_API_ENDPOINT
-      - TEST_BASTION_IP
-      - TEST_BASTION_SSH_KEY
-      - TEST_BASTION_USER
-      - TEST_CLOUDFRONT_URI
-      - TEST_COGNITO_CLIENT_ID
-      - TEST_COGNITO_POOL_ID
-      - TEST_KEBOOLA_STACK
-      - TEST_LOG_HOST
-      - TEST_LOG_PORT
-      - TEST_RDS_DATABASE
-      - TEST_RDS_HOST
-      - TEST_RDS_INSTANCE_CLASS
-      - TEST_RDS_PASSWORD
-      - TEST_RDS_PORT
-      - TEST_RDS_SECURITY_GROUP
-      - TEST_RDS_SSL
-      - TEST_RDS_SUBNET_GROUP
-      - TEST_RDS_USER
-      - TEST_REGION
-      - TEST_S3_BUCKET
-      - TEST_SERVICE_NAME
-      - TEST_SES_EMAIL_FROM
-      - TEST_SLACK_HOOK_URL
-      - TEST_STAGE
-      - TEST_VPC_CF_STACK_ID
-      - TEST_VPC_SECURITY_GROUP
-      - TEST_VPC_SUBNET1
-      - TEST_VPC_SUBNET2
-      - TEST_WARMUP_ENABLED
+      - "SERVICE_NAME=${TEST_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${TEST_KEBOOLA_STACK}"
+      - "REGION=${TEST_REGION}"
+      - "STAGE=${TEST_STAGE}"
+      - "SES_EMAIL_FROM=${TEST_SES_EMAIL_FROM}"
+      - "RDS_INSTANCE_CLASS=${TEST_RDS_INSTANCE_CLASS}"
+      - "RDS_DATABASE=${TEST_RDS_DATABASE}"
+      - "RDS_USER=${TEST_RDS_USER}"
+      - "RDS_PASSWORD=${TEST_RDS_PASSWORD}"
+      - "RDS_HOST=${TEST_RDS_HOST}"
+      - "RDS_PORT=${TEST_RDS_PORT}"
+      - "RDS_SSL=${TEST_RDS_SSL}"
+      - "RDS_SECURITY_GROUP=${TEST_RDS_SECURITY_GROUP}"
+      - "S3_BUCKET=${TEST_S3_BUCKET}"
+      - "LOG_HOST=${TEST_LOG_HOST}"
+      - "LOG_PORT=${TEST_LOG_PORT}"
+      - "SLACK_HOOK_URL=${TEST_SLACK_HOOK_URL}"
+      - "ACCOUNT_ID=${TEST_ACCOUNT_ID}"
+      - "VPC_CF_STACK_ID=${TEST_VPC_CF_STACK_ID}"
+      - "VPC_SECURITY_GROUP=${TEST_VPC_SECURITY_GROUP}"
+      - "VPC_SUBNET1=${TEST_VPC_SUBNET1}"
+      - "VPC_SUBNET2=${TEST_VPC_SUBNET2}"
+      - "RDS_SUBNET_GROUP=${TEST_RDS_SUBNET_GROUP}"
+      - "COGNITO_POOL_ID=${TEST_COGNITO_POOL_ID}"
+      - "COGNITO_CLIENT_ID=${TEST_COGNITO_CLIENT_ID}"
+      - "CLOUDFRONT_URI=${TEST_CLOUDFRONT_URI}"
+      - "API_ENDPOINT=${TEST_API_ENDPOINT}"
+      - "WARMUP_ENABLED=${TEST_WARMUP_ENABLED}"
+      - "BASTION_IP=${TEST_BASTION_IP}"
       - TEST_PATH
     command: >
              sh -c '
              echo ${TEST_BASTION_SSH_KEY} | base64 -d > bastion_ssh.key
              && chmod 400 bastion_ssh.key
-             && ssh -fN $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT
-             && node ./scripts/create-env.js ./env.yml TEST
-             && mocha --timeout 0 --compilers js:babel-core/register $$TEST_PATH
+             && ssh -4 -fN $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT
+             && ./node_modules/.bin/mocha --timeout 0 --compilers js:babel-core/register $$TEST_PATH
              '
 
   ci-test-unit:
     build:
       context: .
-      dockerfile: Dockerfile.tests
+      dockerfile: Dockerfile
     links:
       - mysql
     environment:
@@ -282,48 +288,45 @@ services:
       - "UNIT_RDS_USER=user"
       - "UNIT_RDS_PASSWORD=password"
       - "UNIT_RDS_DATABASE=dev_portal"
-      - TEST_ACCOUNT_ID
-      - TEST_API_ENDPOINT
-      - TEST_BASTION_IP
-      - TEST_BASTION_SSH_KEY
-      - TEST_BASTION_USER
-      - TEST_CLOUDFRONT_URI
-      - TEST_COGNITO_CLIENT_ID
-      - TEST_COGNITO_POOL_ID
-      - TEST_KEBOOLA_STACK
-      - TEST_LOG_HOST
-      - TEST_LOG_PORT
-      - TEST_RDS_DATABASE
-      - TEST_RDS_HOST
-      - TEST_RDS_INSTANCE_CLASS
-      - TEST_RDS_PASSWORD
-      - TEST_RDS_PORT
-      - TEST_RDS_SECURITY_GROUP
-      - TEST_RDS_SSL
-      - TEST_RDS_SUBNET_GROUP
-      - TEST_RDS_USER
-      - TEST_REGION
-      - TEST_S3_BUCKET
-      - TEST_SERVICE_NAME
-      - TEST_SES_EMAIL_FROM
-      - TEST_SLACK_HOOK_URL
-      - TEST_STAGE
-      - TEST_VPC_CF_STACK_ID
-      - TEST_VPC_SECURITY_GROUP
-      - TEST_VPC_SUBNET1
-      - TEST_VPC_SUBNET2
-      - TEST_WARMUP_ENABLED
+      - "SERVICE_NAME=${TEST_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${TEST_KEBOOLA_STACK}"
+      - "REGION=${TEST_REGION}"
+      - "STAGE=${TEST_STAGE}"
+      - "SES_EMAIL_FROM=${TEST_SES_EMAIL_FROM}"
+      - "RDS_INSTANCE_CLASS=${TEST_RDS_INSTANCE_CLASS}"
+      - "RDS_DATABASE=${TEST_RDS_DATABASE}"
+      - "RDS_USER=${TEST_RDS_USER}"
+      - "RDS_PASSWORD=${TEST_RDS_PASSWORD}"
+      - "RDS_HOST=${TEST_RDS_HOST}"
+      - "RDS_PORT=${TEST_RDS_PORT}"
+      - "RDS_SSL=${TEST_RDS_SSL}"
+      - "RDS_SECURITY_GROUP=${TEST_RDS_SECURITY_GROUP}"
+      - "S3_BUCKET=${TEST_S3_BUCKET}"
+      - "LOG_HOST=${TEST_LOG_HOST}"
+      - "LOG_PORT=${TEST_LOG_PORT}"
+      - "SLACK_HOOK_URL=${TEST_SLACK_HOOK_URL}"
+      - "ACCOUNT_ID=${TEST_ACCOUNT_ID}"
+      - "VPC_CF_STACK_ID=${TEST_VPC_CF_STACK_ID}"
+      - "VPC_SECURITY_GROUP=${TEST_VPC_SECURITY_GROUP}"
+      - "VPC_SUBNET1=${TEST_VPC_SUBNET1}"
+      - "VPC_SUBNET2=${TEST_VPC_SUBNET2}"
+      - "RDS_SUBNET_GROUP=${TEST_RDS_SUBNET_GROUP}"
+      - "COGNITO_POOL_ID=${TEST_COGNITO_POOL_ID}"
+      - "COGNITO_CLIENT_ID=${TEST_COGNITO_CLIENT_ID}"
+      - "CLOUDFRONT_URI=${TEST_CLOUDFRONT_URI}"
+      - "API_ENDPOINT=${TEST_API_ENDPOINT}"
+      - "WARMUP_ENABLED=${TEST_WARMUP_ENABLED}"
+      - "BASTION_IP=${TEST_BASTION_IP}"
     command: >
              sh -c '
              sleep 10
-             && node ./scripts/create-env.js ./env.yml TEST
-             && mocha --timeout 0 --compilers js:babel-core/register test/lib test/app
+             && ./node_modules/.bin/mocha --timeout 0 --compilers js:babel-core/register test/lib test/app
              '
 
   ci-test-functional:
     build:
       context: .
-      dockerfile: Dockerfile.tests
+      dockerfile: Dockerfile
     environment:
       - "AWS_ACCESS_KEY_ID=${TEST_AWS_ACCESS_KEY_ID}"
       - "AWS_SECRET_ACCESS_KEY=${TEST_AWS_SECRET_ACCESS_KEY}"
@@ -337,44 +340,41 @@ services:
       - FUNC_USER_PASSWORD
       - FUNC_USER_PHONE
       - FUNC_VENDOR
-      - TEST_ACCOUNT_ID
-      - TEST_API_ENDPOINT
-      - TEST_BASTION_IP
-      - TEST_BASTION_SSH_KEY
-      - TEST_BASTION_USER
-      - TEST_CLOUDFRONT_URI
-      - TEST_COGNITO_CLIENT_ID
-      - TEST_COGNITO_POOL_ID
-      - TEST_KEBOOLA_STACK
-      - TEST_LOG_HOST
-      - TEST_LOG_PORT
-      - TEST_RDS_DATABASE
-      - TEST_RDS_HOST
-      - TEST_RDS_INSTANCE_CLASS
-      - TEST_RDS_PASSWORD
-      - TEST_RDS_PORT
-      - TEST_RDS_SECURITY_GROUP
-      - TEST_RDS_SSL
-      - TEST_RDS_SUBNET_GROUP
-      - TEST_RDS_USER
-      - TEST_REGION
-      - TEST_S3_BUCKET
-      - TEST_SERVICE_NAME
-      - TEST_SES_EMAIL_FROM
-      - TEST_SLACK_HOOK_URL
-      - TEST_STAGE
-      - TEST_VPC_CF_STACK_ID
-      - TEST_VPC_SECURITY_GROUP
-      - TEST_VPC_SUBNET1
-      - TEST_VPC_SUBNET2
-      - TEST_WARMUP_ENABLED
+      - "SERVICE_NAME=${TEST_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${TEST_KEBOOLA_STACK}"
+      - "REGION=${TEST_REGION}"
+      - "STAGE=${TEST_STAGE}"
+      - "SES_EMAIL_FROM=${TEST_SES_EMAIL_FROM}"
+      - "RDS_INSTANCE_CLASS=${TEST_RDS_INSTANCE_CLASS}"
+      - "RDS_DATABASE=${TEST_RDS_DATABASE}"
+      - "RDS_USER=${TEST_RDS_USER}"
+      - "RDS_PASSWORD=${TEST_RDS_PASSWORD}"
+      - "RDS_HOST=${TEST_RDS_HOST}"
+      - "RDS_PORT=${TEST_RDS_PORT}"
+      - "RDS_SSL=${TEST_RDS_SSL}"
+      - "RDS_SECURITY_GROUP=${TEST_RDS_SECURITY_GROUP}"
+      - "S3_BUCKET=${TEST_S3_BUCKET}"
+      - "LOG_HOST=${TEST_LOG_HOST}"
+      - "LOG_PORT=${TEST_LOG_PORT}"
+      - "SLACK_HOOK_URL=${TEST_SLACK_HOOK_URL}"
+      - "ACCOUNT_ID=${TEST_ACCOUNT_ID}"
+      - "VPC_CF_STACK_ID=${TEST_VPC_CF_STACK_ID}"
+      - "VPC_SECURITY_GROUP=${TEST_VPC_SECURITY_GROUP}"
+      - "VPC_SUBNET1=${TEST_VPC_SUBNET1}"
+      - "VPC_SUBNET2=${TEST_VPC_SUBNET2}"
+      - "RDS_SUBNET_GROUP=${TEST_RDS_SUBNET_GROUP}"
+      - "COGNITO_POOL_ID=${TEST_COGNITO_POOL_ID}"
+      - "COGNITO_CLIENT_ID=${TEST_COGNITO_CLIENT_ID}"
+      - "CLOUDFRONT_URI=${TEST_CLOUDFRONT_URI}"
+      - "API_ENDPOINT=${TEST_API_ENDPOINT}"
+      - "WARMUP_ENABLED=${TEST_WARMUP_ENABLED}"
+      - "BASTION_IP=${TEST_BASTION_IP}"
     command: >
              sh -c '
              echo ${TEST_BASTION_SSH_KEY} | base64 -d > bastion_ssh.key
              && chmod 400 bastion_ssh.key
              && ssh -fN $TEST_BASTION_USER@$TEST_BASTION_IP -i bastion_ssh.key -oStrictHostKeyChecking=no -L 33060:$TEST_RDS_HOST:$TEST_RDS_PORT
-             && node ./scripts/create-env.js ./env.yml TEST
-             && mocha --timeout 0 --compilers js:babel-core/register test/functional
+             && ./node_modules/.bin/mocha --timeout 0 --compilers js:babel-core/register test/functional
              '
 
   mysql:

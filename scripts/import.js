@@ -3,22 +3,21 @@
 const _ = require('lodash');
 const async = require('async');
 const db = require('../lib/db');
-const env = require('../lib/env').load();
 const exec = require('child_process').exec;
 const fs = require('fs');
 const mysql = require('mysql');
 const request = require('request');
 
 const rds = mysql.createConnection({
-  host: env.RDS_HOST,
-  port: env.RDS_PORT,
-  user: env.RDS_USER,
-  password: env.RDS_PASSWORD,
-  database: env.RDS_DATABASE,
-  ssl: env.RDS_SSL,
+  host: process.env.RDS_HOST,
+  port: process.env.RDS_PORT,
+  user: process.env.RDS_USER,
+  password: process.env.RDS_PASSWORD,
+  database: process.env.RDS_DATABASE,
+  ssl: process.env.RDS_SSL,
   multipleStatements: true,
 });
-db.connect(env);
+db.connect(process.env);
 
 const args = process.argv.slice(2);
 
@@ -338,7 +337,7 @@ if (args[0] === 'data') {
     if (err) {
       throw err;
     }
-    exec(`aws s3 sync s3_bucket s3://${env.S3_BUCKET} --acl public-read`, (err2) => {
+    exec(`aws s3 sync s3_bucket s3://${process.env.S3_BUCKET} --acl public-read`, (err2) => {
       if (err2) {
         throw err2;
       }

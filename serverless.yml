@@ -1,12 +1,11 @@
----
+service: "${env:SERVICE_NAME}"
+
 custom:
   webpackIncludeModules: true
-  cognitoPoolArn: "arn:aws:cognito-idp:${file(./env.yml):REGION}:${file(./env.yml):ACCOUNT_ID}:userpool/${file(./env.yml):COGNITO_POOL_ID}"
+  cognitoPoolArn: "arn:aws:cognito-idp:${env:REGION}:${env:ACCOUNT_ID}:userpool/${env:COGNITO_POOL_ID}"
   cognitoAuthorizer:
     arn: ${self:custom.cognitoPoolArn}
   logSubscriptionFunction: logger
-
-service: "${file(./env.yml):SERVICE_NAME}"
 
 plugins:
   - db-migration
@@ -23,22 +22,41 @@ package:
 
 provider:
   name: aws
-  region: ${file(./env.yml):REGION}
-  stage: ${file(./env.yml):STAGE}
+  region: ${env:REGION}
+  stage: ${env:STAGE}
   runtime: nodejs6.10
   memorySize: 256
   timeout: 30
   versionFunctions: false
-  environment: ${file(./env.yml)}
+  environment:
+    SERVICE_NAME: ${env:SERVICE_NAME}
+    REGION: ${env:REGION}
+    STAGE: ${env:STAGE}
+    SES_EMAIL_FROM: ${env:SES_EMAIL_FROM}
+    RDS_DATABASE: ${env:RDS_DATABASE}
+    RDS_USER: ${env:RDS_USER}
+    RDS_PASSWORD: ${env:RDS_PASSWORD}
+    RDS_HOST: ${env:RDS_HOST}
+    RDS_PORT: ${env:RDS_PORT}
+    RDS_SSL: ${env:RDS_SSL}
+    S3_BUCKET: ${env:S3_BUCKET}
+    LOG_HOST: ${env:LOG_HOST}
+    LOG_PORT: ${env:LOG_PORT}
+    SLACK_HOOK_URL: ${env:SLACK_HOOK_URL}
+    ACCOUNT_ID: ${env:ACCOUNT_ID}
+    COGNITO_POOL_ID: ${env:COGNITO_POOL_ID}
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
+    CLOUDFRONT_URI: ${env:CLOUDFRONT_URI}
+    API_ENDPOINT: ${env:API_ENDPOINT}
   role: developerPortalLambdaRole
   vpc:
     securityGroupIds:
-      - ${file(./env.yml):VPC_SECURITY_GROUP}
+      - ${env:VPC_SECURITY_GROUP}
     subnetIds:
-      - ${file(./env.yml):VPC_SUBNET1}
-      - ${file(./env.yml):VPC_SUBNET2}
+      - ${env:VPC_SUBNET1}
+      - ${env:VPC_SUBNET2}
   stackTags:
-    KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+    KeboolaStack: ${env:KEBOOLA_STACK}
   stackPolicy:
     - Effect: Allow
       Principal: "*"
@@ -59,18 +77,18 @@ functions:
   logger:
       handler: logger.handler
       tags:
-        KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+        KeboolaStack: ${env:KEBOOLA_STACK}
 
   dbMigration:
       timeout: 300
       handler: dbMigration.handler
       tags:
-        KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+        KeboolaStack: ${env:KEBOOLA_STACK}
 
   public:
     handler: public.public
     tags:
-      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+      KeboolaStack: ${env:KEBOOLA_STACK}
     events:
       -
         http:
@@ -103,7 +121,7 @@ functions:
       -
         schedule:
           rate: rate(15 minutes)
-          enabled: ${file(./env.yml):WARMUP_ENABLED}
+          enabled: ${env:WARMUP_ENABLED}
       -
         http:
           method: get
@@ -124,7 +142,7 @@ functions:
   admin:
     handler: admin.admin
     tags:
-      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+      KeboolaStack: ${env:KEBOOLA_STACK}
     events:
       -
         http:
@@ -185,7 +203,7 @@ functions:
   apps:
     handler: apps.apps
     tags:
-      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+      KeboolaStack: ${env:KEBOOLA_STACK}
     events:
       -
         http:
@@ -251,7 +269,7 @@ functions:
   vendors:
     handler: vendors.vendors
     tags:
-      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+      KeboolaStack: ${env:KEBOOLA_STACK}
     events:
       -
         http:
@@ -291,23 +309,23 @@ functions:
   iconUpload:
     handler: iconUpload.upload
     tags:
-      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+      KeboolaStack: ${env:KEBOOLA_STACK}
     events:
       -
         s3:
-          bucket: "${file(./env.yml):S3_BUCKET}"
+          bucket: "${env:S3_BUCKET}"
           event: "s3:ObjectCreated:Put"
           suffix: .png
 
   authEmailTrigger:
     handler: authEmail.emails
     tags:
-      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+      KeboolaStack: ${env:KEBOOLA_STACK}
 
   auth:
     handler: auth.auth
     tags:
-      KeboolaStack: ${file(./env.yml):KEBOOLA_STACK}
+      KeboolaStack: ${env:KEBOOLA_STACK}
     events:
       -
         http:
@@ -366,7 +384,7 @@ resources:
     developerPortalLambdaRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: "${file(./env.yml):SERVICE_NAME}-lambda-role"
+        RoleName: "${env:SERVICE_NAME}-lambda-role"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -378,7 +396,7 @@ resources:
         ManagedPolicyArns:
           - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
         Policies:
-          - PolicyName: "${file(./env.yml):SERVICE_NAME}-lambda-policy"
+          - PolicyName: "${env:SERVICE_NAME}-lambda-policy"
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -387,12 +405,12 @@ resources:
                     - logs:CreateLogGroup
                     - logs:CreateLogStream
                     - logs:PutLogEvents
-                  Resource: "arn:aws:logs:${file(./env.yml):REGION}:${file(./env.yml):ACCOUNT_ID}:log-group:/aws/lambda/*:*:*"
+                  Resource: "arn:aws:logs:${env:REGION}:${env:ACCOUNT_ID}:log-group:/aws/lambda/*:*:*"
                 - Effect: Allow
                   Action:
                     - "s3:*"
                   Resource:
-                    - "arn:aws:s3:::${file(./env.yml):S3_BUCKET}/*"
+                    - "arn:aws:s3:::${env:S3_BUCKET}/*"
                 - Effect: Allow
                   Action:
                     - "cognito-identity:*"
@@ -414,7 +432,7 @@ resources:
     SMSRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: "${file(./env.yml):SERVICE_NAME}-sms-role"
+        RoleName: "${env:SERVICE_NAME}-sms-role"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -424,9 +442,9 @@ resources:
               Action: sts:AssumeRole
               Condition:
                 StringEquals:
-                  sts:ExternalId: ${file(./env.yml):SERVICE_NAME}
+                  sts:ExternalId: ${env:SERVICE_NAME}
         Policies:
-          - PolicyName: "${file(./env.yml):SERVICE_NAME}-sms-policy"
+          - PolicyName: "${env:SERVICE_NAME}-sms-policy"
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -436,16 +454,16 @@ resources:
     developerPortalEcrRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: "${file(./env.yml):SERVICE_NAME}-ecr-role"
+        RoleName: "${env:SERVICE_NAME}-ecr-role"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal:
-                AWS: ${file(./env.yml):ACCOUNT_ID}
+                AWS: ${env:ACCOUNT_ID}
               Action: sts:AssumeRole
         Policies:
-          - PolicyName: "${file(./env.yml):SERVICE_NAME}-ecr-policy"
+          - PolicyName: "${env:SERVICE_NAME}-ecr-policy"
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -457,30 +475,30 @@ resources:
       Type: AWS::RDS::DBInstance
       Properties:
         AllocatedStorage: "5"
-        DBName: "${file(./env.yml):RDS_DATABASE}"
-        DBInstanceIdentifier: "${file(./env.yml):SERVICE_NAME}-rds"
-        DBInstanceClass: "${file(./env.yml):RDS_INSTANCE_CLASS}"
+        DBName: "${env:RDS_DATABASE}"
+        DBInstanceIdentifier: "${env:SERVICE_NAME}-rds"
+        DBInstanceClass: "${env:RDS_INSTANCE_CLASS}"
         Engine: "mysql"
         EngineVersion: "5.7"
-        MasterUsername: "${file(./env.yml):RDS_USER}"
-        MasterUserPassword: "${file(./env.yml):RDS_PASSWORD}"
+        MasterUsername: "${env:RDS_USER}"
+        MasterUserPassword: "${env:RDS_PASSWORD}"
         MultiAZ: "true"
         PubliclyAccessible: "false"
-        DBSubnetGroupName: "${file(./env.yml):RDS_SUBNET_GROUP}"
+        DBSubnetGroupName: "${env:RDS_SUBNET_GROUP}"
         VPCSecurityGroups:
-          - ${file(./env.yml):RDS_SECURITY_GROUP}
+          - ${env:RDS_SECURITY_GROUP}
         Tags:
           -
             Key: KeboolaStack
-            Value: ${file(./env.yml):KEBOOLA_STACK}
+            Value: ${env:KEBOOLA_STACK}
     CloudFront:
       Type: AWS::CloudFront::Distribution
       Properties:
         DistributionConfig:
           Origins:
             -
-              DomainName: ${file(./env.yml):S3_BUCKET}.s3.amazonaws.com
-              Id: "S3-${file(./env.yml):S3_BUCKET}"
+              DomainName: ${env:S3_BUCKET}.s3.amazonaws.com
+              Id: "S3-${env:S3_BUCKET}"
               S3OriginConfig:
                 OriginAccessIdentity: ""
           Enabled: "true"
@@ -488,7 +506,7 @@ resources:
             AllowedMethods:
               - GET
               - HEAD
-            TargetOriginId: "S3-${file(./env.yml):S3_BUCKET}"
+            TargetOriginId: "S3-${env:S3_BUCKET}"
             ForwardedValues:
               QueryString: "false"
               Cookies:

@@ -8,12 +8,11 @@ const axios = require('axios');
 const expect = require('unexpected');
 const mysql = require('mysql');
 const Promise = require('bluebird');
-const env = require('../../lib/env').load();
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
-const services = new Services(env);
+const services = new Services(process.env);
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST,
@@ -36,7 +35,7 @@ describe('Vendors', () => {
     userPool.updateUserAttribute(process.env.FUNC_USER_EMAIL, 'profile', vendor)
       .then(() => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/login`,
+        url: `${process.env.API_ENDPOINT}/auth/login`,
         responseType: 'json',
         data: {
           email: process.env.FUNC_USER_EMAIL,
@@ -65,7 +64,7 @@ describe('Vendors', () => {
   it('Create vendor', () =>
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/vendors`,
+      url: `${process.env.API_ENDPOINT}/vendors`,
       headers: { Authorization: token },
       responseType: 'json',
       data: {
@@ -92,7 +91,7 @@ describe('Vendors', () => {
   it('Join and remove from vendor', () =>
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/vendors/${vendor1}/users`,
+      url: `${process.env.API_ENDPOINT}/vendors/${vendor1}/users`,
       headers: { Authorization: token },
       responseType: 'json',
     }), 'to be fulfilled')
@@ -103,7 +102,7 @@ describe('Vendors', () => {
       })
       .then(() => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/auth/login`,
+        url: `${process.env.API_ENDPOINT}/auth/login`,
         responseType: 'json',
         data: {
           email: process.env.FUNC_USER_EMAIL,
@@ -118,7 +117,7 @@ describe('Vendors', () => {
       // Remove from vendor
       .then(() => expect(axios({
         method: 'delete',
-        url: `${env.API_ENDPOINT}/vendors/${vendor1}/users/${process.env.FUNC_USER_EMAIL}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor1}/users/${process.env.FUNC_USER_EMAIL}`,
         headers: { Authorization: token },
         responseType: 'json',
       }), 'to be fulfilled'))
@@ -132,7 +131,7 @@ describe('Vendors', () => {
     // 1) Signup
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/auth/signup`,
+      url: `${process.env.API_ENDPOINT}/auth/signup`,
       responseType: 'json',
       data: {
         email: userEmail,
@@ -143,7 +142,7 @@ describe('Vendors', () => {
     // 2) Invite
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/invitations/${userEmail}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/invitations/${userEmail}`,
         headers: { Authorization: token },
         responseType: 'json',
       }), 'to be fulfilled'))
@@ -156,7 +155,7 @@ describe('Vendors', () => {
       // 4) Accept invitation
       .then(code => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/invitations/${userEmail}/${code}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/invitations/${userEmail}/${code}`,
       }), 'to be fulfilled'))
       // 5) Check vendor in cognito
       .then(() => userPool.getUser(userEmail))
@@ -168,7 +167,7 @@ describe('Vendors', () => {
   it('Create service user, list and delete', () =>
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/vendors/${vendor}/credentials`,
+      url: `${process.env.API_ENDPOINT}/vendors/${vendor}/credentials`,
       headers: { Authorization: token },
       responseType: 'json',
       data: {
@@ -178,7 +177,7 @@ describe('Vendors', () => {
     }), 'to be fulfilled')
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/users`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/users`,
         headers: { Authorization: token },
         responseType: 'json',
       }))

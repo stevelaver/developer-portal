@@ -11,8 +11,6 @@ const Promise = require('bluebird');
 const readFile = Promise.promisify(require('fs').readFile);
 const wait = require('wait-promise');
 
-const env = require('../../lib/env').load();
-
 aws.config.setPromisesDependency(Promise);
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
@@ -37,7 +35,7 @@ describe('Apps', () => {
   before(() =>
     axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/auth/login`,
+      url: `${process.env.API_ENDPOINT}/auth/login`,
       responseType: 'json',
       data: {
         email: process.env.FUNC_USER_EMAIL,
@@ -59,7 +57,7 @@ describe('Apps', () => {
     // Try to create app with forbidden attribute
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+      url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
       headers: { Authorization: token },
       responseType: 'json',
       data: {
@@ -72,7 +70,7 @@ describe('Apps', () => {
     // Create app
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
         headers: { Authorization: token },
         responseType: 'json',
         data: {
@@ -84,7 +82,7 @@ describe('Apps', () => {
       // Create second app
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
         headers: { Authorization: token },
         responseType: 'json',
         data: {
@@ -96,7 +94,7 @@ describe('Apps', () => {
       // Get app detail
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -108,7 +106,7 @@ describe('Apps', () => {
       // List apps
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -126,18 +124,18 @@ describe('Apps', () => {
       // Public app profile should not exist
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
+        url: `${process.env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
       }), 'to be rejected with error satisfying', { response: { status: 404 } }))
       // Approve should fail
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
         headers: { Authorization: token },
       }), 'to be rejected with error satisfying', { response: { status: 400 } }))
       // Update to isPublic should fail
       .then(() => expect(axios({
         method: 'patch',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
         headers: { Authorization: token },
         data: {
           isPublic: true,
@@ -146,7 +144,7 @@ describe('Apps', () => {
       // Update should succeed
       .then(() => expect(axios({
         method: 'patch',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}`,
         headers: { Authorization: token },
         data: {
           repository: {
@@ -163,13 +161,13 @@ describe('Apps', () => {
       // Approve should fail on missing icon
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
         headers: { Authorization: token },
       }), 'to be rejected with error satisfying', { response: { status: 400 } }))
       // Request url to upload icons
       .then(() => axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/icon`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/icon`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -192,7 +190,7 @@ describe('Apps', () => {
       // Approve should succeed
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
         headers: { Authorization: token },
       }), 'to be fulfilled'))
       // Manual approval
@@ -200,12 +198,12 @@ describe('Apps', () => {
       // Public app profile should exist now
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
+        url: `${process.env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
       }), 'to be fulfilled'))
       // List versions
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/versions`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/versions`,
         headers: { Authorization: token },
       }))
       .then((res) => {
@@ -215,7 +213,7 @@ describe('Apps', () => {
       // Get version
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/versions/1`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/versions/1`,
         headers: { Authorization: token },
       }))
       .then((res) => {
@@ -225,7 +223,7 @@ describe('Apps', () => {
       // Public apps list should have at least one result
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/apps`,
+        url: `${process.env.API_ENDPOINT}/apps`,
       }))
       .then((res) => {
         expect(res.status, 'to be', 200);
@@ -238,7 +236,7 @@ describe('Apps', () => {
     // Create app should fail on wrong permissions schema
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+      url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
       headers: { Authorization: token },
       responseType: 'json',
       data: {
@@ -257,7 +255,7 @@ describe('Apps', () => {
       // Create app should fail on non-existing stack
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
         headers: { Authorization: token },
         responseType: 'json',
         data: {
@@ -276,7 +274,7 @@ describe('Apps', () => {
       // List stacks
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/stacks`,
+        url: `${process.env.API_ENDPOINT}/stacks`,
         responseType: 'json',
       }))
       .then((res) => {
@@ -285,7 +283,7 @@ describe('Apps', () => {
       // Create app should succeed
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
         headers: { Authorization: token },
         responseType: 'json',
         data: {
@@ -303,7 +301,7 @@ describe('Apps', () => {
       // Update app
       .then(() => expect(axios({
         method: 'patch',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId3}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId3}`,
         headers: { Authorization: token },
         responseType: 'json',
         data: {
@@ -318,7 +316,7 @@ describe('Apps', () => {
       // Get app detail
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId3}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId3}`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -336,11 +334,11 @@ describe('Apps', () => {
       // Public app profile should not exist
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/apps/${vendor}/${appId3}`,
+        url: `${process.env.API_ENDPOINT}/apps/${vendor}/${appId3}`,
       }), 'to be rejected with error satisfying', { response: { status: 404 } }))
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/apps`,
+        url: `${process.env.API_ENDPOINT}/apps`,
         responseType: 'json',
       }))
       .then((res) => {
@@ -356,7 +354,7 @@ describe('Apps', () => {
     // Create app
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+      url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
       headers: { Authorization: token },
       responseType: 'json',
       data: {
@@ -368,7 +366,7 @@ describe('Apps', () => {
     // Update app
       .then(() => expect(axios({
         method: 'patch',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
         headers: { Authorization: token },
         responseType: 'json',
         data: {
@@ -378,7 +376,7 @@ describe('Apps', () => {
       // Get app detail
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -392,14 +390,14 @@ describe('Apps', () => {
       // Rollback
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}/versions/1/rollback`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}/versions/1/rollback`,
         headers: { Authorization: token },
         responseType: 'json',
       }), 'to be fulfilled'))
       // Get app detail
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId4}`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -425,7 +423,7 @@ describe('Apps', () => {
       // Public list all
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/apps`,
+        url: `${process.env.API_ENDPOINT}/apps`,
         responseType: 'json',
       }))
       .then((res) => {
@@ -439,7 +437,7 @@ describe('Apps', () => {
       // Public list limited
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/apps?offset=0&limit=1`,
+        url: `${process.env.API_ENDPOINT}/apps?offset=0&limit=1`,
         responseType: 'json',
       }))
       .then((res) => {
@@ -451,7 +449,7 @@ describe('Apps', () => {
       // Public list limited
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/apps?offset=1&limit=1`,
+        url: `${process.env.API_ENDPOINT}/apps?offset=1&limit=1`,
         responseType: 'json',
       }))
       .then((res) => {
@@ -473,7 +471,7 @@ describe('Apps', () => {
       // Vendor list all
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -488,7 +486,7 @@ describe('Apps', () => {
       // Vendor list limited
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps?offset=0&limit=1`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps?offset=0&limit=1`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -501,7 +499,7 @@ describe('Apps', () => {
       // Vendor list limited
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps?offset=1&limit=1`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps?offset=1&limit=1`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -512,14 +510,14 @@ describe('Apps', () => {
         expect(res.data[0].name, 'to be', testApp2);
       }));
 
-  const ecr = new aws.ECR({ region: env.REGION });
+  const ecr = new aws.ECR({ region: process.env.REGION });
   const appName5 = `a3_${Date.now()}`;
   const appId5 = `${vendor}.${appName5}`;
   it('ECR', () =>
    // Create app
     axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/vendors/${vendor}/apps`,
+      url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,
       headers: { Authorization: token },
       responseType: 'json',
       data: {
@@ -534,7 +532,7 @@ describe('Apps', () => {
       // Get repository credentials
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor}/apps/${appId5}/repository`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId5}/repository`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
@@ -547,18 +545,18 @@ describe('Apps', () => {
         expect(res.data.credentials, 'to have key', 'password');
       })
       // Delete repository
-      .then(() => ecr.deleteRepository({ force: true, repositoryName: `${env.SERVICE_NAME}/${appId5}` }).promise()));
+      .then(() => ecr.deleteRepository({ force: true, repositoryName: `${process.env.SERVICE_NAME}/${appId5}` }).promise()));
 
   const s3 = new aws.S3();
   after(() =>
     rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor])
     // Clear icons from s3
-      .then(() => s3.listObjects({ Bucket: env.S3_BUCKET, Prefix: `${appId1}/` }).promise())
+      .then(() => s3.listObjects({ Bucket: process.env.S3_BUCKET, Prefix: `${appId1}/` }).promise())
       .then((data) => {
         const promises = [];
         if (data && _.has(data, 'Contents')) {
           _.each(data.Contents, (file) => {
-            promises.push(s3.deleteObject({ Bucket: env.S3_BUCKET, Key: file.Key }).promise());
+            promises.push(s3.deleteObject({ Bucket: process.env.S3_BUCKET, Key: file.Key }).promise());
           });
           return Promise.all(promises);
         }

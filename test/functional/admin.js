@@ -9,12 +9,11 @@ const moment = require('moment');
 const mysql = require('mysql');
 const Promise = require('bluebird');
 const db = require('../../lib/db');
-const env = require('../../lib/env').load();
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
-const services = new Services(env);
+const services = new Services(process.env);
 const userPool = services.getUserPool();
 
 const rds = mysql.createConnection({
@@ -38,7 +37,7 @@ describe('Admin', () => {
   before(() =>
     expect(axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/auth/login`,
+      url: `${process.env.API_ENDPOINT}/auth/login`,
       responseType: 'json',
       data: {
         email: process.env.FUNC_USER_EMAIL,
@@ -72,7 +71,7 @@ describe('Admin', () => {
       // Create
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/vendors/${otherVendor}/apps`,
+        url: `${process.env.API_ENDPOINT}/vendors/${otherVendor}/apps`,
         responseType: 'json',
         headers: { Authorization: token },
         data: {
@@ -84,7 +83,7 @@ describe('Admin', () => {
       // Get app detail
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId2}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -96,7 +95,7 @@ describe('Admin', () => {
       // Update app
       .then(() => expect(axios({
         method: 'patch',
-        url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId2}`,
         responseType: 'json',
         headers: { Authorization: token },
         data: {
@@ -106,7 +105,7 @@ describe('Admin', () => {
       // Get app detail
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/admin/apps/${appId2}`,
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId2}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -118,7 +117,7 @@ describe('Admin', () => {
       // Get apps changes
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/admin/changes?since=${moment().subtract(5, 'minutes').format('YYYY-MM-DD')}`,
+        url: `${process.env.API_ENDPOINT}/admin/changes?since=${moment().subtract(5, 'minutes').format('YYYY-MM-DD')}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -138,7 +137,7 @@ describe('Admin', () => {
       // Get app detail
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/admin/apps/${appId}`,
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -150,14 +149,14 @@ describe('Admin', () => {
       // Update app
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/admin/apps/${appId}/approve`,
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId}/approve`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
       // Get app detail
       .then(() => expect(axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/admin/apps/${appId}`,
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -175,7 +174,7 @@ describe('Admin', () => {
       // Make user admin
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/admin/users/${userEmail}/admin`,
+        url: `${process.env.API_ENDPOINT}/admin/users/${userEmail}/admin`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -193,7 +192,7 @@ describe('Admin', () => {
       // Add vendor
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
+        url: `${process.env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -208,7 +207,7 @@ describe('Admin', () => {
       // Remove vendor
       .then(() => expect(axios({
         method: 'delete',
-        url: `${env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
+        url: `${process.env.API_ENDPOINT}/admin/users/${userEmail}/vendors/${otherVendor}`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -225,7 +224,7 @@ describe('Admin', () => {
   it('Create vendor', () =>
     axios({
       method: 'post',
-      url: `${env.API_ENDPOINT}/admin/vendors`,
+      url: `${process.env.API_ENDPOINT}/admin/vendors`,
       responseType: 'json',
       headers: { Authorization: token },
       data: {
@@ -240,7 +239,7 @@ describe('Admin', () => {
       })
       .then(() => axios({
         method: 'get',
-        url: `${env.API_ENDPOINT}/vendors/${vendor2}`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor2}`,
         responseType: 'json',
         headers: { Authorization: token },
       }))
@@ -259,7 +258,7 @@ describe('Admin', () => {
     )
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/admin/vendors/${vendor3}/approve`,
+        url: `${process.env.API_ENDPOINT}/admin/vendors/${vendor3}/approve`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -282,7 +281,7 @@ describe('Admin', () => {
       .then(() => userPool.addUserToVendor(userEmail, vendor4))
       .then(() => expect(axios({
         method: 'post',
-        url: `${env.API_ENDPOINT}/admin/vendors/${vendor4}/approve`,
+        url: `${process.env.API_ENDPOINT}/admin/vendors/${vendor4}/approve`,
         responseType: 'json',
         headers: { Authorization: token },
         data: {

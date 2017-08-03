@@ -1,9 +1,5 @@
 'use strict';
 
-const yaml = require('yamljs');
-
-const env = yaml.load(`${__dirname}/../env.yml`);
-
 class DbMigration {
   constructor(serverless) {
     this.serverless = serverless;
@@ -30,7 +26,7 @@ class DbMigration {
           InvocationType: 'RequestResponse',
           LogType: 'Tail',
           Payload: null,
-        }, env.STAGE, env.REGION);
+        }, process.env.STAGE, process.env.REGION);
     }
   }
 }
