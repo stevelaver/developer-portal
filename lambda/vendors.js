@@ -102,10 +102,11 @@ function requestJoinVendor(event, context, callback) {
         if (user.isAdmin) {
           return vendorApp.join(user, event.pathParameters.vendor);
         }
-        return services.getNotification().approveJoinVendor({
-          name: user.name,
-          email: user.email,
-        }, event.pathParameters.vendor);
+        return vendorApp.checkVendorExists(event.pathParameters.vendor)
+          .then(() => services.getNotification().approveJoinVendor({
+            name: user.name,
+            email: user.email,
+          }, event.pathParameters.vendor));
       }),
     event,
     context,

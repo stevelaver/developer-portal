@@ -49,6 +49,16 @@ class Vendor {
       .then(() => this.db.getVendor(newId));
   }
 
+  checkVendorExists(vendor) {
+    return this.db.connect(this.env)
+      .then(() => this.db.checkVendorExists(vendor))
+      .then(() => this.db.end())
+      .catch((err) => {
+        this.db.end();
+        throw err;
+      });
+  }
+
   join(user, vendor) {
     const userPool = this.services.getUserPool();
     return this.db.connect(this.env)
