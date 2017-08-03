@@ -108,7 +108,7 @@ function approveApp(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(user => app.approveApp(event.pathParameters.id, user))
+      .then(user => app.adminPublishApp(event.pathParameters.id, user))
       .then(vendor => services.getEmail().send(
         vendor.email,
         'App approval in Keboola Developer Portal',
@@ -133,7 +133,7 @@ function listApps(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.listApps(
+      .then(() => app.adminListApps(
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null)
       )),
@@ -156,10 +156,9 @@ function detailApp(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.getAppWithVendorForAdmin(
+      .then(() => app.adminGetAppWithVendor(
         event.pathParameters.id,
-        _.get(event, 'pathParameters.version', null),
-        false
+        _.get(event, 'pathParameters.version', null)
       )),
     db,
     event,
@@ -178,7 +177,7 @@ function updateApp(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(user => app.updateAppByAdmin(
+      .then(user => app.adminUpdateApp(
         event.pathParameters.id,
         JSON.parse(event.body),
         user
@@ -205,7 +204,7 @@ function listAppChanges(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.listAppChanges(
+      .then(() => app.adminListChangesAcrossApps(
         _.get(event, 'queryStringParameters.since', null),
         _.get(event, 'queryStringParameters.until', null)
       )),

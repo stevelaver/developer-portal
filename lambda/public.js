@@ -37,11 +37,7 @@ function detail(event, context, callback) {
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => app.getAppWithVendor(
-        _.get(event.pathParameters, 'app', event.pathParameters.vendorOrApp),
-        null,
-        true
-      )),
+      .then(() => app.getAppWithVendor(_.get(event.pathParameters, 'app', event.pathParameters.vendorOrApp))),
     db,
     event,
     context,
@@ -59,7 +55,7 @@ function list(event, context, callback) {
 
   return request.responseDbPromise(
     db.connect(process.env)
-      .then(() => app.listPublishedApps(
+      .then(() => app.publicListApps(
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null),
       )),

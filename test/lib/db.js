@@ -429,7 +429,7 @@ describe('db', () => {
     );
   });
 
-  describe('getAppWithVendor', () => {
+  describe('getAppWithVendor, publicGetApp', () => {
     const appId = `alafv-${Date.now()}`;
     const vendor = `vlafv-${Date.now()}`;
 
@@ -454,7 +454,6 @@ describe('db', () => {
         .then((data) => {
           expect(data, 'to have key', 'name');
           expect(data.name, 'to be', 'test2');
-          expect(data, 'not to have key', 'permissions');
           expect(data, 'to have key', 'vendor');
           expect(data.vendor, 'to have key', 'name');
           expect(data.vendor.name, 'to be', 'test');
@@ -465,11 +464,10 @@ describe('db', () => {
     );
 
     it('Get version', () =>
-      db.getAppWithVendor(appId, 1, false, false)
+      db.getAppWithVendor(appId, 1)
         .then((data) => {
           expect(data, 'to have key', 'name');
           expect(data.name, 'to be', 'test1');
-          expect(data, 'not to have key', 'permissions');
           expect(data, 'to have key', 'vendor');
           expect(data.vendor, 'to have key', 'name');
           expect(data.vendor.name, 'to be', 'test');
@@ -480,14 +478,14 @@ describe('db', () => {
     );
 
     it('Get public', () =>
-      expect(db.getAppWithVendor(appId, 1, true, false), 'to be rejected')
+      expect(db.publicGetApp(appId), 'to be rejected')
         .then(() => rds.queryAsync('UPDATE `apps` SET isPublic=1 WHERE id=?', [appId]))
         .then(() => rds.queryAsync('UPDATE `appVersions` SET isPublic=1 WHERE id=?', [appId]))
         .then(() => expect(db.getAppWithVendor(appId, 1, true, false), 'to be fulfilled'))
     );
 
     it('Get for admin', () =>
-      db.getAppWithVendor(appId, null, false, true)
+      db.getAppWithVendor(appId)
         .then((data) => {
           expect(data, 'to have key', 'name');
           expect(data.name, 'to be', 'test2');

@@ -85,13 +85,13 @@ function list(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.listAppsForVendor(
+      .then(user => app.listApps(
         event.pathParameters.vendor,
         user,
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null),
       ))
-      .then(res => res.map(r => App.addIcons(r, cfUri))),
+      .then(res => res.map(r => App.formatIcons(r, cfUri))),
     db,
     event,
     context,
@@ -150,7 +150,7 @@ function deleteApp(event, context, callback) {
   );
 }
 
-function approve(event, context, callback) {
+function requestPublishing(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: {
@@ -162,7 +162,7 @@ function approve(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.requestApproval(
+      .then(user => app.requestPublishing(
         event.pathParameters.app,
         event.pathParameters.vendor,
         user,
@@ -329,7 +329,7 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
           return update(event, context, callback);
       }
     case '/vendors/{vendor}/apps/{app}/approve':
-      return approve(event, context, callback);
+      return requestPublishing(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/versions':
       return versions(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/versions/{version}':

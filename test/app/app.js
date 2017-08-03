@@ -79,12 +79,12 @@ describe('App', () => {
         expect(data, 'to have key', 'deletedOn');
         expect(data.deletedOn, 'to be null');
       })
-      .then(() => app.listPublishedApps())
+      .then(() => app.publicListApps())
       .then(data => expect(data, 'to have items satisfying', (item) => {
         expect(item.id, 'not to be', appId);
       }))
       .then(() => app.updateApp(appId, vendorId, { isPublic: true }, user))
-      .then(() => app.listPublishedApps())
+      .then(() => app.publicListApps())
       .then(data => expect(data, 'to have an item satisfying', (item) => {
         expect(item.id, 'to be', appId);
       }))
@@ -93,7 +93,7 @@ describe('App', () => {
       .then((data) => {
         expect(data.deletedOn, 'not to be null');
       })
-      .then(() => app.listPublishedApps())
+      .then(() => app.publicListApps())
       .then(data => expect(data, 'to have items satisfying', (item) => {
         expect(item.id, 'not to be', appId);
       })));
@@ -102,7 +102,7 @@ describe('App', () => {
     app.createApp({ id: appName2, name: 'test' }, vendorId, user)
       .then(() => app.updateApp(appId2, vendorId, { isPublic: true }, user))
       .then(() => expect(app.deprecate(appId2, vendorId, user, '2017-01-01', 'test'), 'to be fulfilled'))
-      .then(() => app.getApp(appId2))
+      .then(() => app.getAppForVendor(appId2, vendorId, user))
       .then((data) => {
         expect(data.isDeprecated, 'to be', true);
         expect(data.isPublic, 'to be', false);

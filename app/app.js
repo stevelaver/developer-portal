@@ -9,7 +9,7 @@ class App {
     this.err = Services.getError();
   }
 
-  requestApproval(id, vendor, user) {
+  requestPublishing(id, vendor, user) {
     return this.access.checkApp(user, vendor, id)
       .then(() => this.db.getApp(id))
       .then((app) => {
@@ -43,21 +43,6 @@ class App {
       });
   }
 
-  listAppsForVendor(vendor, user, offset = 0, limit = 1000) {
-    return this.access.checkVendor(user, vendor)
-      .then(() => this.db.listAppsForVendor(vendor, offset, limit));
-  }
-
-  getAppForVendor(id, vendor, user, version = null) {
-    return this.access.checkApp(user, vendor, id)
-      .then(() => this.getApp(id, version));
-  }
-
-  getApp(id, version = null) {
-    return this.db.getApp(id, version)
-    .then(appData => App.addIcons(appData, this.env.CLOUDFRONT_URI));
-  }
-
   createApp(bodyIn, vendor, user) {
     const body = JSON.parse(JSON.stringify(bodyIn));
     body.createdBy = user.email;
@@ -75,11 +60,10 @@ class App {
   updateApp(id, vendor, body, user) {
     return this.access.checkApp(user, vendor, id)
       .then(() => this.db.checkVendorExists(vendor))
-      .then(() => this.db.updateApp(body, id, user.email))
-      .then(() => null);
+      .then(() => this.adminUpdateApp(id, body, user.email));
   }
 
-  updateAppByAdmin(id, body, user) {
+  adminUpdateApp(id, body, user) {
     return this.db.updateApp(body, id, user.email)
       .then(() => null);
   }
@@ -91,11 +75,13 @@ class App {
   }
 
   listAppVersions(id, vendor, user, offset = 0, limit = 1000) {
+    const cfUri = this.env.CLOUDFRONT_URI;
     return this.access.checkApp(user, vendor, id)
-      .then(() => this.db.listVersions(id, offset, limit));
+      .then(() => this.db.listVersions(id, offset, limit))
+      .then(res => res.map(r => App.formatIcons(r, cfUri)));
   }
 
-  listAppChanges(since = null, until = null) {
+  adminListChangesAcrossApps(since = null, until = null) {
     return this.db.getLatestVersions(since, until)
       .then((res) => {
         const promises = [];
@@ -184,7 +170,7 @@ class App {
       .then(() => null);
   }
 
-  approveApp(id, user) {
+  adminPublishApp(id, user) {
     let appData;
     return this.db.getApp(id)
     .then((data) => {
@@ -197,35 +183,35 @@ class App {
     .then(() => this.db.getVendor(appData.vendor));
   }
 
-  listApps(offset = 0, limit = 1000) {
+  adminListApps(offset = 0, limit = 1000) {
     return this.db.listApps(offset, limit);
   }
 
-  static addIcons(input, cfUri) {
-    const res = input;
-    res.icon = {
-      32: input.icon32 ? `https://${cfUri}/icons/${input.icon32}` : null,
-      64: input.icon64 ? `https://${cfUri}/icons/${input.icon64}` : null,
-    };
-    delete res.icon32;
-    delete res.icon64;
-    return res;
+  listApps(vendor, user, offset = 0, limit = 1000) {
+    return this.access.checkVendor(user, vendor)
+      .then(() => this.db.listAppsForVendor(vendor, offset, limit));
   }
 
-  getAppWithVendor(id, version = null, checkPublished = false) {
-    return this.db.getAppWithVendor(id, version, checkPublished)
-    .then(data => App.addIcons(data, this.env.CLOUDFRONT_URI));
-  }
-
-  getAppWithVendorForAdmin(id, version = null, checkPublished = false) {
-    return this.db.getAppWithVendor(id, version, checkPublished, true)
-      .then(data => App.addIcons(data, this.env.CLOUDFRONT_URI));
-  }
-
-  listPublishedApps(offset = 0, limit = 1000) {
+  publicListApps(offset = 0, limit = 1000) {
     const cfUri = this.env.CLOUDFRONT_URI;
     return this.db.listPublishedApps(offset, limit)
-      .then(res => res.map(r => App.addIcons(r, cfUri)));
+      .then(res => res.map(r => App.formatIcons(r, cfUri)));
+  }
+
+  getAppForVendor(id, vendor, user, version = null) {
+    return this.access.checkApp(user, vendor, id)
+      .then(() => this.db.getApp(id, version))
+      .then(appData => App.formatIcons(appData, this.env.CLOUDFRONT_URI));
+  }
+
+  getAppWithVendor(id) {
+    return this.db.publicGetApp(id)
+      .then(data => App.formatIcons(data, this.env.CLOUDFRONT_URI));
+  }
+
+  adminGetAppWithVendor(id, version = null) {
+    return this.db.getAppWithVendor(id, version)
+      .then(data => App.formatIcons(data, this.env.CLOUDFRONT_URI));
   }
 
   deprecate(appId, vendor, user, expire = null, replace = null) {
@@ -246,6 +232,17 @@ class App {
         replacementApp: replace,
       }, appId, user.email))
       .then(() => null);
+  }
+
+  static formatIcons(input, cfUri) {
+    const res = input;
+    res.icon = {
+      32: input.icon32 ? `https://${cfUri}/icons/${input.icon32}` : null,
+      64: input.icon64 ? `https://${cfUri}/icons/${input.icon64}` : null,
+    };
+    delete res.icon32;
+    delete res.icon64;
+    return res;
   }
 }
 
