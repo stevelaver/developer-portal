@@ -73,7 +73,8 @@ describe('App', () => {
         expect(data, 'to have key', 'id');
         expect(data.id, 'to be', appId);
         expect(data, 'to have key', 'vendor');
-        expect(data.vendor, 'to be', vendorId);
+        expect(data.vendor, 'to have key', 'id');
+        expect(data.vendor.id, 'to be', vendorId);
         expect(data, 'to have key', 'version');
         expect(data.version, 'to be', 1);
         expect(data, 'to have key', 'deletedOn');

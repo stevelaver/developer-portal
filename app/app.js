@@ -180,7 +180,7 @@ class App {
       }
       return this.db.updateApp({ isPublic: 1 }, id, user.email);
     })
-    .then(() => this.db.getVendor(appData.vendor));
+    .then(() => this.db.getVendor(appData.vendor.id));
   }
 
   adminListApps(offset = 0, limit = 1000) {
