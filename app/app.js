@@ -187,12 +187,16 @@ class App {
   }
 
   adminListApps(offset = 0, limit = 1000) {
-    return this.db.listApps(null, false, offset, limit);
+    const cfUri = this.env.CLOUDFRONT_URI;
+    return this.db.listApps(null, false, offset, limit)
+      .then(res => res.map(r => App.formatIcons(r, cfUri)));
   }
 
   listApps(vendor, user, offset = 0, limit = 1000) {
+    const cfUri = process.env.CLOUDFRONT_URI;
     return this.access.checkVendor(user, vendor)
-      .then(() => this.db.listApps(vendor, false, offset, limit));
+      .then(() => this.db.listApps(vendor, false, offset, limit))
+      .then(res => res.map(r => App.formatIcons(r, cfUri)));
   }
 
   publicListApps(offset = 0, limit = 1000) {
