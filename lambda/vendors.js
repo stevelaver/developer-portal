@@ -5,6 +5,7 @@ import Vendor from '../app/vendor';
 
 require('longjohn');
 require('source-map-support').install();
+const _ = require('lodash');
 const joi = require('joi');
 const generator = require('generate-password');
 
@@ -201,15 +202,23 @@ function listUsers(event, context, callback) {
     path: ['vendor'],
   });
 
+  const paginationToken = _.get(event, 'queryStringParameters.paginationToken', null);
+  const vendor = event.pathParameters.vendor;
+  const headers = {};
   return request.responsePromise(
     identity.getUser(event.headers.Authorization)
-      .then(user => vendorApp.listUsers(
-        event.pathParameters.vendor,
-        user
-      )),
+      .then(user => vendorApp.listUsers(vendor, user, paginationToken))
+      .then((res) => {
+        if (res.paginationToken) {
+          headers.Link = `<${process.env.API_ENDPOINT}/vendors/${vendor}/users?&paginationToken=${res.paginationToken}>; rel=next`;
+        }
+        return res.users;
+      }),
     event,
     context,
-    callback
+    callback,
+    200,
+    headers
   );
 }
 

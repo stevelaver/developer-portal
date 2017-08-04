@@ -25,14 +25,25 @@ function listUsers(event, context, callback) {
     query: ['filter'],
   });
 
+  const filter = _.get(event, 'queryStringParameters.filter', '');
+  const paginationToken = _.get(event, 'queryStringParameters.paginationToken', null);
+  const headers = {};
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool().listUsers(_.get(event, 'queryStringParameters.filter', null))),
+      .then(() => services.getUserPool().listUsers(filter, paginationToken))
+      .then((res) => {
+        if (res.paginationToken) {
+          headers.Link = `<${process.env.API_ENDPOINT}/admin/users?filter=${filter}&paginationToken=${res.paginationToken}>; rel=next`;
+        }
+        return res.users;
+      }),
     db,
     event,
     context,
-    callback
+    callback,
+    200,
+    headers
   );
 }
 

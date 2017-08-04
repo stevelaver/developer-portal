@@ -213,10 +213,10 @@ class Vendor {
     }
   }
 
-  listUsers(vendor, user) {
+  listUsers(vendor, user, paginationToken = null) {
     this.checkVendorAccess(user, vendor);
     const userPool = this.services.getUserPool();
-    return userPool.listUsersForVendor(vendor);
+    return userPool.listUsersForVendor(vendor, paginationToken);
   }
 
   checkVendorAccess(user, vendor) {
