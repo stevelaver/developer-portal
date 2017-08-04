@@ -187,17 +187,17 @@ class App {
   }
 
   adminListApps(offset = 0, limit = 1000) {
-    return this.db.listApps(offset, limit);
+    return this.db.listApps(null, false, offset, limit);
   }
 
   listApps(vendor, user, offset = 0, limit = 1000) {
     return this.access.checkVendor(user, vendor)
-      .then(() => this.db.listAppsForVendor(vendor, offset, limit));
+      .then(() => this.db.listApps(vendor, false, offset, limit));
   }
 
   publicListApps(offset = 0, limit = 1000) {
     const cfUri = this.env.CLOUDFRONT_URI;
-    return this.db.listPublishedApps(offset, limit)
+    return this.db.listApps(null, true, offset, limit)
       .then(res => res.map(r => App.formatIcons(r, cfUri)));
   }
 

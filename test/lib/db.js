@@ -305,38 +305,40 @@ describe('db', () => {
   });
 
   describe('listApps', () => {
-    const appId = `alaa-${Date.now()}`;
-    const appId2 = `alaa2-${Date.now()}`;
+    const appId = `app1-${Date.now()}`;
+    const appId2 = `app2-${Date.now()}`;
     const vendor = `vlaa-${Date.now()}`;
     const vendor2 = `vlaa2-${Date.now()}`;
 
     beforeEach(() =>
       rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
         .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor2]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [`alafv2-${Date.now()}`, vendor2, 'test']))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId2, vendor, 'test']))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [appId, vendor, 'test1', 1]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [appId2, vendor, 'test2', 0]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [`app3-${Date.now()}`, vendor2, 'test3', 0]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [`app4-${Date.now()}`, vendor2, 'test4', 0]))
+        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [`app5-${Date.now()}`, vendor, 'test5', 1]))
     );
 
     it('List all', () =>
       db.listApps()
         .then((data) => {
-          expect(data, 'to have length', 3);
+          expect(data, 'to have length', 5);
           expect(data[0], 'to have key', 'id');
           expect(data[1], 'to have key', 'id');
-          expect([data[0].id, data[1].id], 'to contain', appId);
-          expect([data[0].id, data[1].id], 'to contain', appId2);
+          expect([data[0].id, data[1].id, data[2].id, data[3].id, data[4].id], 'to contain', appId);
+          expect([data[0].id, data[1].id, data[2].id, data[3].id, data[4].id], 'to contain', appId2);
         })
     );
 
     it('List limited', () =>
-      db.listApps(0, 1)
+      db.listApps(null, false, 0, 1)
         .then((data) => {
           expect(data, 'to have length', 1);
           expect(data[0], 'to have key', 'id');
           expect(data[0].id, 'to contain', appId);
         })
-        .then(() => db.listApps(1, 2))
+        .then(() => db.listApps(null, false, 1, 2))
         .then((data) => {
           expect(data, 'to have length', 2);
           expect(data[0], 'to have key', 'id');
@@ -345,86 +347,25 @@ describe('db', () => {
           expect([data[0].id, data[1].id], 'to contain', appId2);
         })
     );
-  });
 
-  describe('listPublishedApps', () => {
-    const appId = `alaa-${Date.now()}`;
-    const appId2 = `alaa2-${Date.now()}`;
-    const vendor = `vlaa-${Date.now()}`;
-    const vendor2 = `vlaa2-${Date.now()}`;
-
-    beforeEach(() =>
-      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
-        .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor2]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [appId, vendor, 'test', 1]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [`alafv2-${Date.now()}`, vendor2, 'test', 0]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [`alafv3-${Date.now()}`, vendor, 'test', 1]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?', [appId2, vendor, 'test', 1]))
-    );
-
-    it('List all', () =>
-      db.listPublishedApps()
+    it('List published', () =>
+      db.listApps(null, true)
         .then((data) => {
-          expect(data, 'to have length', 3);
+          expect(data, 'to have length', 2);
           expect(data[0], 'to have key', 'id');
           expect(data[1], 'to have key', 'id');
           expect([data[0].id, data[1].id], 'to contain', appId);
-          expect([data[0].id, data[1].id], 'to contain', appId2);
+          expect([data[0].id, data[1].id], 'not to contain', appId2);
         })
     );
 
-    it('List limited', () =>
-      db.listPublishedApps(0, 1)
+    it('List for vendor', () =>
+      db.listApps(vendor)
         .then((data) => {
-          expect(data, 'to have length', 1);
+          expect(data, 'to have length', 3);
           expect(data[0], 'to have key', 'id');
-          expect(data[0].id, 'to be', appId);
-        })
-        .then(() => db.listPublishedApps(1, 2))
-        .then((data) => {
-          expect(data, 'to have length', 2);
-          expect(data[0], 'to have key', 'id');
-          expect(data[0].id, 'to be', appId2);
-        })
-    );
-  });
-
-  describe('listAppsForVendor', () => {
-    const appId = `alafv-${Date.now()}`;
-    const appId2 = `alafv2-${Date.now()}`;
-    const vendor = `vlafv-${Date.now()}`;
-    const vendor2 = `vlafv2-${Date.now()}`;
-
-    beforeEach(() =>
-      rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor])
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId, vendor, 'test']))
-        .then(() => rds.queryAsync('INSERT INTO `vendors` SET id=?, name="test", address="test", email="test";', [vendor2]))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [`alafv2-${Date.now()}`, vendor2, 'test']))
-        .then(() => rds.queryAsync('INSERT INTO `apps` SET id=?, vendor=?, name=?', [appId2, vendor, 'test']))
-    );
-
-    it('List all', () =>
-      db.listAppsForVendor(vendor)
-        .then((data) => {
-          expect(data, 'to have length', 2);
-          expect(data[0], 'to have key', 'id');
-          expect([data[0].id, data[1].id], 'to contain', appId);
-          expect([data[0].id, data[1].id], 'to contain', appId2);
-        })
-    );
-
-    it('List limited', () =>
-      db.listAppsForVendor(vendor, 0, 1)
-        .then((data) => {
-          expect(data, 'to have length', 1);
-          expect(data[0], 'to have key', 'id');
-          expect(data[0].id, 'to contain', appId);
-        })
-        .then(() => db.listAppsForVendor(vendor, 1, 1))
-        .then((data) => {
-          expect(data, 'to have length', 1);
-          expect(data[0], 'to have key', 'id');
-          expect(data[0].id, 'to contain', appId2);
+          expect([data[0].id, data[1].id, data[2].id], 'to contain', appId);
+          expect([data[0].id, data[1].id, data[2].id], 'to contain', appId2);
         })
     );
   });
