@@ -83,11 +83,10 @@ function getVendorsList(event, context, callback) {
   });
 
   return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => vendorApp.list(
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null),
-      )),
+    vendorApp.list(
+      _.get(event, 'queryStringParameters.offset', null),
+      _.get(event, 'queryStringParameters.limit', null),
+    ),
     db,
     event,
     context,
@@ -101,8 +100,7 @@ function getVendor(event, context, callback) {
   });
 
   return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => vendorApp.get(event.pathParameters.vendor))
+    vendorApp.get(event.pathParameters.vendor)
       .then(data => ({
         id: data.id,
         name: data.name,

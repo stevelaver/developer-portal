@@ -222,8 +222,7 @@ function createVendor(event, context, callback) {
   });
 
   return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
+    identity.getAdmin(event.headers.Authorization)
       .then(() => vendorApp.create(JSON.parse(event.body))),
     db,
     event,
@@ -244,8 +243,7 @@ function approveVendor(event, context, callback) {
 
   const body = JSON.parse(event.body);
   return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
+    identity.getAdmin(event.headers.Authorization)
       .then(() => vendorApp.approve(event.pathParameters.vendor, _.get(body, 'newId', null)))
       .then((vendor) => {
         if (vendor.createdBy) {

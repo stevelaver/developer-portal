@@ -1,3 +1,5 @@
+import DbVendors from '../lib/db/vendors';
+
 const _ = require('lodash');
 const Promise = require('bluebird');
 
@@ -180,7 +182,8 @@ class App {
       }
       return this.db.updateApp({ isPublic: 1 }, id, user.email);
     })
-    .then(() => this.db.getVendor(appData.vendor.id));
+      .then(() => new DbVendors(this.db.getConnection(), this.err))
+      .then(dbVendors => dbVendors.get(appData.vendor.id));
   }
 
   adminListApps(offset = 0, limit = 1000) {

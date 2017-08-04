@@ -31,28 +31,22 @@ function createVendor(event, context, callback) {
   const body = JSON.parse(event.body);
 
   const vendorId = `_v${Date.now()}${Math.random()}`.substr(0, 32);
-  return request.responsePromise(
+  return request.responseDbPromise(
     identity.getUser(event.headers.Authorization)
       .then(user =>
-        db.connect(process.env)
-          .then(() => vendorApp.create({
-            id: vendorId,
-            name: body.name,
-            address: body.address,
-            email: body.email,
-            createdBy: user.email,
-          }, false))
+        vendorApp.create({
+          id: vendorId,
+          name: body.name,
+          address: body.address,
+          email: body.email,
+          createdBy: user.email,
+        }, false)
           .then(() => services.getUserPool().addUserToVendor(user.email, vendorId))
           .then(() => services.getNotification().approveVendor(vendorId, body.name, {
             name: body.name,
             email: body.email,
-          })),
-      )
-      .then(() => db.end())
-      .catch((err) => {
-        db.end();
-        throw err;
-      }),
+          }))),
+    db,
     event,
     context,
     callback,
@@ -76,13 +70,14 @@ function updateVendor(event, context, callback) {
   });
 
   const body = JSON.parse(event.body);
-  return request.responsePromise(
+  return request.responseDbPromise(
     identity.getUser(event.headers.Authorization)
       .then(user => vendorApp.updateVendor(
         event.pathParameters.vendor,
         body,
         user,
       )),
+    db,
     event,
     context,
     callback,

@@ -1,4 +1,5 @@
 import DbInvitations from '../lib/db/invitations';
+import DbVendors from '../lib/db/vendors';
 
 const _ = require('lodash');
 const moment = require('moment');
@@ -14,17 +15,23 @@ class Vendor {
   }
 
   list(offset = 0, limit = 1000) {
-    return this.db.listVendors(offset, limit);
+    return db.connect(process.env)
+      .then(() => new DbVendors(this.db.getConnection(), this.err))
+      .then(dbVendors => dbVendors.list(offset, limit));
   }
 
   get(id) {
-    return this.db.getVendor(id);
+    return db.connect(process.env)
+      .then(() => new DbVendors(this.db.getConnection(), this.err))
+      .then(dbVendors => dbVendors.get(id));
   }
 
   create(body, isApproved = true) {
     const params = _.clone(body);
     params.isApproved = isApproved;
-    return this.db.createVendor(params)
+    return this.db.connect(this.env)
+      .then(() => new DbVendors(this.db.getConnection(), this.err))
+      .then(dbVendors => dbVendors.create(params))
       .catch((err) => {
         if (_.startsWith('ER_DUP_ENTRY', err.message)) {
           throw this.err.badRequest('The vendor already exists');
@@ -36,17 +43,22 @@ class Vendor {
   updateVendor(vendor, data, user) {
     this.checkVendorAccess(user, vendor);
     return this.db.connect(this.env)
-      .then(() => this.db.updateVendor(vendor, data));
+      .then(() => new DbVendors(this.db.getConnection(), this.err))
+      .then(dbVendors => dbVendors.update(vendor, data));
   }
 
   approve(id, newId = null) {
     if (!newId) {
-      return this.db.updateVendor(id, { isApproved: true })
-        .then(() => this.db.getVendor(id));
+      return this.db.connect(process.env)
+        .then(() => new DbVendors(this.db.getConnection(), this.err))
+        .then(dbVendors => dbVendors.update(id, { isApproved: true })
+          .then(() => dbVendors.get(id)));
     }
-    return this.db.checkVendorNotExists(newId)
-      .then(() => this.db.updateVendor(id, { id: newId, isApproved: true }))
-      .then(() => this.db.getVendor(newId));
+    return this.db.connect(process.env)
+      .then(() => this.db.checkVendorNotExists(newId))
+      .then(() => new DbVendors(this.db.getConnection(), this.err))
+      .then(dbVendors => dbVendors.update(id, { id: newId, isApproved: true })
+        .then(() => dbVendors.get(newId)));
   }
 
   checkVendorExists(vendor) {
