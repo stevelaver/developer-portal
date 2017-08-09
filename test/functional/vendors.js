@@ -53,7 +53,7 @@ describe('Vendors', () => {
       ))
       .then(() => userPool.listUsersForVendor(vendor))
       .then((data) => {
-        _.each(data, (user) => {
+        _.each(data.users, (user) => {
           if (user.email !== process.env.FUNC_USER_EMAIL) {
             userPool.deleteUser(user.email);
           }
