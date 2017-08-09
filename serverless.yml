@@ -94,30 +94,37 @@ functions:
         http:
           method: get
           path: "/"
+          cors: true
       -
         http:
           method: get
           path: "apps/{vendorOrApp}"
+          cors: true
       -
         http:
           method: get
           path: "apps/{vendorOrApp}/{app}"
+          cors: true
       -
         http:
           method: get
           path: "apps"
+          cors: true
       -
         http:
           method: get
           path: "stacks"
+          cors: true
       -
         http:
           method: get
           path: "vendors"
+          cors: true
       -
         http:
           method: get
           path: "vendors/{vendor}"
+          cors: true
       -
         schedule:
           rate: rate(15 minutes)
@@ -149,56 +156,67 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/apps/{id}/approve"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "admin/apps/{id}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "admin/apps"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: patch
           path: "admin/apps/{id}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "admin/users"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/users/{email}/admin"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/users/{email}/vendors/{vendor}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: delete
           path: "admin/users/{email}/vendors/{vendor}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/vendors"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/vendors/{vendor}/approve"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "admin/changes"
+          cors: true
 
   apps:
     handler: apps.apps
@@ -210,61 +228,73 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "vendors/{vendor}/apps"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "vendors/{vendor}/apps/{app}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: delete
           path: "vendors/{vendor}/apps/{app}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: patch
           path: "vendors/{vendor}/apps/{app}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps/{app}/approve"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "vendors/{vendor}/apps/{app}/versions"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "vendors/{vendor}/apps/{app}/versions/{version}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps/{app}/versions/{version}/rollback"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps/{app}/icon"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "vendors/{vendor}/apps/{app}/repository"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/apps/{app}/deprecate"
+          cors: true
 
   vendors:
     handler: vendors.vendors
@@ -276,35 +306,42 @@ functions:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/users"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/invitations/{email}"
+          cors: true
       -
         http:
           method: get
           path: "vendors/{vendor}/invitations/{email}/{code}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "vendors/{vendor}/users"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: delete
           path: "vendors/{vendor}/users/{email}"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/credentials"
+          cors: true
 
   iconUpload:
     handler: iconUpload.upload
@@ -331,52 +368,64 @@ functions:
         http:
           method: post
           path: "auth/login"
+          cors: true
       -
         http:
           method: post
           path: "auth/logout"
+          cors: true
       -
         http:
           method: get
           path: "auth/token"
+          cors: true
       -
         http:
           method: post
           path: "auth/forgot/{email}"
+          cors: true
       -
         http:
           method: post
           path: "auth/forgot/{email}/confirm"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: get
           path: "auth/profile"
+          cors: true
       -
         http:
           method: post
           path: "auth/signup"
+          cors: true
       -
         http:
           method: post
           path: "auth/confirm/{email}/{code}"
+          cors: true
       -
         http:
           method: get
           path: "auth/confirm/{email}/{code}"
+          cors: true
       -
         http:
           method: post
           path: "auth/confirm"
+          cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "auth/mfa/{phone}"
+          cors: true
       -
         http:
           method: post
           path: "auth/mfa/confirm/{code}"
+          cors: true
 
 
 resources:
