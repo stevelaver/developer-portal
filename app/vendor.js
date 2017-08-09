@@ -33,7 +33,7 @@ class Vendor {
       .then(() => new DbVendors(this.db.getConnection(), this.err))
       .then(dbVendors => dbVendors.create(params))
       .catch((err) => {
-        if (_.startsWith('ER_DUP_ENTRY', err.message)) {
+        if (_.startsWith(err.message, 'ER_DUP_ENTRY')) {
           throw this.err.badRequest('The vendor already exists');
         }
       })
