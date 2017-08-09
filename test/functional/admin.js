@@ -102,6 +102,12 @@ describe('Admin', () => {
           forwardToken: true,
         },
       }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'id');
+        expect(res.data, 'to have key', 'forwardToken');
+        expect(res.data.forwardToken, 'to be true');
+      })
       // Get app detail
       .then(() => expect(axios({
         method: 'get',

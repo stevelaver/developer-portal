@@ -79,6 +79,13 @@ describe('Apps', () => {
           type: 'extractor',
         },
       }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 201);
+        expect(res.data, 'to have key', 'id');
+        expect(res.data, 'to have key', 'repository');
+        expect(res.data, 'to have key', 'name');
+        expect(res.data, 'to have key', 'vendor');
+      })
       // Create second app
       .then(() => expect(axios({
         method: 'post',
@@ -158,6 +165,13 @@ describe('Apps', () => {
           documentationUrl: 'https://github.com/keboola/test-extractor/blob/master/README.md',
         },
       }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'id');
+        expect(res.data, 'to have key', 'repository');
+        expect(res.data, 'to have key', 'name');
+        expect(res.data, 'to have key', 'vendor');
+      })
       // Approve should fail on missing icon
       .then(() => expect(axios({
         method: 'post',

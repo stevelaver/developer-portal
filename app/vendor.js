@@ -23,28 +23,32 @@ class Vendor {
   get(id) {
     return db.connect(process.env)
       .then(() => new DbVendors(this.db.getConnection(), this.err))
-      .then(dbVendors => dbVendors.get(id));
+      .then(dbVendors => dbVendors.publicGetVendor(id));
   }
 
   create(body, isApproved = true) {
     const params = _.clone(body);
+    if (!_.has(params, 'id')) {
+      params.id = `_v${Date.now()}${Math.random()}`.substr(0, 32);
+    }
     params.isApproved = isApproved;
     return this.db.connect(this.env)
       .then(() => new DbVendors(this.db.getConnection(), this.err))
-      .then(dbVendors => dbVendors.create(params))
+      .then(dbVendors => dbVendors.create(params)
+        .then(() => dbVendors.publicGetVendor(params.id)))
       .catch((err) => {
         if (_.startsWith(err.message, 'ER_DUP_ENTRY')) {
           throw this.err.badRequest('The vendor already exists');
         }
-      })
-      .then(() => null);
+      });
   }
 
   updateVendor(vendor, data, user) {
     this.checkVendorAccess(user, vendor);
     return this.db.connect(this.env)
       .then(() => new DbVendors(this.db.getConnection(), this.err))
-      .then(dbVendors => dbVendors.update(vendor, data));
+      .then(dbVendors => dbVendors.update(vendor, data)
+        .then(() => dbVendors.publicGetVendor(vendor)));
   }
 
   approve(id, newId = null) {

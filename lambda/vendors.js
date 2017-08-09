@@ -20,33 +20,26 @@ const vendorApp = new Vendor(services, db, process.env, Services.getError());
 
 function createVendor(event, context, callback) {
   validation.validate(event, {
-    body: {
-      name: joi.string().max(64).required()
-        .error(Error('Parameter vendor.name is required string with max length 64')),
-      address: joi.string().required()
-        .error(Error('Parameter vendor.address is required string')),
-      email: joi.string().email().required()
-        .error(Error('Parameter vendor.email is required email address')),
-    },
+    auth: true,
+    body: validation.createVendorSchema(),
   });
   const body = JSON.parse(event.body);
 
-  const vendorId = `_v${Date.now()}${Math.random()}`.substr(0, 32);
   return request.responseDbPromise(
     identity.getUser(event.headers.Authorization)
       .then(user =>
         vendorApp.create({
-          id: vendorId,
           name: body.name,
           address: body.address,
           email: body.email,
           createdBy: user.email,
         }, false)
-          .then(() => services.getUserPool().addUserToVendor(user.email, vendorId))
-          .then(() => services.getNotification().approveVendor(vendorId, body.name, {
-            name: body.name,
-            email: body.email,
-          }))),
+          .then(vendor => services.getUserPool().addUserToVendor(user.email, vendor.id)
+            .then(() => services.getNotification().approveVendor(vendor.id, body.name, {
+              name: body.name,
+              email: body.email,
+            }))
+            .then(() => vendor))),
     db,
     event,
     context,
@@ -59,15 +52,7 @@ function updateVendor(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: ['vendor'],
-    body: {
-      name: joi.string().max(64)
-        .error(Error('Parameter vendor.name is required string with max length 64')),
-      address: joi.string()
-        .error(Error('Parameter vendor.address is required string')),
-      email: joi.string().email()
-        .error(Error('Parameter vendor.email is required email address')),
-      id: joi.forbidden(),
-    },
+    body: validation.updateVendorSchema(),
   });
 
   const body = JSON.parse(event.body);
@@ -81,8 +66,7 @@ function updateVendor(event, context, callback) {
     db,
     event,
     context,
-    callback,
-    204
+    callback
   );
 }
 

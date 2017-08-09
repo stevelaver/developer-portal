@@ -202,19 +202,19 @@ describe('Validation', () => {
       const schema = validation.adminCreateVendorSchema();
       // Address missing
       expectFail(joi.validate({
-        id: 'id',
+        id: 'idd',
         name: 'vendor name',
         email: 'right@email.com',
       }, schema));
       // Email format
       expectFail(joi.validate({
-        id: 'id',
+        id: 'idd',
         name: 'vendor name',
         address: 'vendor address',
         email: 'wrong',
       }, schema));
       expectOk(joi.validate({
-        id: 'id',
+        id: 'idd',
         name: 'vendor name',
         address: 'vendor address',
         email: 'right@email.com',

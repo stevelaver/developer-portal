@@ -67,8 +67,7 @@ function update(event, context, callback) {
     db,
     event,
     context,
-    callback,
-    204
+    callback
   );
 }
 

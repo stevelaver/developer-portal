@@ -56,18 +56,21 @@ class App {
       .then(() => this.db.checkAppNotExists(body.id))
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.insertApp(body))
-      .then(() => null);
+      .then(() => this.db.getApp(body.id))
+      .then(appData => App.formatIcons(appData, this.env.CLOUDFRONT_URI));
   }
 
   updateApp(id, vendor, body, user) {
     return this.access.checkApp(user, vendor, id)
       .then(() => this.db.checkVendorExists(vendor))
-      .then(() => this.adminUpdateApp(id, body, user.email));
+      .then(() => this.db.updateApp(body, id, user.email))
+      .then(() => this.db.getApp(id))
+      .then(appData => App.formatIcons(appData, this.env.CLOUDFRONT_URI));
   }
 
   adminUpdateApp(id, body, user) {
     return this.db.updateApp(body, id, user.email)
-      .then(() => null);
+      .then(() => this.adminGetAppWithVendor(id));
   }
 
   deleteApp(id, vendor, user, moment) {

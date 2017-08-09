@@ -81,12 +81,18 @@ describe('Vendor App', () => {
   describe('Create and Update', () => {
     const v1 = `v1${Math.random()}`;
     it('Create', () =>
-      expect(vendorApp.create({
+      vendorApp.create({
         id: v1,
         name: 'test1',
         address: 'address1',
         email: 'email1@email.com',
-      }), 'to be fulfilled')
+      })
+        .then((res) => {
+          expect(res, 'to have key', 'id');
+          expect(res, 'to have key', 'name');
+          expect(res, 'to have key', 'address');
+          expect(res, 'to have key', 'email');
+        })
         .then(() => rds.queryAsync('SELECT * FROM vendors WHERE id=?', [v1]))
         .then((data) => {
           expect(data, 'to have length', 1);
@@ -104,11 +110,17 @@ describe('Vendor App', () => {
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
         [v2, 'vendor2', 'address2', 'email2@email.com', 0],
       )
-        .then(() => expect(vendorApp.updateVendor(v2, {
+        .then(() => vendorApp.updateVendor(v2, {
           name: 'test2',
           address: 'address23',
           email: 'email23@email.com',
-        }, { isAdmin: true }), 'to be fulfilled'))
+        }, { isAdmin: true }))
+        .then((res) => {
+          expect(res, 'to have key', 'id');
+          expect(res, 'to have key', 'name');
+          expect(res, 'to have key', 'address');
+          expect(res, 'to have key', 'email');
+        })
         .then(() => rds.queryAsync('SELECT * FROM vendors WHERE id=?', [v2]))
         .then((data) => {
           expect(data, 'to have length', 1);

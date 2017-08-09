@@ -68,6 +68,17 @@ describe('App', () => {
 
   it('Create, get and Delete', () =>
     app.createApp({ id: appName, name: 'test' }, vendorId, user)
+      .then((data) => {
+        expect(data, 'to have key', 'id');
+        expect(data.id, 'to be', appId);
+        expect(data, 'to have key', 'vendor');
+        expect(data.vendor, 'to have key', 'id');
+        expect(data.vendor.id, 'to be', vendorId);
+        expect(data, 'to have key', 'version');
+        expect(data.version, 'to be', 1);
+        expect(data, 'to have key', 'deletedOn');
+        expect(data.deletedOn, 'to be null');
+      })
       .then(() => app.getAppForVendor(appId, vendorId, user))
       .then((data) => {
         expect(data, 'to have key', 'id');
@@ -85,6 +96,17 @@ describe('App', () => {
         expect(item.id, 'not to be', appId);
       }))
       .then(() => app.updateApp(appId, vendorId, { isPublic: true }, user))
+      .then((data) => {
+        expect(data, 'to have key', 'id');
+        expect(data.id, 'to be', appId);
+        expect(data, 'to have key', 'vendor');
+        expect(data.vendor, 'to have key', 'id');
+        expect(data.vendor.id, 'to be', vendorId);
+        expect(data, 'to have key', 'version');
+        expect(data.version, 'to be', 2);
+        expect(data, 'to have key', 'deletedOn');
+        expect(data.deletedOn, 'to be null');
+      })
       .then(() => app.publicListApps())
       .then(data => expect(data, 'to have an item satisfying', (item) => {
         expect(item.id, 'to be', appId);

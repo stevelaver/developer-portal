@@ -62,18 +62,40 @@ describe('Vendors', () => {
 
   const vendorName = `vendor.${Date.now()}`;
   it('Create vendor', () =>
-    expect(axios({
+    axios({
       method: 'post',
-      url: `${process.env.API_ENDPOINT}/vendors`,
-      headers: { Authorization: token },
+      url: `${process.env.API_ENDPOINT}/auth/login`,
       responseType: 'json',
       data: {
-        name: vendorName,
-        address: 'test',
-        email: 'test@test.com',
+        email: process.env.FUNC_USER_EMAIL,
+        password: process.env.FUNC_USER_PASSWORD,
       },
-    }), 'to be fulfilled')
-    // Check database
+    })
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        token = res.data.token;
+      })
+      .then(() => axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/vendors`,
+        headers: { Authorization: token },
+        responseType: 'json',
+        data: {
+          name: vendorName,
+          address: 'test',
+          email: 'test@test.com',
+        },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 201);
+        expect(res.data, 'to have key', 'id');
+        expect(res.data, 'to have key', 'name');
+        expect(res.data, 'to have key', 'address');
+        expect(res.data, 'to have key', 'email');
+        token = res.data.token;
+      })
+      // Check database
       .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE name=?', [vendorName]))
       .then((res) => {
         expect(res, 'to have length', 1);
@@ -90,7 +112,21 @@ describe('Vendors', () => {
 
   it('Update vendor', () =>
     rds.queryAsync('UPDATE `vendors` SET address=? WHERE id=?', ['address', vendor1])
-      .then(() => expect(axios({
+      .then(() => axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: process.env.FUNC_USER_EMAIL,
+          password: process.env.FUNC_USER_PASSWORD,
+        },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        token = res.data.token;
+      })
+      .then(() => axios({
         method: 'patch',
         url: `${process.env.API_ENDPOINT}/vendors/${vendor1}`,
         headers: { Authorization: token },
@@ -98,7 +134,15 @@ describe('Vendors', () => {
         data: {
           address: `address ${vendor1}`,
         },
-      }), 'to be fulfilled'))
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'id');
+        expect(res.data, 'to have key', 'name');
+        expect(res.data, 'to have key', 'address');
+        expect(res.data, 'to have key', 'email');
+        token = res.data.token;
+      })
       .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE id=?', [vendor1]))
       .then((res) => {
         expect(res, 'to have length', 1);
@@ -106,12 +150,26 @@ describe('Vendors', () => {
       }));
 
   it('Join and remove from vendor', () =>
-    expect(axios({
+    axios({
       method: 'post',
-      url: `${process.env.API_ENDPOINT}/vendors/${vendor1}/users`,
-      headers: { Authorization: token },
+      url: `${process.env.API_ENDPOINT}/auth/login`,
       responseType: 'json',
-    }), 'to be fulfilled')
+      data: {
+        email: process.env.FUNC_USER_EMAIL,
+        password: process.env.FUNC_USER_PASSWORD,
+      },
+    })
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        token = res.data.token;
+      })
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor1}/users`,
+        headers: { Authorization: token },
+        responseType: 'json',
+      }), 'to be fulfilled'))
       .then(() => userPool.getUser(process.env.FUNC_USER_EMAIL))
       .then((user) => {
         expect(user, 'to have key', 'vendors');
@@ -182,16 +240,30 @@ describe('Vendors', () => {
       }));
 
   it('Create service user, list and delete', () =>
-    expect(axios({
+    axios({
       method: 'post',
-      url: `${process.env.API_ENDPOINT}/vendors/${vendor}/credentials`,
-      headers: { Authorization: token },
+      url: `${process.env.API_ENDPOINT}/auth/login`,
       responseType: 'json',
       data: {
-        name: 'test',
-        description: 'Test desc',
+        email: process.env.FUNC_USER_EMAIL,
+        password: process.env.FUNC_USER_PASSWORD,
       },
-    }), 'to be fulfilled')
+    })
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        token = res.data.token;
+      })
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/credentials`,
+        headers: { Authorization: token },
+        responseType: 'json',
+        data: {
+          name: 'test',
+          description: 'Test desc',
+        },
+      }), 'to be fulfilled'))
       .then(() => axios({
         method: 'get',
         url: `${process.env.API_ENDPOINT}/vendors/${vendor}/users`,
