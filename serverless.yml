@@ -310,6 +310,12 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
+          method: patch
+          path: "vendors/{vendor}"
+          cors: true
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "vendors/{vendor}/users"
           cors: true

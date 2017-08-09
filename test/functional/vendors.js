@@ -88,6 +88,23 @@ describe('Vendors', () => {
         })
       ));
 
+  it('Update vendor', () =>
+    rds.queryAsync('UPDATE `vendors` SET address=? WHERE id=?', ['address', vendor1])
+      .then(() => expect(axios({
+        method: 'patch',
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor1}`,
+        headers: { Authorization: token },
+        responseType: 'json',
+        data: {
+          address: `address ${vendor1}`,
+        },
+      }), 'to be fulfilled'))
+      .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE id=?', [vendor1]))
+      .then((res) => {
+        expect(res, 'to have length', 1);
+        expect(res[0].address, 'to be', `address ${vendor1}`);
+      }));
+
   it('Join and remove from vendor', () =>
     expect(axios({
       method: 'post',
