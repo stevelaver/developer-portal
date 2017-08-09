@@ -72,6 +72,12 @@ class App {
 
   deleteApp(id, vendor, user, moment) {
     return this.access.checkApp(user, vendor, id)
+      .then(() => this.db.getApp(id))
+      .then((app) => {
+        if (app.deletedOn) {
+          throw this.err.badRequest('The app is already deleted');
+        }
+      })
       .then(() => this.db.updateApp({ deletedOn: moment().format('YYYY-MM-DD HH:mm:ss') }, id, user.email))
       .then(() => null);
   }
