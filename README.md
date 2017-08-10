@@ -109,7 +109,12 @@ If you change variable `WARMUP_ENABLED` in `env.yml` to `true`, a CloudWatch sch
 
 ### Development
 
-Conform your code to included ESLint rules. You can use prepared pre-commit hook using command `ln -s pre-commit.sh .git/hooks/pre-commit`
+- Conform your code to included ESLint rules. You can use prepared pre-commit hook using command `ln -s pre-commit.sh .git/hooks/pre-commit`
+
+#### Db migrations
+
+- Migrations are performed automatically after the deployment in a lambda function. So they have to be executed in a release previous to the one where the udpates are used.
+- To prepare a migration create a `.js` file in `/migrations` dir. Its name consists of a timestamp and short description, i.e. `yyyymmddhhiiss-description.js` (e.g. `20170526092800-deprecated-app.js`). Copy its content from a previous one. Then put `.sql` file with the same name to `/migrations/sqls` with the migrations themselves.
 
 ### CI and deployment
 
