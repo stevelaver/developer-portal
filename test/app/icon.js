@@ -77,11 +77,11 @@ describe('Icon App', () => {
       .then(() => wait.sleep(3000))
       .then(() => iconApp.upload(sharp, appId, appEnv.S3_BUCKET, sourceKey))
       .then(() => expect(
-        s3.headObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/32/2.png` }).promise(),
+        () => s3.headObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/32/2.png` }).promise(),
         'to be fulfilled'
       ))
       .then(() => expect(
-        s3.headObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/64/2.png` }).promise(),
+        () => s3.headObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/64/2.png` }).promise(),
         'to be fulfilled'
       )));
 

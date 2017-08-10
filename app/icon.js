@@ -29,7 +29,7 @@ class Icon {
       });
   }
 
-  resize(sharp, bucket, appId, version, size) {
+  resize(sharp, bucket, appId, size) {
     return this.s3.getObject({
       Bucket: bucket,
       Key: `icons/${appId}/latest.png`,
@@ -40,9 +40,18 @@ class Icon {
         Body: buffer,
         Bucket: bucket,
         ContentType: 'image/png',
-        Key: `icons/${appId}/${size}/${version}.png`,
+        Key: `icons/${appId}/${size}/latest.png`,
         ACL: 'public-read',
       }).promise());
+  }
+
+  nameFileByVersion(bucket, appId, size, version) {
+    return this.s3.copyObject({
+      CopySource: `${bucket}/icons/${appId}/${size}/latest.png`,
+      Bucket: bucket,
+      Key: `icons/${appId}/${size}/${version}.png`,
+      ACL: 'public-read',
+    }).promise();
   }
 
   upload(sharp, appId, bucket, sourceKey) {
@@ -61,6 +70,8 @@ class Icon {
         ACL: 'public-read',
       }).promise())
       .then(() => this.s3.deleteObject({ Bucket: bucket, Key: sourceKey }).promise())
+      .then(() => this.resize(sharp, bucket, appId, 64))
+      .then(() => this.resize(sharp, bucket, appId, 32))
       .then(() => this.db.connect(this.env)
         .then(() => this.db.addAppIcon(appId))
         .then((v) => {
@@ -68,12 +79,12 @@ class Icon {
         })
         .then(() => this.db.end())
       )
+      .then(() => this.nameFileByVersion(bucket, appId, 32, version))
+      .then(() => this.nameFileByVersion(bucket, appId, 64, version))
       .catch((err) => {
         this.db.end();
         throw err;
-      })
-      .then(() => this.resize(sharp, bucket, appId, version, 64))
-      .then(() => this.resize(sharp, bucket, appId, version, 32));
+      });
   }
 }
 
