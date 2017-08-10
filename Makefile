@@ -22,7 +22,7 @@ update-cognito:
 
 finish-deploy-sls:
 	sls deploy
-	cat ./env.yml
+	cat ./.env
 
 
 

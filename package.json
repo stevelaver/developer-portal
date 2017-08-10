@@ -28,8 +28,7 @@
     "sharp": "^0.18.2",
     "source-map-support": "^0.4.15",
     "winston": "*",
-    "winston-papertrail": "^1.0.0",
-    "yamljs": "^0.2.10"
+    "winston-papertrail": "^1.0.0"
   },
   "devDependencies": {
     "async": "^2.4.0",

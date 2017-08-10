@@ -5,11 +5,17 @@ const async = require('async');
 const aws = require('aws-sdk');
 const exec = require('child_process').exec;
 const fs = require('fs');
-const yaml = require('yamljs');
 
-let env = {};
-if (fs.existsSync(`${__dirname}/../env.yml`)) {
-  env = yaml.load(`${__dirname}/../env.yml`);
+const env = {};
+if (fs.existsSync(`${__dirname}/../.env`)) {
+  const file = fs.readFileSync(`${__dirname}/../.env`);
+  const lines = file.toString().split('\n');
+  _.each(lines, (line) => {
+    const match = line.match(/^([^=:]+?)[=:](.*)/);
+    if (match) {
+      env[match[1].trim()] = match[2].trim();
+    }
+  });
 }
 
 const done = function (err) {
@@ -17,6 +23,16 @@ const done = function (err) {
     throw err;
   }
   process.exit();
+};
+
+const stringify = (json) => {
+  let res = '';
+  _.each(json, (val, key) => {
+    if (key) {
+      res += `${key}=${String(val)}\n`;
+    }
+  });
+  return res;
 };
 
 class Setup {
@@ -41,10 +57,10 @@ class Setup {
       KEBOOLA_STACK: process.env.KEBOOLA_STACK,
     };
     fs.writeFile(
-      `${__dirname}/../env.yml`,
-      yaml.stringify(newEnv),
+      `${__dirname}/../.env`,
+      stringify(newEnv),
       (err2) => {
-        console.info('- Env saved to env.yml');
+        console.info('- Env saved to .env');
         return done(err2);
       }
     );
@@ -58,8 +74,8 @@ class Setup {
       }
       env.ACCOUNT_ID = _.trim(out);
       fs.writeFile(
-        `${__dirname}/../env.yml`,
-        yaml.stringify(env),
+        `${__dirname}/../.env`,
+        stringify(env),
         (err2) => {
           console.info(`- Account id saved: ${env.ACCOUNT_ID}`);
           return done(err2);
@@ -132,8 +148,8 @@ class Setup {
         env.RDS_SUBNET_GROUP = output.rdsSubnetGroup.OutputValue;
         env.BASTION_IP = output.bastionIP.OutputValue;
         fs.writeFile(
-          `${__dirname}/../env.yml`,
-          yaml.stringify(env),
+          `${__dirname}/../.env`,
+          stringify(env),
           err2 => cb(err2)
         );
       },
@@ -198,8 +214,8 @@ class Setup {
       env.COGNITO_POOL_ID = res.poolId;
       env.COGNITO_CLIENT_ID = res.clientId;
       fs.writeFile(
-        `${__dirname}/../env.yml`,
-        yaml.stringify(env),
+        `${__dirname}/../.env`,
+        stringify(env),
         err2 => done(err2)
       );
     });
@@ -274,8 +290,8 @@ class Setup {
       env.CLOUDFRONT_URI = result.CloudFrontUri;
       env.API_ENDPOINT = result.ServiceEndpoint;
       fs.writeFile(
-        `${__dirname}/../env.yml`,
-        yaml.stringify(env),
+        `${__dirname}/../.env`,
+        stringify(env),
         (err2) => {
           console.info('- CloudFormation stack described');
           return done(err2);

@@ -37,7 +37,6 @@ node_modules
 
 #SERVERLESS
 .env
-**/env.yml
 **/event.json
 **/event-*.json
 **/.serverless
