@@ -1,3 +1,6 @@
+'use strict';
+
+const _ = require('lodash');
 
 class Auth {
   constructor(services, db, env, err) {
@@ -8,7 +11,14 @@ class Auth {
   }
 
   forgot(email) {
-    return this.userPool.forgotPassword(email);
+    return this.userPool.forgotPassword(email)
+      .catch((err) => {
+        if (err && err.code === 'InvalidParameterException' && _.includes(err.message, 'no registered/verified email')) {
+          throw this.err.badRequest('User account is not confirmed. Confirm it first please.');
+        } else {
+          throw err;
+        }
+      });
   }
 
   confirmForgotPassword(email, password, code) {
