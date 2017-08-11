@@ -184,6 +184,12 @@ functions:
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
+          method: delete
+          path: "admin/users/{email}"
+          cors: true
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
           method: post
           path: "admin/users/{email}/admin"
           cors: true

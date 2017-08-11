@@ -47,6 +47,25 @@ function listUsers(event, context, callback) {
   );
 }
 
+function deleteUser(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['email'],
+  });
+
+  return request.responseDbPromise(
+    db.connect(process.env)
+      .then(() => identity.getAdmin(event.headers.Authorization))
+      .then(() => services.getUserPool().deleteUser(event.pathParameters.email))
+      .then(() => null),
+    db,
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
 function makeUserAdmin(event, context, callback) {
   validation.validate(event, {
     auth: true,
@@ -283,9 +302,12 @@ function approveVendor(event, context, callback) {
 
 
 module.exports.admin = (event, context, callback) => request.errorHandler(() => {
+  console.log('EVENT', event);
   switch (event.resource) {
     case '/admin/users':
       return listUsers(event, context, callback);
+    case '/admin/users/{email}':
+      return deleteUser(event, context, callback);
     case '/admin/users/{email}/admin':
       return makeUserAdmin(event, context, callback);
     case '/admin/users/{email}/vendors/{vendor}':
@@ -293,6 +315,8 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
         return removeUserFromVendor(event, context, callback);
       }
       return addUserToVendor(event, context, callback);
+    case '/admin/apps':
+      return listApps(event, context, callback);
     case '/admin/apps/{id}/approve':
       return approveApp(event, context, callback);
     case '/admin/apps/{id}':
@@ -300,8 +324,6 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
         return detailApp(event, context, callback);
       }
       return updateApp(event, context, callback);
-    case '/admin/apps':
-      return listApps(event, context, callback);
     case '/admin/changes':
       return listAppChanges(event, context, callback);
     case '/admin/vendors':

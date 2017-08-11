@@ -172,6 +172,17 @@ describe('Admin', () => {
         expect(res.data.isPublic, 'to be', true);
       }));
 
+  const userEmail2 = `test-func-admin-u2${Date.now()}.test@keboola.com`;
+  it('Delete User', () =>
+    userPool.signUp(userEmail2, '123jfsklJFKLAD._.d-X', 'Test')
+      .then(() => expect(axios({
+        method: 'delete',
+        url: `${process.env.API_ENDPOINT}/admin/users/${userEmail2}`,
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then(() => expect(() => userPool.getUser(userEmail2), 'to error'))
+  );
+
   it('Make User Admin', () =>
     userPool.getUser(userEmail)
       .then((data) => {
