@@ -68,7 +68,8 @@ Login returns three different tokens.
 - `accessToken` - is used to verify MFA setup or for logout, is valid for 1 hour
 - `refreshToken` - is used for refreshing an auth token using the API call below, is valid for 30 days
 
-If your account has activated MFA, login with `email` and `password` returns `session` which is used in subsequent login call along with the code recieved in text message.
+If your account has activated MFA, login with `email` and `password` returns `session` which is used in subsequent login
+call along with the code recieved in text message.
 
 + Attributes
     + email (required)
