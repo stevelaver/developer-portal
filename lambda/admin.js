@@ -302,7 +302,6 @@ function approveVendor(event, context, callback) {
 
 
 module.exports.admin = (event, context, callback) => request.errorHandler(() => {
-  console.log('EVENT', event);
   switch (event.resource) {
     case '/admin/users':
       return listUsers(event, context, callback);
