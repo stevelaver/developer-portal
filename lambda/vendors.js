@@ -33,7 +33,7 @@ function createVendor(event, context, callback) {
           email: body.email,
           createdBy: user.email,
         }, false)
-          .then(vendor => services.getUserPool().addUserToVendor(user.email, vendor.id)
+          .then(vendor => services.getUserPool(db).addUserToVendor(user.email, vendor.id)
             .then(() => services.getNotification().approveVendor(vendor.id, body.name, {
               name: body.name,
               email: body.email,

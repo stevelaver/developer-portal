@@ -39,7 +39,7 @@ appEnv.RDS_DATABASE = process.env.UNIT_RDS_DATABASE;
 appEnv.RDS_SSL = false;
 const services = new Services(appEnv);
 const vendorApp = new Vendor(services, db, appEnv, error);
-const userPool = services.getUserPool();
+const userPool = services.getUserPool(db);
 
 const vendor = `v${Date.now()}`;
 const userEmail = `test${Date.now()}@keboola.com`;

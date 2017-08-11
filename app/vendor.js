@@ -76,7 +76,7 @@ class Vendor {
   }
 
   join(user, vendor) {
-    const userPool = this.services.getUserPool();
+    const userPool = this.services.getUserPool(this.db);
     return this.db.connect(this.env)
       .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.end())
@@ -90,7 +90,7 @@ class Vendor {
   invite(vendor, email, user) {
     this.checkVendorAccess(user, vendor);
     const emailLib = this.services.getEmail();
-    const userPool = this.services.getUserPool();
+    const userPool = this.services.getUserPool(this.db);
     return db.connect(this.env)
       .then(() => db.checkVendorExists(vendor))
       .then(() => userPool.getUser(email))
@@ -123,7 +123,7 @@ class Vendor {
   }
 
   acceptInvitation(vendor, email, code) {
-    const userPool = this.services.getUserPool();
+    const userPool = this.services.getUserPool(this.db);
     let dbInvitations;
     return db.connect(this.env)
       .then(() => {
@@ -153,7 +153,7 @@ class Vendor {
 
   removeUser(vendor, email, user) {
     this.checkVendorAccess(user, vendor);
-    const userPool = this.services.getUserPool();
+    const userPool = this.services.getUserPool(this.db);
     return db.connect(this.env)
       .then(() => db.checkVendorExists(vendor))
       .then(() => userPool.getUser(email))
@@ -199,7 +199,7 @@ class Vendor {
 
   createCredentials(vendor, name, description, user, generator) {
     this.checkVendorAccess(user, vendor);
-    const userPool = this.services.getUserPool();
+    const userPool = this.services.getUserPool(this.db);
     const username = `${vendor}+${name}`;
     const password = Vendor.generatePassword(generator);
 
@@ -219,7 +219,7 @@ class Vendor {
 
   listUsers(vendor, user) {
     this.checkVendorAccess(user, vendor);
-    const userPool = this.services.getUserPool();
+    const userPool = this.services.getUserPool(this.db);
     return userPool.listUsersAllAtOnce(vendor);
   }
 

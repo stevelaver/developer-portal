@@ -17,6 +17,7 @@ let rds;
 let dbVendors;
 
 const dbConnectParams = {
+  driver: 'mysql',
   host: process.env.UNIT_RDS_HOST,
   port: process.env.UNIT_RDS_PORT,
   user: process.env.UNIT_RDS_USER,
@@ -31,16 +32,7 @@ describe('dbVendors', () => {
     const dbm = dbMigrate.getInstance(true, {
       config: {
         defaultEnv: 'current',
-        current: {
-          driver: 'mysql',
-          user: process.env.UNIT_RDS_USER,
-          password: process.env.UNIT_RDS_PASSWORD,
-          host: process.env.UNIT_RDS_HOST,
-          database: process.env.UNIT_RDS_DATABASE,
-          port: process.env.UNIT_RDS_PORT,
-          ssl: process.env.UNIT_RDS_SSL,
-          multipleStatements: true,
-        },
+        current: dbConnectParams,
       },
     });
 

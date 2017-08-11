@@ -31,7 +31,7 @@ function listUsers(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool().listUsers(filter, paginationToken))
+      .then(() => services.getUserPool(db).listUsers(filter, paginationToken))
       .then((res) => {
         if (res.paginationToken) {
           headers.Link = `<${process.env.API_ENDPOINT}/admin/users?filter=${filter}&paginationToken=${res.paginationToken}>; rel=next`;
@@ -56,7 +56,7 @@ function deleteUser(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool().deleteUser(event.pathParameters.email))
+      .then(() => services.getUserPool(db).deleteUser(event.pathParameters.email))
       .then(() => null),
     db,
     event,
@@ -75,7 +75,7 @@ function makeUserAdmin(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool().makeUserAdmin(event.pathParameters.email))
+      .then(() => services.getUserPool(db).makeUserAdmin(event.pathParameters.email))
       .then(() => null),
     db,
     event,
@@ -94,7 +94,7 @@ function addUserToVendor(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool()
+      .then(() => services.getUserPool(db)
         .addUserToVendor(event.pathParameters.email, event.pathParameters.vendor)),
     db,
     event,
@@ -113,7 +113,7 @@ function removeUserFromVendor(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool()
+      .then(() => services.getUserPool(db)
         .removeUserFromVendor(event.pathParameters.email, event.pathParameters.vendor))
       .then(() => services.getEmail().send(
         event.pathParameters.email,
@@ -283,7 +283,7 @@ function approveVendor(event, context, callback) {
             `Your vendor has been approved with id <strong>${_.get(body, 'newId', null)}</strong>.`,
           );
           if (_.has(body, 'newId')) {
-            const userPool = services.getUserPool();
+            const userPool = services.getUserPool(db);
             return userPool.addUserToVendor(vendor.createdBy, body.newId)
               .then(() => userPool.removeUserFromVendor(vendor.createdBy, event.pathParameters.vendor))
               .then(() => emailPromise);

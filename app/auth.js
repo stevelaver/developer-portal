@@ -7,7 +7,7 @@ class Auth {
     this.db = db;
     this.env = env;
     this.err = err;
-    this.userPool = services.getUserPool();
+    this.userPool = services.getUserPool(db);
   }
 
   forgot(email) {

@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS invitations;
 CREATE TABLE `invitations` (
   `code` varchar(64) NOT NULL DEFAULT '',
   `vendor` varchar(32) NOT NULL DEFAULT '',

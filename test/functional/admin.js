@@ -14,7 +14,7 @@ Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const services = new Services(process.env);
-const userPool = services.getUserPool();
+const userPool = services.getUserPool(db);
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST,

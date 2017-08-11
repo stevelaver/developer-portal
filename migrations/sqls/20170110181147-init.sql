@@ -11,6 +11,7 @@ CREATE TABLE `vendors` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS stacks;
 CREATE TABLE `stacks` (
   `name` varchar(128) NOT NULL DEFAULT '',
   PRIMARY KEY (`name`)

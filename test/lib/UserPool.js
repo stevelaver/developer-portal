@@ -2,15 +2,35 @@
 
 import Identity from '../../lib/Identity';
 import UserPool from '../../lib/UserPool';
+import DbUsers from '../../lib/db/Users';
 
 const aws = require('aws-sdk');
 const expect = require('unexpected');
+const mysql = require('mysql');
 const Promise = require('bluebird');
 const err = require('../../lib/error');
+const db = require('../../lib/db');
+const dbMigrate = require('db-migrate');
+require('db-migrate-mysql');
+
+let rds;
+let dbUsers;
+let userPool;
+const dbConnectParams = {
+  driver: 'mysql',
+  host: process.env.UNIT_RDS_HOST,
+  port: process.env.UNIT_RDS_PORT,
+  user: process.env.UNIT_RDS_USER,
+  password: process.env.UNIT_RDS_PASSWORD,
+  database: process.env.UNIT_RDS_DATABASE,
+  ssl: process.env.UNIT_RDS_SSL,
+  multipleStatements: true,
+};
+Promise.promisifyAll(mysql);
+Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 aws.config.setPromisesDependency(Promise);
 const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
-const userPool = new UserPool(cognito, process.env.COGNITO_POOL_ID, process.env.COGNITO_CLIENT_ID, Identity, err);
 let email;
 
 const createUser = () => {
@@ -41,6 +61,33 @@ const deleteUser = () =>
 
 
 describe('UserPool', () => {
+  before(() => {
+    const dbm = dbMigrate.getInstance(true, {
+      config: {
+        defaultEnv: 'current',
+        current: dbConnectParams,
+      },
+    });
+
+    return dbm.up()
+      .then(() => {
+        rds = mysql.createConnection(dbConnectParams);
+      })
+      .then(() => db.init(rds))
+      .then(() => rds.queryAsync('TRUNCATE TABLE `migrations`'))
+      .then(() => {
+        dbUsers = new DbUsers(rds);
+        userPool = new UserPool(
+          cognito,
+          process.env.COGNITO_POOL_ID,
+          process.env.COGNITO_CLIENT_ID,
+          Identity,
+          err,
+          dbUsers,
+        );
+      });
+  });
+
   it('getCognito', () =>
     expect(userPool.getCognito(), 'to be', cognito));
 
@@ -134,6 +181,10 @@ describe('UserPool', () => {
         cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise(),
         'to be fulfilled',
       ))
+      .then(() => rds.queryAsync('SELECT * FROM users WHERE id=?', [email2]))
+      .spread((res) => {
+        expect(res.id, 'to be', email2);
+      })
       .then(() => cognito.adminDeleteUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise());
   });
 
