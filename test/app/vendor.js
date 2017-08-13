@@ -20,15 +20,7 @@ const error = require('../../lib/error');
 
 aws.config.setPromisesDependency(Promise);
 const cognito = new aws.CognitoIdentityServiceProvider({ region: process.env.REGION });
-const rds = mysql.createConnection({
-  host: process.env.UNIT_RDS_HOST,
-  port: process.env.UNIT_RDS_PORT,
-  user: process.env.UNIT_RDS_USER,
-  password: process.env.UNIT_RDS_PASSWORD,
-  database: process.env.UNIT_RDS_DATABASE,
-  ssl: false,
-  multipleStatements: true,
-});
+let rds;
 
 const appEnv = _.clone(process.env);
 appEnv.RDS_HOST = process.env.UNIT_RDS_HOST;
@@ -39,7 +31,7 @@ appEnv.RDS_DATABASE = process.env.UNIT_RDS_DATABASE;
 appEnv.RDS_SSL = false;
 const services = new Services(appEnv);
 const vendorApp = new Vendor(services, db, appEnv, error);
-const userPool = services.getUserPool(db);
+let userPool;
 
 const vendor = `v${Date.now()}`;
 const userEmail = `test${Date.now()}@keboola.com`;
@@ -70,13 +62,39 @@ const deleteUser = () =>
   cognito.adminDeleteUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: userEmail }).promise();
 
 describe('Vendor App', () => {
-  before(() =>
-    rds.queryAsync('DELETE FROM invitations WHERE vendor=?', [vendor])
+  before(() => {
+    rds = mysql.createConnection({
+      host: process.env.UNIT_RDS_HOST,
+      port: process.env.UNIT_RDS_PORT,
+      user: process.env.UNIT_RDS_USER,
+      password: process.env.UNIT_RDS_PASSWORD,
+      database: process.env.UNIT_RDS_DATABASE,
+      ssl: false,
+      multipleStatements: true,
+    });
+    return rds.queryAsync('DELETE FROM invitations WHERE vendor=?', [vendor])
       .then(() => rds.queryAsync(
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
         [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
       ))
-      .then(() => createUser()));
+      .then(() => createUser());
+  });
+
+  beforeEach(() => {
+    rds = mysql.createConnection({
+      host: process.env.UNIT_RDS_HOST,
+      port: process.env.UNIT_RDS_PORT,
+      user: process.env.UNIT_RDS_USER,
+      password: process.env.UNIT_RDS_PASSWORD,
+      database: process.env.UNIT_RDS_DATABASE,
+      ssl: false,
+      multipleStatements: true,
+    });
+    return db.init(rds)
+      .then(() => {
+        userPool = services.getUserPool(db);
+      });
+  });
 
   describe('Create and Update', () => {
     const v1 = `v1${Math.random()}`;

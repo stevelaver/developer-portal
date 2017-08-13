@@ -14,7 +14,6 @@ Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const services = new Services(process.env);
-const userPool = services.getUserPool(db);
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST,
@@ -25,7 +24,7 @@ const rds = mysql.createConnection({
   ssl: process.env.FUNC_RDS_SSL,
   multipleStatements: true,
 });
-db.init(rds);
+let userPool;
 
 const vendor = process.env.FUNC_VENDOR;
 const otherVendor = `${vendor}o1`;
@@ -48,6 +47,10 @@ describe('Admin', () => {
         expect(res.status, 'to be', 200);
         expect(res.data, 'to have key', 'token');
         token = res.data.token;
+      })
+      .then(() => db.init(rds))
+      .then(() => {
+        userPool = services.getUserPool(db);
       })
       .then(() => rds.queryAsync(
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
