@@ -65,9 +65,9 @@ describe('Admin', () => {
       .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor]))
       .then(() => new DbUsers(db.getConnection(), error))
       .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
-      .then(userPool2 => userPool2.signUp(userEmail, '123jfsklJFKLAD._.d-X', 'Test'))
-      .then(() => userPool.addUserToVendor(userEmail, 'test'))
-      .then(() => userPool.confirmSignUp(userEmail)));
+      .then(userPoolDb => userPoolDb.signUp(userEmail, '123jfsklJFKLAD._.d-X', 'Test')
+        .then(() => userPoolDb.addUserToVendor(userEmail, 'test'))
+        .then(() => userPool.confirmSignUp(userEmail))));
 
   const appId2 = `${otherVendor}.${appId}-2`;
   it('Create and Edit App', () =>

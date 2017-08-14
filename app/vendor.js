@@ -77,15 +77,16 @@ class Vendor {
   }
 
   join(user, vendor) {
-    const userPool = this.services.getUserPool();
     return this.db.connect(this.env)
       .then(() => this.db.checkVendorExists(vendor))
+      .then(() => new DbUsers(this.db.getConnection(), this.err))
+      .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool => userPool.addUserToVendor(user.email, vendor))
       .then(() => this.db.end())
       .catch((err) => {
         this.db.end();
         throw err;
-      })
-      .then(() => userPool.addUserToVendor(user.email, vendor));
+      });
   }
 
   invite(vendor, email, user) {
@@ -124,7 +125,6 @@ class Vendor {
   }
 
   acceptInvitation(vendor, email, code) {
-    const userPool = this.services.getUserPool();
     let dbInvitations;
     return db.connect(this.env)
       .then(() => {
@@ -140,7 +140,9 @@ class Vendor {
           throw this.err.badRequest('Your invitation expired. Please ask for a new one.');
         }
       })
-      .then(() => userPool.addUserToVendor(email, vendor))
+      .then(() => new DbUsers(this.db.getConnection(), this.err))
+      .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool => userPool.addUserToVendor(email, vendor))
       .then(() => dbInvitations.accept(code))
       .then(() => db.end())
       .catch((err) => {
@@ -208,16 +210,16 @@ class Vendor {
       return this.db.connect(this.env)
         .then(() => new DbUsers(this.db.getConnection(), this.err))
         .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
-        .then(userPool2 => userPool2.signUp(username, password, `Service ${vendor}`, description, false))
+        .then(userPoolDb => userPoolDb.signUp(username, password, `Service ${vendor}`, description, false)
+          .then(() => userPool.confirmSignUp(username))
+          .then(() => userPoolDb.addUserToVendor(username, vendor))
+          .then(() => ({ username, password })))
         .catch((err) => {
           if (err.code === 'UsernameExistsException') {
             throw this.err.badRequest(`User with name ${username} already exists`);
           }
           throw err;
-        })
-        .then(() => userPool.confirmSignUp(username))
-        .then(() => userPool.addUserToVendor(username, vendor))
-        .then(() => ({ username, password }));
+        });
     }
   }
 

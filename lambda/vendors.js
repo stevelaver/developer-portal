@@ -2,6 +2,7 @@
 
 import Services from '../lib/Services';
 import Vendor from '../app/vendor';
+import DbUsers from '../lib/db/Users';
 
 require('longjohn');
 require('source-map-support').install();
@@ -33,7 +34,9 @@ function createVendor(event, context, callback) {
           email: body.email,
           createdBy: user.email,
         }, false)
-          .then(vendor => services.getUserPool().addUserToVendor(user.email, vendor.id)
+          .then(vendor => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
+            .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+            .then(userPool => userPool.addUserToVendor(user.email, vendor.id))
             .then(() => services.getNotification().approveVendor(vendor.id, body.name, {
               name: body.name,
               email: body.email,

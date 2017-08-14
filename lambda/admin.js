@@ -97,8 +97,9 @@ function addUserToVendor(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool()
-        .addUserToVendor(event.pathParameters.email, event.pathParameters.vendor)),
+      .then(() => new DbUsers(db.getConnection(), Services.getError()))
+      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool => userPool.addUserToVendor(event.pathParameters.email, event.pathParameters.vendor)),
     db,
     event,
     context,
@@ -286,10 +287,11 @@ function approveVendor(event, context, callback) {
             `Your vendor has been approved with id <strong>${_.get(body, 'newId', null)}</strong>.`,
           );
           if (_.has(body, 'newId')) {
-            const userPool = services.getUserPool();
-            return userPool.addUserToVendor(vendor.createdBy, body.newId)
-              .then(() => userPool.removeUserFromVendor(vendor.createdBy, event.pathParameters.vendor))
-              .then(() => emailPromise);
+            return new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
+              .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+              .then(userPool => userPool.addUserToVendor(vendor.createdBy, body.newId)
+                .then(() => userPool.removeUserFromVendor(vendor.createdBy, event.pathParameters.vendor))
+                .then(() => emailPromise));
           }
           return emailPromise;
         }

@@ -184,6 +184,7 @@ describe('Vendor App', () => {
     it('Success', () => {
       const code = `c${Date.now()}`;
       return rds.queryAsync('INSERT INTO invitations SET code=?, vendor=?, email=?', [code, vendor, userEmail])
+        .then(() => rds.queryAsync('INSERT INTO users SET id=?, name=?', [userEmail, 'Test']))
         .then(() => vendorApp.acceptInvitation(vendor, userEmail, code))
         .then(() => rds.queryAsync('SELECT * FROM invitations WHERE code=?', [code]))
         .then((data) => {
