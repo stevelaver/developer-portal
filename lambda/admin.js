@@ -3,6 +3,7 @@
 import App from '../app/app';
 import Services from '../lib/Services';
 import Vendor from '../app/vendor';
+import DbUsers from '../lib/db/Users';
 
 require('longjohn');
 require('source-map-support').install();
@@ -56,7 +57,9 @@ function deleteUser(event, context, callback) {
   return request.responseDbPromise(
     db.connect(process.env)
       .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool().deleteUser(event.pathParameters.email))
+      .then(() => new DbUsers(db.getConnection(), Services.getError()))
+      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool => userPool.deleteUser(event.pathParameters.email))
       .then(() => null),
     db,
     event,

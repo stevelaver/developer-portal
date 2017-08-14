@@ -64,7 +64,8 @@ describe('Admin', () => {
       ))
       .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor]))
       .then(() => new DbUsers(db.getConnection(), error))
-      .then(dbUsers => userPool.signUp(dbUsers, userEmail, '123jfsklJFKLAD._.d-X', 'Test'))
+      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool2 => userPool2.signUp(userEmail, '123jfsklJFKLAD._.d-X', 'Test'))
       .then(() => userPool.addUserToVendor(userEmail, 'test'))
       .then(() => userPool.confirmSignUp(userEmail)));
 
@@ -181,7 +182,8 @@ describe('Admin', () => {
   const userEmail2 = `test-func-admin-u2${Date.now()}.test@keboola.com`;
   it('Delete User', () =>
     new Promise(res => res(new DbUsers(db.getConnection(), error)))
-      .then(dbUsers => userPool.signUp(dbUsers, userEmail2, '123jfsklJFKLAD._.d-X', 'Test'))
+      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool2 => userPool2.signUp(userEmail2, '123jfsklJFKLAD._.d-X', 'Test'))
       .then(() => expect(axios({
         method: 'delete',
         url: `${process.env.API_ENDPOINT}/admin/users/${userEmail2}`,

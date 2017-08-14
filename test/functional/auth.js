@@ -7,6 +7,7 @@ const axios = require('axios');
 const expect = require('unexpected');
 const mysql = require('mysql');
 const Promise = require('bluebird');
+const db = require('../../lib/db');
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
@@ -31,10 +32,11 @@ const otherVendor = `${vendor}o1`;
 
 describe('Auth', () => {
   before(() =>
-    rds.queryAsync(
-      'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
-      [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
-    )
+    db.init(rds)
+      .then(() => rds.queryAsync(
+        'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
+        [vendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
+      ))
       .then(() => rds.queryAsync(
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
         [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],

@@ -1,6 +1,7 @@
 import Access from '../lib/Access';
 import Identity from '../lib/Identity';
 import UserPool from '../lib/UserPool';
+import UserPoolWithDatabase from '../lib/UserPoolWithDatabase';
 
 const aws = require('aws-sdk');
 const base64 = require('base-64');
@@ -39,6 +40,14 @@ class Services {
       error,
     );
   }
+
+  getUserPoolWithDatabase(dbUsers) {
+    return new UserPoolWithDatabase(
+      this.getUserPool(),
+      dbUsers,
+    );
+  }
+
 
   static getAccess(db) {
     return new Access(db, error);

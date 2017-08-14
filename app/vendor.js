@@ -202,20 +202,23 @@ class Vendor {
     this.checkVendorAccess(user, vendor);
     const userPool = this.services.getUserPool();
     const username = `${vendor}+${name}`;
-    const password = Vendor.generatePassword(generator);
 
-    return this.db.connect(this.env)
-      .then(() => new DbUsers(this.db.getConnection(), this.err))
-      .then(dbUsers => userPool.signUp(dbUsers, username, password, `Service ${vendor}`, description, false))
-      .catch((err) => {
-        if (err.code === 'UsernameExistsException') {
-          throw this.err.badRequest(`User with name ${username} already exists`);
-        }
-        throw err;
-      })
-      .then(() => userPool.confirmSignUp(username))
-      .then(() => userPool.addUserToVendor(username, vendor))
-      .then(() => ({ username, password }));
+    while (true) { // eslint-disable-line no-constant-condition
+      const password = Vendor.generatePassword(generator);
+      return this.db.connect(this.env)
+        .then(() => new DbUsers(this.db.getConnection(), this.err))
+        .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+        .then(userPool2 => userPool2.signUp(username, password, `Service ${vendor}`, description, false))
+        .catch((err) => {
+          if (err.code === 'UsernameExistsException') {
+            throw this.err.badRequest(`User with name ${username} already exists`);
+          }
+          throw err;
+        })
+        .then(() => userPool.confirmSignUp(username))
+        .then(() => userPool.addUserToVendor(username, vendor))
+        .then(() => ({ username, password }));
+    }
   }
 
   listUsers(vendor, user) {

@@ -6,6 +6,7 @@ const _ = require('lodash');
 
 class Auth {
   constructor(services, db, env, err) {
+    this.services = services;
     this.db = db;
     this.env = env;
     this.err = err;
@@ -73,7 +74,8 @@ class Auth {
   signUp(email, password, name) {
     return this.db.connect(process.env)
       .then(() => new DbUsers(this.db.getConnection(), this.err))
-      .then(dbUsers => this.userPool.signUp(dbUsers, email, password, name))
+      .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool => userPool.signUp(email, password, name))
       .then(() => null);
   }
 

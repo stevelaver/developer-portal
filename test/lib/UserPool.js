@@ -2,7 +2,6 @@
 
 import Identity from '../../lib/Identity';
 import UserPool from '../../lib/UserPool';
-import DbUsers from '../../lib/db/Users';
 
 const aws = require('aws-sdk');
 const expect = require('unexpected');
@@ -172,17 +171,12 @@ describe('UserPool', () => {
 
   it('signUp', () => {
     const email2 = `devportal-2${Date.now()}@test.keboola.com`;
-    return new Promise(res => res(new DbUsers(db.getConnection(), err)))
-      .then(dbUsers => userPool.signUp(dbUsers, email2, 'uifsdk129JDKS_DSJ', 'Test'))
+    return userPool.signUp(email2, 'uifsdk129JDKS_DSJ', 'Test')
       .then(() => cognito.adminConfirmSignUp({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise())
       .then(() => expect(
         cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise(),
         'to be fulfilled',
       ))
-      .then(() => rds.queryAsync('SELECT * FROM users WHERE id=?', [email2]))
-      .spread((res) => {
-        expect(res.id, 'to be', email2);
-      })
       .then(() => cognito.adminDeleteUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise());
   });
 
