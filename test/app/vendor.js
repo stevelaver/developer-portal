@@ -92,7 +92,7 @@ describe('Vendor App', () => {
     });
     return db.init(rds)
       .then(() => {
-        userPool = services.getUserPool(db);
+        userPool = services.getUserPool();
       });
   });
 
@@ -194,8 +194,8 @@ describe('Vendor App', () => {
         .then(() => cognito.adminGetUser({
           UserPoolId: process.env.COGNITO_POOL_ID,
           Username: userEmail,
-        }).promise()
-        .then(data => Identity.formatUser(data)))
+        }).promise())
+        .then(data => Identity.formatUser(data))
         .then((data) => {
           expect(data.vendors, 'to contain', vendor);
         });

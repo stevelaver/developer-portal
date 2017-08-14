@@ -1,5 +1,7 @@
 'use strict';
 
+import DbUsers from '../lib/db/Users';
+
 const _ = require('lodash');
 
 class Auth {
@@ -7,7 +9,7 @@ class Auth {
     this.db = db;
     this.env = env;
     this.err = err;
-    this.userPool = services.getUserPool(db);
+    this.userPool = services.getUserPool();
   }
 
   forgot(email) {
@@ -69,7 +71,10 @@ class Auth {
   }
 
   signUp(email, password, name) {
-    return this.userPool.signUp(email, password, name);
+    return this.db.connect(process.env)
+      .then(() => new DbUsers(this.db.getConnection(), this.err))
+      .then(dbUsers => this.userPool.signUp(dbUsers, email, password, name))
+      .then(() => null);
   }
 
   confirm(email, code) {

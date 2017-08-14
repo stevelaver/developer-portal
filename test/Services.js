@@ -1,7 +1,6 @@
 import Access from '../lib/Access';
 import Identity from '../lib/Identity';
 import UserPool from '../lib/UserPool';
-import DbUsers from '../lib/db/Users';
 
 const aws = require('aws-sdk');
 const base64 = require('base-64');
@@ -31,14 +30,13 @@ class Services {
     );
   }
 
-  getUserPool(db) {
+  getUserPool() {
     return new UserPool(
       new aws.CognitoIdentityServiceProvider({ region: this.env.REGION }),
       this.env.COGNITO_POOL_ID,
       this.env.COGNITO_CLIENT_ID,
       Identity,
       error,
-      new DbUsers(db.getConnection(), error),
     );
   }
 

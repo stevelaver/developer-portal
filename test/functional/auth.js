@@ -7,13 +7,12 @@ const axios = require('axios');
 const expect = require('unexpected');
 const mysql = require('mysql');
 const Promise = require('bluebird');
-const db = require('../../lib/db');
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 
 const services = new Services(process.env);
-const userPool = services.getUserPool(db);
+const userPool = services.getUserPool();
 
 const rds = mysql.createConnection({
   host: process.env.FUNC_RDS_HOST,
@@ -228,10 +227,10 @@ describe('Auth', () => {
         headers: { Authorization: token },
       }), 'to be fulfilled'))
       .then(() => userPool.getUser(userEmail)
-      .then((data) => {
-        expect(data, 'to have key', 'phone');
-        expect(data.phone, 'to be', process.env.FUNC_USER_PHONE);
-      }))
+        .then((data) => {
+          expect(data, 'to have key', 'phone');
+          expect(data.phone, 'to be', process.env.FUNC_USER_PHONE);
+        }))
       // 4) Login
       .then(() => axios({
         method: 'post',
@@ -266,5 +265,5 @@ describe('Auth', () => {
 
   afterEach(() =>
     userPool.deleteUser(userEmail)
-    .catch(() => {}));
+      .catch(() => {}));
 });

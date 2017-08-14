@@ -184,13 +184,13 @@ class App {
   adminPublishApp(id, user) {
     let appData;
     return this.db.getApp(id)
-    .then((data) => {
-      appData = data;
-      if (appData.isPublic) {
-        throw this.err.badRequest('The app is already set as public');
-      }
-      return this.db.updateApp({ isPublic: 1 }, id, user.email);
-    })
+      .then((data) => {
+        appData = data;
+        if (appData.isPublic) {
+          throw this.err.badRequest('The app is already set as public');
+        }
+        return this.db.updateApp({ isPublic: 1 }, id, user.email);
+      })
       .then(() => new DbVendors(this.db.getConnection(), this.err))
       .then(dbVendors => dbVendors.get(appData.vendor.id));
   }

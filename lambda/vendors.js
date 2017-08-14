@@ -33,7 +33,7 @@ function createVendor(event, context, callback) {
           email: body.email,
           createdBy: user.email,
         }, false)
-          .then(vendor => services.getUserPool(db).addUserToVendor(user.email, vendor.id)
+          .then(vendor => services.getUserPool().addUserToVendor(user.email, vendor.id)
             .then(() => services.getNotification().approveVendor(vendor.id, body.name, {
               name: body.name,
               email: body.email,
@@ -163,7 +163,7 @@ function createCredentials(event, context, callback) {
   });
   const body = JSON.parse(event.body);
 
-  return request.responsePromise(
+  return request.responseDbPromise(
     identity.getUser(event.headers.Authorization)
       .then(user => vendorApp.createCredentials(
         event.pathParameters.vendor,
@@ -172,6 +172,7 @@ function createCredentials(event, context, callback) {
         user,
         generator,
       )),
+    db,
     event,
     context,
     callback

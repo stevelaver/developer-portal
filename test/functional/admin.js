@@ -1,6 +1,7 @@
 'use strict';
 
 import Services from '../Services';
+import DbUsers from '../../lib/db/Users';
 
 require('longjohn');
 const axios = require('axios');
@@ -9,6 +10,7 @@ const moment = require('moment');
 const mysql = require('mysql');
 const Promise = require('bluebird');
 const db = require('../../lib/db');
+const error = require('../../lib/error');
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
@@ -50,7 +52,7 @@ describe('Admin', () => {
       })
       .then(() => db.init(rds))
       .then(() => {
-        userPool = services.getUserPool(db);
+        userPool = services.getUserPool();
       })
       .then(() => rds.queryAsync(
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
@@ -61,7 +63,8 @@ describe('Admin', () => {
         [otherVendor, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
       ))
       .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor]))
-      .then(() => userPool.signUp(userEmail, '123jfsklJFKLAD._.d-X', 'Test'))
+      .then(() => new DbUsers(db.getConnection(), error))
+      .then(dbUsers => userPool.signUp(dbUsers, userEmail, '123jfsklJFKLAD._.d-X', 'Test'))
       .then(() => userPool.addUserToVendor(userEmail, 'test'))
       .then(() => userPool.confirmSignUp(userEmail)));
 
@@ -177,7 +180,8 @@ describe('Admin', () => {
 
   const userEmail2 = `test-func-admin-u2${Date.now()}.test@keboola.com`;
   it('Delete User', () =>
-    userPool.signUp(userEmail2, '123jfsklJFKLAD._.d-X', 'Test')
+    new Promise(res => res(new DbUsers(db.getConnection(), error)))
+      .then(dbUsers => userPool.signUp(dbUsers, userEmail2, '123jfsklJFKLAD._.d-X', 'Test'))
       .then(() => expect(axios({
         method: 'delete',
         url: `${process.env.API_ENDPOINT}/admin/users/${userEmail2}`,

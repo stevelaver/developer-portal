@@ -14,7 +14,6 @@ const dbMigrate = require('db-migrate');
 require('db-migrate-mysql');
 
 let rds;
-let dbUsers;
 let userPool;
 const dbConnectParams = {
   driver: 'mysql',
@@ -76,14 +75,12 @@ describe('UserPool', () => {
       .then(() => db.init(rds))
       .then(() => rds.queryAsync('TRUNCATE TABLE `migrations`'))
       .then(() => {
-        dbUsers = new DbUsers(rds);
         userPool = new UserPool(
           cognito,
           process.env.COGNITO_POOL_ID,
           process.env.COGNITO_CLIENT_ID,
           Identity,
           err,
-          dbUsers,
         );
       });
   });
@@ -175,7 +172,8 @@ describe('UserPool', () => {
 
   it('signUp', () => {
     const email2 = `devportal-2${Date.now()}@test.keboola.com`;
-    return userPool.signUp(email2, 'uifsdk129JDKS_DSJ', 'Test')
+    return new Promise(res => res(new DbUsers(db.getConnection(), err)))
+      .then(dbUsers => userPool.signUp(dbUsers, email2, 'uifsdk129JDKS_DSJ', 'Test'))
       .then(() => cognito.adminConfirmSignUp({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise())
       .then(() => expect(
         cognito.adminGetUser({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email2 }).promise(),

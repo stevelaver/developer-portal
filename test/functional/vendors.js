@@ -8,7 +8,6 @@ const axios = require('axios');
 const expect = require('unexpected');
 const mysql = require('mysql');
 const Promise = require('bluebird');
-const db = require('../../lib/db');
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
@@ -24,7 +23,7 @@ const rds = mysql.createConnection({
   ssl: process.env.FUNC_RDS_SSL,
   multipleStatements: true,
 });
-const userPool = services.getUserPool(db);
+const userPool = services.getUserPool();
 
 const userEmail = `u${Date.now()}@keboola.com`;
 const vendor = process.env.FUNC_VENDOR;
@@ -255,6 +254,8 @@ describe('Vendors', () => {
         expect(res.data, 'to have key', 'token');
         token = res.data.token;
       })
+      .then(() => userPool.deleteUser(`${vendor}+test`))
+      .catch(() => null)
       .then(() => expect(axios({
         method: 'post',
         url: `${process.env.API_ENDPOINT}/vendors/${vendor}/credentials`,
