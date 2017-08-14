@@ -16,7 +16,7 @@ module.exports.emails = (event, context, callback) => {
         buttonUrl: `${process.env.API_ENDPOINT}/auth/confirm/${event.userName}`
         +`/${event.request.codeParameter}`,
         buttonText: 'Confirm your email',
-      });*/
+      }); */
       newEvent.response.emailMessage = `Thank you for signing up. Confirm your email using this link: ${process.env.API_ENDPOINT}/auth/confirm/${event.userName}/${event.request.codeParameter}`;
       break;
     case 'CustomMessage_ForgotPassword':

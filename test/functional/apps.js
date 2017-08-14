@@ -528,7 +528,7 @@ describe('Apps', () => {
   const appName5 = `a3_${Date.now()}`;
   const appId5 = `${vendor}.${appName5}`;
   it('ECR', () =>
-   // Create app
+    // Create app
     axios({
       method: 'post',
       url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps`,

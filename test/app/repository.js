@@ -72,31 +72,31 @@ describe('Repository App', () => {
 
   const repositoryName2 = repositoryApp.getRepositoryName(`app2${Date.now()}`);
   it('Get repository credentials', () =>
-      ecr.createRepository({ repositoryName: repositoryName2 }).promise()
-        .then(() => repositoryApp.getCredentials(appId, vendorId, user))
-        .then(creds => registryRequest(`${repositoryName}/tags/list`, {
+    ecr.createRepository({ repositoryName: repositoryName2 }).promise()
+      .then(() => repositoryApp.getCredentials(appId, vendorId, user))
+      .then(creds => registryRequest(`${repositoryName}/tags/list`, {
+        registry: `https://${creds.registry}`,
+        credentials: creds.credentials,
+      })
+        .then((res) => {
+          expect(res, 'to have key', 'tags');
+        })
+        .then(() => registryRequest(`${repositoryName2}/tags/list`, {
           registry: `https://${creds.registry}`,
           credentials: creds.credentials,
-        })
-          .then((res) => {
-            expect(res, 'to have key', 'tags');
-          })
-          .then(() => registryRequest(`${repositoryName2}/tags/list`, {
-            registry: `https://${creds.registry}`,
-            credentials: creds.credentials,
-          }))
-          .then((res) => {
-            expect(res, 'to have key', 'errors');
-            expect(res.errors, 'to have length', 1);
-            expect(res.errors[0], 'to have key', 'code');
-            expect(res.errors[0].code, 'to be', 'DENIED');
-          }))
-        .then(() => ecr.describeRepositories({ repositoryNames: [repositoryName] }).promise())
-        .then((data) => {
-          expect(data, 'to have key', 'repositories');
-          expect(data.repositories, 'to have length', 1);
-        })
-        .then(() => ecr.deleteRepository({ repositoryName: repositoryName2, force: true }).promise()));
+        }))
+        .then((res) => {
+          expect(res, 'to have key', 'errors');
+          expect(res.errors, 'to have length', 1);
+          expect(res.errors[0], 'to have key', 'code');
+          expect(res.errors[0].code, 'to be', 'DENIED');
+        }))
+      .then(() => ecr.describeRepositories({ repositoryNames: [repositoryName] }).promise())
+      .then((data) => {
+        expect(data, 'to have key', 'repositories');
+        expect(data.repositories, 'to have length', 1);
+      })
+      .then(() => ecr.deleteRepository({ repositoryName: repositoryName2, force: true }).promise()));
 
   after(() =>
     ecr.deleteRepository({ repositoryName, force: true }).promise());

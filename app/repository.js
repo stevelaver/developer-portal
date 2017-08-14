@@ -47,7 +47,7 @@ class Repository {
           Effect: 'Allow',
           Action: [
             'ecr:GetAuthorizationToken',
-            //'cloudwatchlogs:*',
+            // 'cloudwatchlogs:*',
           ],
           Resource: '*',
         },

@@ -315,7 +315,7 @@ const addNewData = function (data, callbackMain) {
         // exists, skip
       })
       .then(() => callback)
-  , callbackMain);
+    , callbackMain);
 };
 
 if (args[0] === 'data') {

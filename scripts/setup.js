@@ -36,7 +36,6 @@ const stringify = (json) => {
 };
 
 class Setup {
-
   static saveEnv() {
     const dbName = process.env.SERVICE_NAME.replace(/\W/g, '').substr(0, 16);
     const newEnv = {
@@ -186,24 +185,24 @@ class Setup {
       (poolId, cb2) => {
         exec(`aws cognito-idp add-custom-attributes --region ${env.REGION} --user-pool-id ${poolId} \
           --custom-attributes '[{"Name":"isAdmin","AttributeDataType":"Number","DeveloperOnlyAttribute":false,"Mutable":true,"Required": false,"NumberAttributeConstraints":{"MinValue":"0","MaxValue":"1"}}]'`, (err) => {
-          if (err) {
-            cb2(`Cognito Create Pool error: ${err}`);
-          }
-          console.info('- Attributes to Cognito User Pool added');
-          cb2(null, poolId);
-        });
+            if (err) {
+              cb2(`Cognito Create Pool error: ${err}`);
+            }
+            console.info('- Attributes to Cognito User Pool added');
+            cb2(null, poolId);
+          });
       },
       (poolId, cb2) => {
         exec(`aws cognito-idp create-user-pool-client --region ${env.REGION} --user-pool-id ${poolId} --client-name ${env.SERVICE_NAME} \
           --no-generate-secret --read-attributes profile email name "custom:isAdmin" --write-attributes profile email name "custom:isAdmin" \
           --explicit-auth-flows ADMIN_NO_SRP_AUTH`, (err, out) => {
-          if (err) {
-            cb2(`Cognito Create Pool error: ${err}`);
-          }
-          const clientId = JSON.parse(out).UserPoolClient.ClientId;
-          console.info('- Cognito User Pool Client created');
-          cb2(null, { poolId, clientId });
-        });
+            if (err) {
+              cb2(`Cognito Create Pool error: ${err}`);
+            }
+            const clientId = JSON.parse(out).UserPoolClient.ClientId;
+            console.info('- Cognito User Pool Client created');
+            cb2(null, { poolId, clientId });
+          });
       },
     ], (err, res) => {
       if (err) {
@@ -310,7 +309,6 @@ class Setup {
       return done();
     });
   }
-
 }
 
 const args = process.argv.slice(2);
