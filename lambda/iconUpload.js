@@ -37,10 +37,10 @@ module.exports.upload = (event, context, callback) => request.errorHandler(() =>
     return callback();
   }
   console.log(JSON.stringify(event));
-  return request.responsePromise(
-    app.upload(sharp, appId, bucket, key),
+  return request.responseDbPromise(
+    () => app.upload(sharp, appId, bucket, key),
     event,
     context,
     callback
   );
-}, event, context, (err, res) => db.endCallback(err, res, callback));
+}, event, context, callback);

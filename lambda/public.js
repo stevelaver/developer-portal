@@ -36,9 +36,7 @@ function detail(event, context, callback) {
   });
 
   return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => app.getAppWithVendor(_.get(event.pathParameters, 'app', event.pathParameters.vendorOrApp))),
-    db,
+    () => app.getAppWithVendor(_.get(event.pathParameters, 'app', event.pathParameters.vendorOrApp)),
     event,
     context,
     callback
@@ -54,12 +52,10 @@ function list(event, context, callback) {
   });
 
   return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => app.publicListApps(
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null),
-      )),
-    db,
+    () => app.publicListApps(
+      _.get(event, 'queryStringParameters.offset', null),
+      _.get(event, 'queryStringParameters.limit', null),
+    ),
     event,
     context,
     callback
@@ -68,9 +64,7 @@ function list(event, context, callback) {
 
 function stacks(event, context, callback) {
   return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => db.listStacks()),
-    db,
+    () => db.listStacks(),
     event,
     context,
     callback
@@ -83,11 +77,10 @@ function getVendorsList(event, context, callback) {
   });
 
   return request.responseDbPromise(
-    vendorApp.list(
+    () => vendorApp.list(
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null),
     ),
-    db,
     event,
     context,
     callback
@@ -100,8 +93,7 @@ function getVendor(event, context, callback) {
   });
 
   return request.responseDbPromise(
-    vendorApp.get(event.pathParameters.vendor),
-    db,
+    () => vendorApp.get(event.pathParameters.vendor),
     event,
     context,
     callback
@@ -127,4 +119,4 @@ module.exports.public = (event, context, callback) => request.errorHandler(() =>
     default:
       throw Services.getError().notFound();
   }
-}, event, context, (err, res) => db.endCallback(err, res, callback));
+}, event, context, callback);

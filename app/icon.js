@@ -55,7 +55,6 @@ class Icon {
   }
 
   upload(sharp, appId, bucket, sourceKey) {
-    let version;
     return this.s3.headObject({ Bucket: bucket, Key: sourceKey }).promise()
       .catch((err) => {
         if (err.code === 'NotFound' || err.code === 'Forbidden') {
@@ -72,19 +71,9 @@ class Icon {
       .then(() => this.s3.deleteObject({ Bucket: bucket, Key: sourceKey }).promise())
       .then(() => this.resize(sharp, bucket, appId, 64))
       .then(() => this.resize(sharp, bucket, appId, 32))
-      .then(() => this.db.connect(this.env)
-        .then(() => this.db.addAppIcon(appId))
-        .then((v) => {
-          version = v;
-        })
-        .then(() => this.db.end())
-      )
-      .then(() => this.nameFileByVersion(bucket, appId, 32, version))
-      .then(() => this.nameFileByVersion(bucket, appId, 64, version))
-      .catch((err) => {
-        this.db.end();
-        throw err;
-      });
+      .then(() => this.db.addAppIcon(appId))
+      .then(version => this.nameFileByVersion(bucket, appId, 32, version)
+        .then(() => this.nameFileByVersion(bucket, appId, 64, version)));
   }
 }
 

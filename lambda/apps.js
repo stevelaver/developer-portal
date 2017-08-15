@@ -15,7 +15,6 @@ const db = require('../lib/db');
 const request = require('../lib/request');
 
 const services = new Services(process.env);
-const identity = Services.getIdentity();
 const app = new App(Services, db, process.env);
 const validation = Services.getValidation();
 
@@ -29,11 +28,8 @@ function create(event, context, callback) {
     body: validation.createAppSchema(),
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.createApp(JSON.parse(event.body), event.pathParameters.vendor, user)),
-    db,
+  return request.userAuthPromise(
+    user => app.createApp(JSON.parse(event.body), event.pathParameters.vendor, user),
     event,
     context,
     callback,
@@ -50,21 +46,16 @@ function update(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => {
-        validation.validate(event, {
-          body: validation.updateAppSchema(),
-        });
-      })
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.updateApp(
+  return request.userAuthPromise(
+    user => new Promise(res => res(validation.validate(event, {
+      body: validation.updateAppSchema(),
+    })))
+      .then(() => app.updateApp(
         event.pathParameters.app,
         event.pathParameters.vendor,
         JSON.parse(event.body),
         user
       )),
-    db,
     event,
     context,
     callback
@@ -80,16 +71,13 @@ function list(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.listApps(
-        event.pathParameters.vendor,
-        user,
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null),
-      )),
-    db,
+  return request.userAuthPromise(
+    user => app.listApps(
+      event.pathParameters.vendor,
+      user,
+      _.get(event, 'queryStringParameters.offset', null),
+      _.get(event, 'queryStringParameters.limit', null),
+    ),
     event,
     context,
     callback
@@ -106,16 +94,13 @@ function detail(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.getAppForVendor(
-        event.pathParameters.app,
-        event.pathParameters.vendor,
-        user,
-        _.get(event, 'pathParameters.version', null),
-      )),
-    db,
+  return request.userAuthPromise(
+    user => app.getAppForVendor(
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+      _.get(event, 'pathParameters.version', null),
+    ),
     event,
     context,
     callback
@@ -131,16 +116,13 @@ function deleteApp(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.deleteApp(
-        event.pathParameters.app,
-        event.pathParameters.vendor,
-        user,
-        moment,
-      )),
-    db,
+  return request.userAuthPromise(
+    user => app.deleteApp(
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+      moment,
+    ),
     event,
     context,
     callback
@@ -156,16 +138,13 @@ function requestPublishing(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.requestPublishing(
-        event.pathParameters.app,
-        event.pathParameters.vendor,
-        user,
-      ))
+  return request.userAuthPromise(
+    user => app.requestPublishing(
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+    )
       .then(() => services.getNotification().approveApp(event.pathParameters.app)),
-    db,
     event,
     context,
     callback,
@@ -183,17 +162,14 @@ function versions(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.listAppVersions(
-        event.pathParameters.app,
-        event.pathParameters.vendor,
-        user,
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null)
-      )),
-    db,
+  return request.userAuthPromise(
+    user => app.listAppVersions(
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+      _.get(event, 'queryStringParameters.offset', null),
+      _.get(event, 'queryStringParameters.limit', null)
+    ),
     event,
     context,
     callback
@@ -210,16 +186,13 @@ function rollback(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.rollbackAppVersion(
-        event.pathParameters.app,
-        event.pathParameters.vendor,
-        user,
-        event.pathParameters.version
-      )),
-    db,
+  return request.userAuthPromise(
+    user => app.rollbackAppVersion(
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+      event.pathParameters.version
+    ),
     event,
     context,
     callback,
@@ -237,15 +210,12 @@ function icon(event, context, callback) {
   });
 
   const iconApp = new Icon(Services, db, process.env);
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => iconApp.getUploadLink(
-        user,
-        event.pathParameters.vendor,
-        event.pathParameters.app,
-      )),
-    db,
+  return request.userAuthPromise(
+    user => iconApp.getUploadLink(
+      user,
+      event.pathParameters.vendor,
+      event.pathParameters.app,
+    ),
     event,
     context,
     callback
@@ -262,15 +232,12 @@ function getRepository(event, context, callback) {
   });
 
   const repository = new Repository(Services, db, process.env);
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => repository.getCredentials(
-        event.pathParameters.app,
-        event.pathParameters.vendor,
-        user,
-      )),
-    db,
+  return request.userAuthPromise(
+    user => repository.getCredentials(
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+    ),
     event,
     context,
     callback
@@ -291,17 +258,14 @@ function deprecateApp(event, context, callback) {
   });
 
   const body = JSON.parse(event.body);
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getUser(event.headers.Authorization))
-      .then(user => app.deprecate(
-        event.pathParameters.app,
-        event.pathParameters.vendor,
-        user,
-        _.get(body, 'expiredOn', null),
-        _.get(body, 'replacementApp', null)
-      )),
-    db,
+  return request.userAuthPromise(
+    user => app.deprecate(
+      event.pathParameters.app,
+      event.pathParameters.vendor,
+      user,
+      _.get(body, 'expiredOn', null),
+      _.get(body, 'replacementApp', null)
+    ),
     event,
     context,
     callback,
@@ -342,4 +306,4 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
     default:
       throw Services.getError().notFound();
   }
-}, event, context, (err, res) => db.endCallback(err, res, callback));
+}, event, context, callback);

@@ -149,8 +149,7 @@ function signup(event, context, callback) {
   const body = JSON.parse(event.body);
 
   return request.responseDbAuthPromise(
-    app.signUp(body.email, body.password, body.name),
-    db,
+    () => app.signUp(body.email, body.password, body.name),
     event,
     context,
     callback,
@@ -271,4 +270,4 @@ module.exports.auth = (event, context, callback) => request.errorHandler(() => {
     default:
       throw Services.getError().notFound();
   }
-}, event, context, (err, res) => db.endCallback(err, res, callback));
+}, event, context, callback);

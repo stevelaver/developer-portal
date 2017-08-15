@@ -1,25 +1,22 @@
 sudo: true
 language: bash
 services:
-  - docker
-
+- docker
 before_script:
-  - docker -v
-  - docker-compose -v
-  - docker-compose build
-
+- docker -v
+- docker-compose -v
+- docker-compose build
 script:
-  - docker-compose run lint
-  - docker-compose run ci-test-unit
-  - docker-compose run deploy-testing
-  - docker-compose run ci-test-functional
-
-
+- docker-compose run lint
+- docker-compose run ci-test-unit
+- docker-compose run deploy-testing
+- docker-compose run ci-test-functional
 deploy:
   provider: script
-  script: docker -v &&
-    docker-compose -v &&
-    docker-compose build &&
-    docker-compose run deploy-production
+  script: docker -v && docker-compose -v && docker-compose build && docker-compose
+    run deploy-production
   on:
     tags: true
+notifications:
+  slack:
+    secure: ST828xKtT74JedaqMFf27klGmfTOWVz0qekaHRCmCUkPm+/FOGUX+/81s2Iz6vMTlyKr7chaix59gott/TOpxUb+70A/8gqClQCRgKxxnrkVRJIk4Zuy44HpqeuFIBkfuxBYqPctLGdzxCfErrCnUMF0mHxCLspau+VZdR2EOoEBeZY/ctVFm8x46X6mB1XeXQWAVigU9/sNoNqUyujVVepVOV+1JEVnUFBUB0+/L8dkuidNchmAN6Sg2zT2ekM8doaq7p1Bxh3hNY1Qxpsyi3Vjmx02WFpAgaX7JRXcL5kXvPUUEhcGVA6GBhoH0kNAG9fnO7alm/j6IsUUIQ56s3CvAOZkzX00CGUHItARfc5PC9JQcDQ2ddl+tlUs3qbbIlR0KUjH2XSS3HkP84JRilMoWF+u6doRuz2bCl3Bd5ubHEiLB9QQnTVsKXH9UYWORg7OyF6cAqJNJHT6h6+Laf/fmKmKemqvIZk9wi8QI60pcBxG74QDT7eFMfmX0bfU1XX8mXqIU7MeVAncOYoamkFtJTmRMc5CoAnptQOx7phDOsw5LqdNUM0Sh4WwueqKUG910lZ9cEMYLW0fK+waxGNFvJkQnbbab8Lu96FthuBdUKC4xvd8NogNc55Ypwka8t6mW+9sMlvuPlVFcLx0UiA1B0QFr+BlwmBeN2Rcc0A=

@@ -72,8 +72,7 @@ class Auth {
   }
 
   signUp(email, password, name) {
-    return this.db.connect(process.env)
-      .then(() => new DbUsers(this.db.getConnection(), this.err))
+    return new Promise(res => res(new DbUsers(this.db.getConnection(), this.err)))
       .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
       .then(userPool => userPool.signUp(email, password, name))
       .then(() => null);

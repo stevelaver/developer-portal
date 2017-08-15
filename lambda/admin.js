@@ -13,7 +13,6 @@ const db = require('../lib/db');
 const request = require('../lib/request');
 
 const services = new Services(process.env);
-const identity = Services.getIdentity();
 const app = new App(Services, db, process.env);
 const validation = Services.getValidation();
 const vendorApp = new Vendor(services, db, process.env, Services.getError());
@@ -29,17 +28,14 @@ function listUsers(event, context, callback) {
   const filter = _.get(event, 'queryStringParameters.filter', '');
   const paginationToken = _.get(event, 'queryStringParameters.paginationToken', null);
   const headers = {};
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool().listUsers(filter, paginationToken))
+  return request.adminAuthPromise(
+    () => services.getUserPool().listUsers(filter, paginationToken)
       .then((res) => {
         if (res.paginationToken) {
           headers.Link = `<${process.env.API_ENDPOINT}/admin/users?filter=${filter}&paginationToken=${res.paginationToken}>; rel=next`;
         }
         return res.users;
       }),
-    db,
     event,
     context,
     callback,
@@ -54,14 +50,10 @@ function deleteUser(event, context, callback) {
     path: ['email'],
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => new DbUsers(db.getConnection(), Services.getError()))
+  return request.adminAuthPromise(
+    () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
       .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
-      .then(userPool => userPool.deleteUser(event.pathParameters.email))
-      .then(() => null),
-    db,
+      .then(userPool => userPool.deleteUser(event.pathParameters.email)),
     event,
     context,
     callback,
@@ -75,12 +67,8 @@ function makeUserAdmin(event, context, callback) {
     path: ['email'],
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool().makeUserAdmin(event.pathParameters.email))
-      .then(() => null),
-    db,
+  return request.adminAuthPromise(
+    () => services.getUserPool().makeUserAdmin(event.pathParameters.email),
     event,
     context,
     callback,
@@ -94,13 +82,10 @@ function addUserToVendor(event, context, callback) {
     path: ['email', 'vendor'],
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => new DbUsers(db.getConnection(), Services.getError()))
+  return request.adminAuthPromise(
+    () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
       .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
       .then(userPool => userPool.addUserToVendor(event.pathParameters.email, event.pathParameters.vendor)),
-    db,
     event,
     context,
     callback,
@@ -114,18 +99,16 @@ function removeUserFromVendor(event, context, callback) {
     path: ['email', 'vendor'],
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => services.getUserPool()
-        .removeUserFromVendor(event.pathParameters.email, event.pathParameters.vendor))
+  return request.adminAuthPromise(
+    () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
+      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool => userPool.removeUserFromVendor(event.pathParameters.email, event.pathParameters.vendor))
       .then(() => services.getEmail().send(
         event.pathParameters.email,
         'Removal from vendor',
         'Keboola Developer Portal',
         `Your account was removed from vendor ${event.pathParameters.vendor} by an administrator.`,
       )),
-    db,
     event,
     context,
     callback,
@@ -139,17 +122,14 @@ function approveApp(event, context, callback) {
     path: ['id'],
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(user => app.adminPublishApp(event.pathParameters.id, user))
+  return request.adminAuthPromise(
+    user => app.adminPublishApp(event.pathParameters.id, user)
       .then(vendor => services.getEmail().send(
         vendor.email,
         'App approval in Keboola Developer Portal',
         'Keboola Developer Portal',
         `Your app <strong>${event.pathParameters.id}</strong> has been approved.`,
       )),
-    db,
     event,
     context,
     callback,
@@ -164,14 +144,11 @@ function listApps(event, context, callback) {
     query: ['filter'],
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.adminListApps(
-        _.get(event, 'queryStringParameters.offset', null),
-        _.get(event, 'queryStringParameters.limit', null)
-      )),
-    db,
+  return request.adminAuthPromise(
+    () => app.adminListApps(
+      _.get(event, 'queryStringParameters.offset', null),
+      _.get(event, 'queryStringParameters.limit', null)
+    ),
     event,
     context,
     callback
@@ -187,14 +164,11 @@ function detailApp(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.adminGetAppWithVendor(
-        event.pathParameters.id,
-        _.get(event, 'pathParameters.version', null)
-      )),
-    db,
+  return request.adminAuthPromise(
+    () => app.adminGetAppWithVendor(
+      event.pathParameters.id,
+      _.get(event, 'pathParameters.version', null)
+    ),
     event,
     context,
     callback
@@ -208,15 +182,8 @@ function updateApp(event, context, callback) {
     body: validation.adminAppSchema(),
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(user => app.adminUpdateApp(
-        event.pathParameters.id,
-        JSON.parse(event.body),
-        user
-      )),
-    db,
+  return request.adminAuthPromise(
+    user => app.adminUpdateApp(event.pathParameters.id, JSON.parse(event.body), user),
     event,
     context,
     callback
@@ -234,14 +201,11 @@ function listAppChanges(event, context, callback) {
     },
   });
 
-  return request.responseDbPromise(
-    db.connect(process.env)
-      .then(() => identity.getAdmin(event.headers.Authorization))
-      .then(() => app.adminListChangesAcrossApps(
-        _.get(event, 'queryStringParameters.since', null),
-        _.get(event, 'queryStringParameters.until', null)
-      )),
-    db,
+  return request.adminAuthPromise(
+    () => app.adminListChangesAcrossApps(
+      _.get(event, 'queryStringParameters.since', null),
+      _.get(event, 'queryStringParameters.until', null)
+    ),
     event,
     context,
     callback
@@ -254,10 +218,8 @@ function createVendor(event, context, callback) {
     body: validation.adminCreateVendorSchema(),
   });
 
-  return request.responseDbPromise(
-    identity.getAdmin(event.headers.Authorization)
-      .then(() => vendorApp.create(JSON.parse(event.body))),
-    db,
+  return request.adminAuthPromise(
+    () => vendorApp.create(JSON.parse(event.body)),
     event,
     context,
     callback,
@@ -275,9 +237,8 @@ function approveVendor(event, context, callback) {
   });
 
   const body = JSON.parse(event.body);
-  return request.responseDbPromise(
-    identity.getAdmin(event.headers.Authorization)
-      .then(() => vendorApp.approve(event.pathParameters.vendor, _.get(body, 'newId', null)))
+  return request.adminAuthPromise(
+    () => vendorApp.approve(event.pathParameters.vendor, _.get(body, 'newId', null))
       .then((vendor) => {
         if (vendor.createdBy) {
           const emailPromise = services.getEmail().send(
@@ -295,9 +256,7 @@ function approveVendor(event, context, callback) {
           }
           return emailPromise;
         }
-      })
-      .then(() => null),
-    db,
+      }),
     event,
     context,
     callback,
@@ -337,4 +296,4 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
     default:
       throw Services.getError().notFound();
   }
-}, event, context, (err, res) => db.endCallback(err, res, callback));
+}, event, context, callback);
