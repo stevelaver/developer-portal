@@ -274,7 +274,7 @@ describe('Vendors', () => {
       }))
       .then((res) => {
         expect(res.data, 'to have an item satisfying',
-          { name: 'Service test', email: `${vendor}+test`, description: 'Test desc' });
+          { name: 'Service test', email: `${vendor}+test` });
       })
   );
 

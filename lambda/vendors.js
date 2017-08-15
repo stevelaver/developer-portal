@@ -6,6 +6,7 @@ import DbUsers from '../lib/db/Users';
 
 require('longjohn');
 require('source-map-support').install();
+const _ = require('lodash');
 const joi = require('joi');
 const generator = require('generate-password');
 
@@ -186,7 +187,12 @@ function listUsers(event, context, callback) {
   const vendor = event.pathParameters.vendor;
   const headers = {};
   return request.userAuthPromise(
-    user => vendorApp.listUsers(vendor, user),
+    user => vendorApp.listUsers(
+      vendor,
+      user,
+      _.get(event, 'queryStringParameters.offset', null),
+      _.get(event, 'queryStringParameters.limit', null),
+    ),
     event,
     context,
     callback,

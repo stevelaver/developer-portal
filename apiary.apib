@@ -402,12 +402,16 @@ Generates a service account which can be used e.g. for continuous integration an
             }
 
 
-### List users [GET /vendors/{vendor}/users]
+### List users [GET /vendors/{vendor}/users?offset={offset}&limit={limit}]
 
 Lists all users of the vendor including service accounts
 
 + Parameters
     + vendor
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
 
 + Request
 
@@ -423,7 +427,8 @@ Lists all users of the vendor including service accounts
                 {
                     "email": "test@keboola.com",
                     "name": "Test User",
-                    "description": ""
+                    "createdOn": "",
+                    "vendors": ["keboola"]
                 }
             ]
 

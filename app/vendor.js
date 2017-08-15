@@ -184,10 +184,11 @@ class Vendor {
     }
   }
 
-  listUsers(vendor, user) {
+  listUsers(vendor, user, offset = 0, limit = 1000) {
     this.checkVendorAccess(user, vendor);
-    const userPool = this.services.getUserPool();
-    return userPool.listUsersAllAtOnce(vendor);
+    return new Promise(res => res(new DbUsers(this.db.getConnection(), this.err)))
+      .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool => userPool.listUsersPaginated(vendor, offset, limit));
   }
 
   checkVendorAccess(user, vendor) {
