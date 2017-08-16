@@ -22,20 +22,23 @@ function listUsers(event, context, callback) {
   validation.validate(event, {
     auth: true,
     pagination: true,
-    query: ['filter'],
   });
 
-  const filter = _.get(event, 'queryStringParameters.filter', '');
-  const paginationToken = _.get(event, 'queryStringParameters.paginationToken', null);
+  // const paginationToken = _.get(event, 'queryStringParameters.paginationToken', null);
   const headers = {};
   return request.adminAuthPromise(
-    () => services.getUserPool().listUsers(filter, paginationToken)
-      .then((res) => {
+    () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
+      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(userPool => userPool.listAllUsers(
+        _.get(event, 'queryStringParameters.offset', null),
+        _.get(event, 'queryStringParameters.limit', null)
+      )),
+    /* .then((res) => {
         if (res.paginationToken) {
           headers.Link = `<${process.env.API_ENDPOINT}/admin/users?filter=${filter}&paginationToken=${res.paginationToken}>; rel=next`;
         }
         return res.users;
-      }),
+      }), */
     event,
     context,
     callback,

@@ -1,6 +1,7 @@
 'use strict';
 
 import Services from '../Services';
+import DbUsers from '../../lib/db/Users';
 
 require('longjohn');
 const _ = require('lodash');
@@ -8,6 +9,9 @@ const axios = require('axios');
 const expect = require('unexpected');
 const mysql = require('mysql');
 const Promise = require('bluebird');
+const db = require('../../lib/db');
+const error = require('../../lib/error');
+
 
 Promise.promisifyAll(mysql);
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
@@ -47,11 +51,14 @@ describe('Vendors', () => {
         expect(res.data, 'to have key', 'token');
         token = res.data.token;
       })
+      .then(() => db.init(rds))
       .then(() => rds.queryAsync(
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
         [vendor1, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
       ))
-      .then(() => userPool.listUsersForVendor(vendor))
+      .then(() => new DbUsers(db.getConnection(), error))
+      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(userPoolDb => userPoolDb.listUsersForVendor(vendor))
       .then((data) => {
         _.each(data.users, (user) => {
           if (user.email !== process.env.FUNC_USER_EMAIL) {

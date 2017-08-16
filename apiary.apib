@@ -1132,15 +1132,13 @@ Shows the app if its flag `isPublic` is set to `true`
 
 Management of users and apps designated for Developer Portal staff only
 
-### List users [GET /admin/users?filter={filter}]
+### List users [GET /admin/users?offset={offset}&limit={limit}]
 
 + Parameters
-    + filter (optional)
-        + Members
-            + enabled - shows only enabled (active) users
-            + disabled - shows only disabled (waiting for enable) users
-            + confirmed - shows only users who confirmed their account
-            + unconfirmed - shows only users who have not confirmed their account
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
 
 + Request
 
@@ -1156,11 +1154,8 @@ Management of users and apps designated for Developer Portal staff only
                 {
                     "email": "test@keboola.com",
                     "name": "Test User",
-                    "vendors": ["keboola"],
-                    "description": "",
-                    "createdOn": "2016-08-10T19:02:46.361Z",
-                    "isEnabled": true,
-                    "status": "CONFIRMED",
+                    "createdOn": "",
+                    "vendors": ["keboola"]
                 }
             ]
 

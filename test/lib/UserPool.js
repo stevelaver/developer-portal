@@ -100,35 +100,6 @@ describe('UserPool', () => {
       })
       .then(() => deleteUser()));
 
-  it('listUsers, listUsersForVendor', () =>
-    createUser()
-      .then(() => userPool.listUsers())
-      .then((data) => {
-        expect(data.users, 'to have an item satisfying', { email });
-      })
-      .then(() => userPool.listUsers('unconfirmed'))
-      .then((data) => {
-        expect(data.users, 'to have an item satisfying', { email });
-      })
-      .then(() => cognito.adminConfirmSignUp({ UserPoolId: process.env.COGNITO_POOL_ID, Username: email }).promise())
-      .then(() => userPool.listUsers('confirmed'))
-      .then((data) => {
-        expect(data.users, 'to have an item satisfying', { email });
-      })
-      .then(() => userPool.listUsers('enabled'))
-      .then((data) => {
-        expect(data.users, 'to have an item satisfying', { email });
-      })
-      .then(() => userPool.listUsersForVendor('test1'))
-      .then((data) => {
-        expect(data.users, 'to have an item satisfying', { email });
-      })
-      .then(() => userPool.listUsersForVendor('testX'))
-      .then((data) => {
-        expect(data.users, 'to have length', 0);
-      })
-      .then(() => deleteUser()));
-
   it('updateUserAttribute, addUserToVendor, removeUserFromVendor, makeUserAdmin', () =>
     createUser()
       .then(() => userPool.updateUserAttribute(email, 'profile', 'test'))

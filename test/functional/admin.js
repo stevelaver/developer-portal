@@ -274,6 +274,16 @@ describe('Admin', () => {
         expect(res.data, 'to have key', 'name');
         expect(res.data.name, 'to be', vendor2);
       })
+      .then(() => axios({
+        method: 'get',
+        url: `${process.env.API_ENDPOINT}/vendors`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have an item satisfying', { id: vendor2 });
+      })
       .then(() => rds.queryAsync('DELETE FROM apps WHERE vendor=?', [vendor2])));
 
   const vendor3 = `av3${Date.now()}`;

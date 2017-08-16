@@ -188,7 +188,7 @@ class Vendor {
     this.checkVendorAccess(user, vendor);
     return new Promise(res => res(new DbUsers(this.db.getConnection(), this.err)))
       .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
-      .then(userPool => userPool.listUsersPaginated(vendor, offset, limit));
+      .then(userPool => userPool.listUsersForVendor(vendor, offset, limit));
   }
 
   checkVendorAccess(user, vendor) {
