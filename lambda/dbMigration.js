@@ -33,6 +33,9 @@ exports.handler = function (event, context, callback) {
     },
   });
 
+  let rds;
+  const promises = [];
+
   const listUsersAll = (paginationToken = null) => {
     const params = { UserPoolId: process.env.COGNITO_POOL_ID };
     if (paginationToken) {
@@ -40,24 +43,33 @@ exports.handler = function (event, context, callback) {
     }
     return services.getUserPool().getCognito().listUsers(params).promise()
       .then((data) => {
-        const formattedData = _.map(data.Users, (item) => {
-          const profile = _.find(item.Attributes, o => (o.Name === 'profile'));
-          return {
-            email: item.Username,
-            name: _.get(_.find(item.Attributes, o => (o.Name === 'name')), 'Value', ''),
-            vendors: profile ? _.get(profile, 'Value', '').split(',') : [],
-            description: _.get(_.find(item.Attributes, o => (o.Name === 'custom:description')), 'Value', ''),
-            createdOn: item.UserCreateDate,
-          };
+        _.each(data.Users, (user) => {
+          const vendorsObject = _.find(user.Attributes, o => (o.Name === 'profile'));
+          const vendors = vendorsObject ? _.get(vendorsObject, 'Value', '').split(',') : [];
+          promises.push(rds.queryAsync('INSERT IGNORE INTO users SET ?', [{
+            id: user.Username,
+            name: _.get(_.find(user.Attributes, o => (o.Name === 'name')), 'Value', ''),
+            description: _.get(_.find(user.Attributes, o => (o.Name === 'custom:description')), 'Value', null),
+            serviceAccount: !_.includes(user.Username, '@'),
+            createdOn: user.UserCreateDate,
+          }]));
+          _.each(vendors, (vendor) => {
+            promises.push(rds.queryAsync('INSERT IGNORE INTO vendors SET ?', [{
+              id: vendor,
+            }]));
+            promises.push(rds.queryAsync('INSERT IGNORE INTO usersToVendors SET ?', [{
+              user: user.Username,
+              vendor,
+            }]));
+          });
         });
+
         if (_.has(data, 'PaginationToken')) {
-          return _.concat(formattedData, listUsersAll(data.PaginationToken));
+          listUsersAll(data.PaginationToken);
         }
-        return formattedData;
       });
   };
 
-  let rds;
   return dbm.up()
     .catch((err) => {
       console.log('ERROR', err);
@@ -67,30 +79,7 @@ exports.handler = function (event, context, callback) {
       rds = mysql.createConnection(dbParams);
     })
     .then(() => listUsersAll())
-    .then((res) => {
-      const promises1 = [];
-      _.each(res, (item) => {
-        if (item.email) {
-          promises1.push(rds.queryAsync('INSERT IGNORE INTO users SET ?', [{
-            id: item.email,
-            name: item.name,
-            description: item.description ? item.description : null,
-            serviceAccount: !_.includes(item.email, '@'),
-            createdOn: item.createdOn,
-          }]));
-          _.each(item.vendors, (vendor) => {
-            promises1.push(rds.queryAsync('INSERT IGNORE INTO vendors SET ?', [{
-              id: vendor,
-            }]));
-            promises1.push(rds.queryAsync('INSERT IGNORE INTO usersToVendors SET ?', [{
-              user: item.email,
-              vendor,
-            }]));
-          });
-        }
-        return Promise.all(promises1);
-      });
-    })
+    .then(() => Promise.all(promises))
     .then(() => rds.endAsync())
     .catch((err) => {
       rds.endAsync()
