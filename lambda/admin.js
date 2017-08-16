@@ -67,11 +67,11 @@ function deleteUser(event, context, callback) {
 function makeUserAdmin(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: ['email'],
+    path: ['username'],
   });
 
   return request.adminAuthPromise(
-    () => services.getUserPool().makeUserAdmin(event.pathParameters.email),
+    () => services.getUserPool().makeUserAdmin(event.pathParameters.username),
     event,
     context,
     callback,
@@ -82,13 +82,13 @@ function makeUserAdmin(event, context, callback) {
 function addUserToVendor(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: ['email', 'vendor'],
+    path: ['username', 'vendor'],
   });
 
   return request.adminAuthPromise(
     () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
       .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
-      .then(userPool => userPool.addUserToVendor(event.pathParameters.email, event.pathParameters.vendor)),
+      .then(userPool => userPool.addUserToVendor(event.pathParameters.username, event.pathParameters.vendor)),
     event,
     context,
     callback,
@@ -99,15 +99,15 @@ function addUserToVendor(event, context, callback) {
 function removeUserFromVendor(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: ['email', 'vendor'],
+    path: ['username', 'vendor'],
   });
 
   return request.adminAuthPromise(
     () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
       .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
-      .then(userPool => userPool.removeUserFromVendor(event.pathParameters.email, event.pathParameters.vendor))
+      .then(userPool => userPool.removeUserFromVendor(event.pathParameters.username, event.pathParameters.vendor))
       .then(() => services.getEmail().send(
-        event.pathParameters.email,
+        event.pathParameters.username,
         'Removal from vendor',
         'Keboola Developer Portal',
         `Your account was removed from vendor ${event.pathParameters.vendor} by an administrator.`,
@@ -272,11 +272,11 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
   switch (event.resource) {
     case '/admin/users':
       return listUsers(event, context, callback);
-    case '/admin/users/{email}':
+    case '/admin/users/{username}':
       return deleteUser(event, context, callback);
-    case '/admin/users/{email}/admin':
+    case '/admin/users/{username}/admin':
       return makeUserAdmin(event, context, callback);
-    case '/admin/users/{email}/vendors/{vendor}':
+    case '/admin/users/{username}/vendors/{vendor}':
       if (event.httpMethod === 'DELETE') {
         return removeUserFromVendor(event, context, callback);
       }

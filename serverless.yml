@@ -191,19 +191,19 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
-          path: "admin/users/{email}/admin"
+          path: "admin/users/{username}/admin"
           cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
-          path: "admin/users/{email}/vendors/{vendor}"
+          path: "admin/users/{username}/vendors/{vendor}"
           cors: true
       -
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: delete
-          path: "admin/users/{email}/vendors/{vendor}"
+          path: "admin/users/{username}/vendors/{vendor}"
           cors: true
       -
         http:
