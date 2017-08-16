@@ -50,13 +50,13 @@ function listUsers(event, context, callback) {
 function deleteUser(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: ['email'],
+    path: ['username'],
   });
 
   return request.adminAuthPromise(
     () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
       .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
-      .then(userPool => userPool.deleteUser(event.pathParameters.email)),
+      .then(userPool => userPool.deleteUser(event.pathParameters.username)),
     event,
     context,
     callback,
