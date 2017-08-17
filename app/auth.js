@@ -1,7 +1,5 @@
 'use strict';
 
-import DbUsers from '../lib/db/Users';
-
 const _ = require('lodash');
 
 class Auth {
@@ -72,8 +70,7 @@ class Auth {
   }
 
   signUp(email, password, name) {
-    return new Promise(res => res(new DbUsers(this.db.getConnection(), this.err)))
-      .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+    return this.services.getUserPoolWithDatabase(this.db)
       .then(userPool => userPool.signUp(email, password, name))
       .then(() => null);
   }

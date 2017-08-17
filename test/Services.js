@@ -2,6 +2,7 @@ import Access from '../lib/Access';
 import Identity from '../lib/Identity';
 import UserPool from '../lib/UserPool';
 import UserPoolWithDatabase from '../lib/UserPoolWithDatabase';
+import DbUsers from '../lib/db/Users';
 
 const aws = require('aws-sdk');
 const base64 = require('base-64');
@@ -41,13 +42,17 @@ class Services {
     );
   }
 
-  getUserPoolWithDatabase(dbUsers) {
-    return new UserPoolWithDatabase(
-      this.getUserPool(),
-      dbUsers,
-    );
+  getUserPoolWithDatabase(db) {
+    return Services.getDbUsers(db)
+      .then(dbUsers => new Promise(res => res(new UserPoolWithDatabase(
+        this.getUserPool(),
+        dbUsers,
+      ))));
   }
 
+  static getDbUsers(db) {
+    return new Promise(res => res(new DbUsers(db.getConnection(), error)));
+  }
 
   static getAccess(db) {
     return new Access(db, error);

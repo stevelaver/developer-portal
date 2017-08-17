@@ -346,7 +346,7 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: delete
-          path: "vendors/{vendor}/users/{email}"
+          path: "vendors/{vendor}/users/{username}"
           cors: true
       -
         http:

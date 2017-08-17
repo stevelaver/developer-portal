@@ -1,7 +1,6 @@
 'use strict';
 
 import Services from '../Services';
-import DbUsers from '../../lib/db/Users';
 
 require('longjohn');
 const _ = require('lodash');
@@ -10,7 +9,6 @@ const expect = require('unexpected');
 const mysql = require('mysql');
 const Promise = require('bluebird');
 const db = require('../../lib/db');
-const error = require('../../lib/error');
 
 
 Promise.promisifyAll(mysql);
@@ -56,8 +54,7 @@ describe('Vendors', () => {
         'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?',
         [vendor1, 'test', 'test', process.env.FUNC_USER_EMAIL, 0],
       ))
-      .then(() => new DbUsers(db.getConnection(), error))
-      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(() => services.getUserPoolWithDatabase(db))
       .then(userPoolDb => userPoolDb.listUsersForVendor(vendor))
       .then((data) => {
         _.each(data.users, (user) => {

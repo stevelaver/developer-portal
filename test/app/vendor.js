@@ -254,7 +254,12 @@ describe('Vendor App', () => {
         })
         .then(() => expect(userPool.login(`service.${vendor}`, password), 'to be rejected'))
         .then(() => userPool.deleteUser(username))
-        .then(() => userPool.deleteUser(username2)));
+        .then(() => expect(vendorApp.removeUser(
+          vendor,
+          username2,
+          { name: 'User', email: process.env.FUNC_USER_EMAIL, vendors: [vendor] }
+        ), 'to be fulfilled'))
+        .then(() => expect(() => userPool.getUser(username2), 'to error')));
   });
 
   after(() =>

@@ -2,7 +2,6 @@
 
 import Services from '../lib/Services';
 import Vendor from '../app/vendor';
-import DbUsers from '../lib/db/Users';
 
 require('longjohn');
 require('source-map-support').install();
@@ -32,8 +31,7 @@ function createVendor(event, context, callback) {
       email: body.email,
       createdBy: user.email,
     }, false)
-      .then(vendor => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
-        .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+      .then(vendor => services.getUserPoolWithDatabase(db)
         .then(userPool => userPool.addUserToVendor(user.email, vendor.id))
         .then(() => services.getNotification().approveVendor(vendor.id, body.name, {
           name: body.name,
@@ -135,13 +133,13 @@ function acceptInvitation(event, context, callback) {
 function removeUser(event, context, callback) {
   validation.validate(event, {
     auth: true,
-    path: ['vendor', 'email'],
+    path: ['vendor', 'username'],
   });
 
   return request.userAuthPromise(
     user => vendorApp.removeUser(
       event.pathParameters.vendor,
-      event.pathParameters.email,
+      event.pathParameters.username,
       user,
     ),
     event,
@@ -218,7 +216,7 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
       return sendInvitation(event, context, callback);
     case '/vendors/{vendor}/invitations/{email}/{code}':
       return acceptInvitation(event, context, callback);
-    case '/vendors/{vendor}/users/{email}':
+    case '/vendors/{vendor}/users/{username}':
       return removeUser(event, context, callback);
     case '/vendors/{vendor}/credentials':
       return createCredentials(event, context, callback);

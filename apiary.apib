@@ -352,13 +352,13 @@ Link to this resource is sent to an email.
 + Response 200 (text/html)
 
 
-### Remove user from a vendor [DELETE /vendors/{vendor}/users/{email}]
+### Remove user from a vendor or delete service account [DELETE /vendors/{vendor}/users/{username}]
 
-Remove other user or yourself from the vendor
+Remove other user or yourself from the vendor, service account will be deleted instead
 
 + Parameters
     + vendor
-    + email
+    + username
 
 + Request
 
@@ -1207,7 +1207,7 @@ It will send email confirmation to a user.
 
 ### Remove user from a vendor [DELETE /admin/users/{username}/vendors/{vendor}]
 
-It will send username confirmation to a user.
+It will send email confirmation to a user.
 
 + Parameters
     + username

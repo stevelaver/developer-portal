@@ -3,7 +3,6 @@
 import App from '../app/app';
 import Services from '../lib/Services';
 import Vendor from '../app/vendor';
-import DbUsers from '../lib/db/Users';
 
 require('longjohn');
 require('source-map-support').install();
@@ -27,8 +26,7 @@ function listUsers(event, context, callback) {
   // const paginationToken = _.get(event, 'queryStringParameters.paginationToken', null);
   const headers = {};
   return request.adminAuthPromise(
-    () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
-      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+    () => services.getUserPoolWithDatabase(db)
       .then(userPool => userPool.listAllUsers(
         _.get(event, 'queryStringParameters.offset', null),
         _.get(event, 'queryStringParameters.limit', null)
@@ -54,8 +52,7 @@ function deleteUser(event, context, callback) {
   });
 
   return request.adminAuthPromise(
-    () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
-      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+    () => services.getUserPoolWithDatabase(db)
       .then(userPool => userPool.deleteUser(event.pathParameters.username)),
     event,
     context,
@@ -86,8 +83,7 @@ function addUserToVendor(event, context, callback) {
   });
 
   return request.adminAuthPromise(
-    () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
-      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+    () => services.getUserPoolWithDatabase(db)
       .then(userPool => userPool.addUserToVendor(event.pathParameters.username, event.pathParameters.vendor)),
     event,
     context,
@@ -103,8 +99,7 @@ function removeUserFromVendor(event, context, callback) {
   });
 
   return request.adminAuthPromise(
-    () => new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
-      .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+    () => services.getUserPoolWithDatabase(db)
       .then(userPool => userPool.removeUserFromVendor(event.pathParameters.username, event.pathParameters.vendor))
       .then(() => services.getEmail().send(
         event.pathParameters.username,
@@ -251,8 +246,7 @@ function approveVendor(event, context, callback) {
             `Your vendor has been approved with id <strong>${_.get(body, 'newId', null)}</strong>.`,
           );
           if (_.has(body, 'newId')) {
-            return new Promise(res => res(new DbUsers(db.getConnection(), Services.getError())))
-              .then(dbUsers => services.getUserPoolWithDatabase(dbUsers))
+            return services.getUserPoolWithDatabase(db)
               .then(userPool => userPool.addUserToVendor(vendor.createdBy, body.newId)
                 .then(() => userPool.removeUserFromVendor(vendor.createdBy, event.pathParameters.vendor))
                 .then(() => emailPromise));

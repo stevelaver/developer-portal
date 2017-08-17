@@ -66,8 +66,7 @@ class Vendor {
 
   join(user, vendor) {
     return this.db.checkVendorExists(vendor)
-      .then(() => new DbUsers(this.db.getConnection(), this.err))
-      .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+      .then(() => this.services.getUserPoolWithDatabase(this.db))
       .then(userPool => userPool.addUserToVendor(user.email, vendor));
   }
 
@@ -111,8 +110,7 @@ class Vendor {
             throw this.err.badRequest('Your invitation expired. Please ask for a new one.');
           }
         })
-        .then(() => new DbUsers(this.db.getConnection(), this.err))
-        .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+        .then(() => this.services.getUserPoolWithDatabase(this.db))
         .then(userPool => userPool.addUserToVendor(email, vendor))
         .then(() => dbInvitations.accept(code)))
       .catch((err) => {
@@ -123,33 +121,34 @@ class Vendor {
       });
   }
 
-  removeUser(vendor, email, user) {
+  removeUser(vendor, username, user) {
     this.checkVendorAccess(user, vendor);
-    const userPool = this.services.getUserPool();
     return db.checkVendorExists(vendor)
-      .then(() => userPool.getUser(email))
-      .then((data) => {
-        if (data.vendors.indexOf(vendor) === -1) {
-          throw this.err.forbidden('The user is not member of the vendor');
-        }
-      })
-      .catch((err) => {
-        if (err.code !== 'UserNotFoundException') {
-          throw err;
-        }
-      })
-      .then(() => userPool.removeUserFromVendor(email, vendor))
-      .then(() => {
-        if (user.email !== email) {
-          const emailLib = this.services.getEmail();
-          return emailLib.send(
-            email,
-            `Removal from vendor ${vendor}`,
-            'Keboola Developer Portal',
-            `Your account was removed from vendor ${vendor} by ${user.name}.`
-          );
-        }
-      });
+      .then(() => new DbUsers(this.db.getConnection(), this.err))
+      .then(dbUsers => dbUsers.getUser(username)
+        .then((data) => {
+          if (data.deletedOn || !_.includes(data.vendors, vendor)) {
+            throw this.err.notFound('User not found');
+          }
+          return this.services.getUserPoolWithDatabase(this.db)
+            .then((userPoolDb) => {
+              if (data.serviceAccount) {
+                return userPoolDb.deleteUser(username);
+              }
+              return userPoolDb.removeUserFromVendor(username, vendor)
+                .then(() => {
+                  if (user.email !== username) {
+                    const emailLib = this.services.getEmail();
+                    return emailLib.send(
+                      username,
+                      `Removal from vendor ${vendor}`,
+                      'Keboola Developer Portal',
+                      `Your account was removed from vendor ${vendor} by ${user.name}.`
+                    );
+                  }
+                });
+            });
+        }));
   }
 
   static generatePassword(generator) {
@@ -169,8 +168,7 @@ class Vendor {
 
     while (true) { // eslint-disable-line no-constant-condition
       const password = Vendor.generatePassword(generator);
-      return new Promise(res => res(new DbUsers(this.db.getConnection(), this.err)))
-        .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+      return this.services.getUserPoolWithDatabase(this.db)
         .then(userPoolDb => userPoolDb.signUp(username, password, `Service ${vendor}`, description, false)
           .then(() => userPool.confirmSignUp(username))
           .then(() => userPoolDb.addUserToVendor(username, vendor))
@@ -184,12 +182,11 @@ class Vendor {
     }
   }
 
-  listUsers(vendor, user, service = false, offset = 0, limit = 1000) {
+  listUsers(vendor, user, serviceAccount = false, offset = 0, limit = 1000) {
     this.checkVendorAccess(user, vendor);
-    return new Promise(res => res(new DbUsers(this.db.getConnection(), this.err)))
-      .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
+    return this.services.getUserPoolWithDatabase(this.db)
       .then((userPool) => {
-        if (service) {
+        if (serviceAccount) {
           return userPool.listServiceUsersForVendor(vendor, offset, limit);
         }
         return userPool.listUsersForVendor(vendor, offset, limit);
