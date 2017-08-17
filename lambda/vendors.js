@@ -76,11 +76,13 @@ function requestJoinVendor(event, context, callback) {
       if (user.isAdmin) {
         return vendorApp.join(user, event.pathParameters.vendor);
       }
-      return vendorApp.checkVendorExists(event.pathParameters.vendor)
-        .then(() => services.getNotification().approveJoinVendor({
-          name: user.name,
-          email: user.email,
-        }, event.pathParameters.vendor));
+      return vendorApp.get(event.pathParameters.vendor)
+        .then(vendor => services.getEmail().send(
+          vendor.email,
+          'Request to join your vendor in Keboola Developer Portal',
+          'Keboola Developer Portal',
+          `User ${user.name} <${user.email}> wants to become a member of your vendor ${vendor.id}. You can approve or ignore.`,
+        ));
     },
     event,
     context,
