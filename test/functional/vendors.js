@@ -275,14 +275,11 @@ describe('Vendors', () => {
       }), 'to be fulfilled'))
       .then(() => axios({
         method: 'get',
-        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/users`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/users?service=1`,
         headers: { Authorization: token },
         responseType: 'json',
       }))
-      .then((res) => {
-        expect(res.data, 'to have an item satisfying',
-          { name: 'Service test', email: `${vendor}+test` });
-      })
+      .then(res => expect(res.data, 'to have an item satisfying', { username: `${vendor}+test` }))
   );
 
   after(() =>

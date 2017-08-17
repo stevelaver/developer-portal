@@ -184,11 +184,16 @@ class Vendor {
     }
   }
 
-  listUsers(vendor, user, offset = 0, limit = 1000) {
+  listUsers(vendor, user, service = false, offset = 0, limit = 1000) {
     this.checkVendorAccess(user, vendor);
     return new Promise(res => res(new DbUsers(this.db.getConnection(), this.err)))
       .then(dbUsers => this.services.getUserPoolWithDatabase(dbUsers))
-      .then(userPool => userPool.listUsersForVendor(vendor, offset, limit));
+      .then((userPool) => {
+        if (service) {
+          return userPool.listServiceUsersForVendor(vendor, offset, limit);
+        }
+        return userPool.listUsersForVendor(vendor, offset, limit);
+      });
   }
 
   checkVendorAccess(user, vendor) {

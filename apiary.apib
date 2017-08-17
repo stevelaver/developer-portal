@@ -115,7 +115,7 @@ call along with the code recieved in text message.
         {
             "email": "john@keboola.com",
             "code": "{code}",
-            session: "{session}"
+            "session": "{session}"
         }
 
 + Response 200 (application/json)
@@ -402,12 +402,14 @@ Generates a service account which can be used e.g. for continuous integration an
             }
 
 
-### List users [GET /vendors/{vendor}/users?offset={offset}&limit={limit}]
+### List users [GET /vendors/{vendor}/users?service={service}&offset={offset}&limit={limit}]
 
-Lists all users of the vendor including service accounts
+Lists all regular users or service accounts of the vendor.
 
 + Parameters
     + vendor
+    + service (optional) - list service accounts instead of regular users
+        + Default: 0
     + offset (optional) - pagination offset
         + Default: 0
     + limit (optional) - pagination limit
@@ -425,10 +427,22 @@ Lists all users of the vendor including service accounts
 
             [
                 {
-                    "email": "test@keboola.com",
+                    "username": "test@keboola.com",
                     "name": "Test User",
                     "createdOn": "",
                     "vendors": ["keboola"]
+                }
+            ]
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "username": "keboola+service",
+                    "decription": "Service Account for Travis CI",
+                    "createdOn": ""
                 }
             ]
 
@@ -1134,6 +1148,8 @@ Management of users and apps designated for Developer Portal staff only
 
 ### List users [GET /admin/users?offset={offset}&limit={limit}]
 
+List all user accounts
+
 + Parameters
     + offset (optional) - pagination offset
         + Default: 0
@@ -1152,17 +1168,17 @@ Management of users and apps designated for Developer Portal staff only
 
             [
                 {
-                    "email": "test@keboola.com",
+                    "username": "test@keboola.com",
                     "name": "Test User",
                     "createdOn": "",
                     "vendors": ["keboola"]
                 }
             ]
 
-### Delete user [DELETE /admin/users/{email}]
+### Delete user [DELETE /admin/users/{username}]
 
 + Parameters
-    + email
+    + username
 
 + Request
 
@@ -1172,12 +1188,12 @@ Management of users and apps designated for Developer Portal staff only
 
 + Response 204
 
-### Add user to a vendor [POST /admin/users/{email}/vendors/{vendor}]
+### Add user to a vendor [POST /admin/users/{username}/vendors/{vendor}]
 
 It will send email confirmation to a user.
 
 + Parameters
-    + email
+    + username
     + vendor
 
 + Request
@@ -1189,12 +1205,12 @@ It will send email confirmation to a user.
 + Response 204
 
 
-### Remove user from a vendor [DELETE /admin/users/{email}/vendors/{vendor}]
+### Remove user from a vendor [DELETE /admin/users/{username}/vendors/{vendor}]
 
-It will send email confirmation to a user.
+It will send username confirmation to a user.
 
 + Parameters
-    + email
+    + username
     + vendor
 
 + Request
@@ -1206,10 +1222,10 @@ It will send email confirmation to a user.
 + Response 204
 
 
-### Make user admin [POST /admin/users/{email}/admin]
+### Make user admin [POST /admin/users/{username}/admin]
 
 + Parameters
-    + email
+    + username
 
 + Request
 

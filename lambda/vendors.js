@@ -190,6 +190,7 @@ function listUsers(event, context, callback) {
     user => vendorApp.listUsers(
       vendor,
       user,
+      _.get(event, 'queryStringParameters.service', null),
       _.get(event, 'queryStringParameters.offset', null),
       _.get(event, 'queryStringParameters.limit', null),
     ),
