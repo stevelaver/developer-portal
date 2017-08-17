@@ -20,6 +20,19 @@ class Vendor {
       .then(dbVendors => dbVendors.list(offset, limit));
   }
 
+  adminListVendors(offset = 0, limit = 1000) {
+    return new Promise(res => res(new DbVendors(this.db.getConnection(), this.err)))
+      .then(dbVendors => dbVendors.adminListAll(offset, limit))
+      .then(data => _.map(data, item => ({
+        id: item.id,
+        name: item.name,
+        address: item.address,
+        email: item.email,
+        isPublic: item.isPublic === 1,
+        isApproved: item.isApproved === 1,
+      })));
+  }
+
   get(id) {
     return new Promise(res => res(new DbVendors(this.db.getConnection(), this.err)))
       .then(dbVendors => dbVendors.publicGetVendor(id));

@@ -65,6 +65,7 @@ describe('Vendors', () => {
       }));
 
   const vendorName = `vendor.${Date.now()}`;
+  const vendorId2 = `vendor2.${Date.now()}`;
   it('Create vendor', () =>
     axios({
       method: 'post',
@@ -97,7 +98,6 @@ describe('Vendors', () => {
         expect(res.data, 'to have key', 'name');
         expect(res.data, 'to have key', 'address');
         expect(res.data, 'to have key', 'email');
-        token = res.data.token;
       })
       // Check database
       .then(() => rds.queryAsync('SELECT * FROM `vendors` WHERE name=?', [vendorName]))
@@ -107,12 +107,21 @@ describe('Vendors', () => {
         expect(res[0].isApproved, 'to be', 0);
         return res[0].id;
       })
-      .then(vendorId => userPool.getUser(process.env.FUNC_USER_EMAIL)
-        .then((user) => {
-          expect(user, 'to have key', 'vendors');
-          expect(user.vendors, 'to contain', vendorId);
-        })
-      ));
+      .then(vendorId => expect(axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/admin/vendors/${vendorId}/approve`,
+        responseType: 'json',
+        headers: { Authorization: token },
+        data: {
+          newId: vendorId2,
+        },
+      }), 'to be fulfilled')
+        .then(() => userPool.getUser(process.env.FUNC_USER_EMAIL)
+          .then((user) => {
+            expect(user, 'to have key', 'vendors');
+            expect(user.vendors, 'to contain', vendorId2);
+          })
+        )));
 
   it('Update vendor', () =>
     rds.queryAsync('UPDATE `vendors` SET address=? WHERE id=?', ['address', vendor1])

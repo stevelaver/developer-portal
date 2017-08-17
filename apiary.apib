@@ -1498,6 +1498,29 @@ Allows to update apps across vendors
 + Response 204
 
 
+### List vendors [GET /admin/vendors?offset={offset}&limit={limit}]
+
++ Parameters
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola",
+                    "name": "Keboola",
+                    "address": "Křižíkova 488/115, Prague, CZ",
+                    "email": "support@keboola.com",
+                    "isPublic": true,
+                    "isApproved": true
+                }
+            ]
+
 ### Create a vendor [POST /admin/vendors]
 
 + Attributes

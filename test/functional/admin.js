@@ -310,7 +310,6 @@ describe('Admin', () => {
       'INSERT IGNORE INTO `vendors` SET id=?, name=?, address=?, email=?, isPublic=?, isApproved=?, createdBy=?',
       [vendor4, 'test', 'test', process.env.FUNC_USER_EMAIL, 0, 0, userEmail],
     )
-      .then(() => userPool.addUserToVendor(userEmail, vendor4))
       .then(() => expect(axios({
         method: 'post',
         url: `${process.env.API_ENDPOINT}/admin/vendors/${vendor4}/approve`,

@@ -235,6 +235,7 @@ function approveVendor(event, context, callback) {
   });
 
   const body = JSON.parse(event.body);
+  const newVendorId = _.get(body, 'newId', event.pathParameters.vendor);
   return request.adminAuthPromise(
     () => vendorApp.approve(event.pathParameters.vendor, _.get(body, 'newId', null))
       .then((vendor) => {
@@ -243,12 +244,11 @@ function approveVendor(event, context, callback) {
             vendor.createdBy,
             'Vendor approval in Keboola Developer Portal',
             'Keboola Developer Portal',
-            `Your vendor has been approved with id <strong>${_.get(body, 'newId', null)}</strong>.`,
+            `Your vendor has been approved with id <strong>${newVendorId}</strong>.`,
           );
           if (_.has(body, 'newId')) {
             return services.getUserPoolWithDatabase(db)
-              .then(userPool => userPool.addUserToVendor(vendor.createdBy, body.newId)
-                .then(() => userPool.removeUserFromVendor(vendor.createdBy, event.pathParameters.vendor))
+              .then(userPool => userPool.addUserToVendor(vendor.createdBy, newVendorId)
                 .then(() => emailPromise));
           }
           return emailPromise;
@@ -258,6 +258,24 @@ function approveVendor(event, context, callback) {
     context,
     callback,
     204
+  );
+}
+
+function listVendors(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    pagination: true,
+    query: ['filter'],
+  });
+
+  return request.adminAuthPromise(
+    () => vendorApp.adminListVendors(
+      _.get(event, 'queryStringParameters.since', null),
+      _.get(event, 'queryStringParameters.until', null)
+    ),
+    event,
+    context,
+    callback
   );
 }
 
@@ -287,6 +305,9 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
     case '/admin/changes':
       return listAppChanges(event, context, callback);
     case '/admin/vendors':
+      if (event.httpMethod === 'GET') {
+        return listVendors(event, context, callback);
+      }
       return createVendor(event, context, callback);
     case '/admin/vendors/{vendor}/approve':
       return approveVendor(event, context, callback);
