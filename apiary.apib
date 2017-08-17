@@ -322,6 +322,20 @@ Request to join a vendor. You will recieve an email confirmation once it is appr
 
 + Response 204 (application/json)
 
+### Accept request to join a vendor [POST /vendors/{vendor}/users/{username}]
+
++ Parameters
+    + vendor
+    + username
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204 (application/json)
+
 
 ### Invite user to a vendor [POST /vendors/{vendor}/invitations/{email}]
 
@@ -444,6 +458,34 @@ Lists all regular users or service accounts of the vendor.
                 {
                     "username": "keboola+service",
                     "decription": "Service Account for Travis CI",
+                    "createdOn": ""
+                }
+            ]
+
+### List join requests [GET /vendors/{vendor}/user-requests?offset={offset}&limit={limit}]
+
+Lists requests to join the vendor.
+
++ Parameters
+    + vendor
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Request
+
+    + Headers
+
+            Authorization: {token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "username": "test@keboola.com",
                     "createdOn": ""
                 }
             ]

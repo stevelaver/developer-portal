@@ -27,7 +27,7 @@ const rds = mysql.createConnection({
 });
 const userPool = services.getUserPool();
 
-const userEmail = `u${Date.now()}@keboola.com`;
+const userEmail = `func-vendors1-${Date.now()}@keboola.com`;
 const vendor = process.env.FUNC_VENDOR;
 const vendor1 = `T.vendor.${Date.now()}`;
 let token;
@@ -206,6 +206,94 @@ describe('Vendors', () => {
         expect(user.vendors, 'not to contain', vendor1);
       }));
 
+  const userEmail2 = `func-vendors2-${Date.now()}@keboola.com`;
+  it('Request and accept joining vendor', () =>
+    expect(axios({
+      method: 'post',
+      url: `${process.env.API_ENDPOINT}/auth/signup`,
+      responseType: 'json',
+      data: {
+        email: userEmail2,
+        password: 'uiOU.-jfdksfj88',
+        name: 'Test',
+      },
+    }), 'to be fulfilled')
+      .then(() => userPool.confirmSignUp(userEmail2))
+      .then(() => axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: userEmail2,
+          password: 'uiOU.-jfdksfj88',
+        },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        token = res.data.token;
+      })
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor1}/users`,
+        headers: { Authorization: token },
+        responseType: 'json',
+      }), 'to be fulfilled'))
+      .then(() => userPool.getUser(userEmail2))
+      .then((user) => {
+        expect(user, 'to have key', 'vendors');
+        expect(user.vendors, 'not to contain', vendor1);
+      })
+      .then(() => axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: process.env.FUNC_USER_EMAIL,
+          password: process.env.FUNC_USER_PASSWORD,
+        },
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'token');
+        token = res.data.token;
+      })
+      // List requests
+      .then(() => axios({
+        method: 'get',
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor1}/user-requests`,
+        headers: { Authorization: token },
+        responseType: 'json',
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have an item satisfying', { username: userEmail2 });
+      })
+      // Accept the request
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor1}/users/${userEmail2}`,
+        headers: { Authorization: token },
+        responseType: 'json',
+      }), 'to be fulfilled'))
+      .then(() => userPool.getUser(userEmail2))
+      .then((user) => {
+        expect(user, 'to have key', 'vendors');
+        expect(user.vendors, 'to contain', vendor1);
+      })
+      // List requests
+      .then(() => axios({
+        method: 'get',
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor1}/user-requests`,
+        headers: { Authorization: token },
+        responseType: 'json',
+      }))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have length', 0);
+      })
+      .then(() => userPool.deleteUser(userEmail2)));
+
   it('Invite user', () =>
     // 1) Signup
     expect(axios({
@@ -218,6 +306,15 @@ describe('Vendors', () => {
         name: 'Test',
       },
     }), 'to be fulfilled')
+      .then(() => axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/auth/login`,
+        responseType: 'json',
+        data: {
+          email: process.env.FUNC_USER_EMAIL,
+          password: process.env.FUNC_USER_PASSWORD,
+        },
+      }))
     // 2) Invite
       .then(() => expect(axios({
         method: 'post',

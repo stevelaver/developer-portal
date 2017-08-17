@@ -74,9 +74,9 @@ function requestJoinVendor(event, context, callback) {
   return request.userAuthPromise(
     (user) => {
       if (user.isAdmin) {
-        return vendorApp.join(user, event.pathParameters.vendor);
+        return vendorApp.adminJoinVendor(user, event.pathParameters.vendor);
       }
-      return vendorApp.get(event.pathParameters.vendor)
+      return vendorApp.addUserRequestToVendor(user.email, event.pathParameters.vendor)
         .then(vendor => services.getEmail().send(
           vendor.email,
           'Request to join your vendor in Keboola Developer Portal',
@@ -84,6 +84,27 @@ function requestJoinVendor(event, context, callback) {
           `User ${user.name} <${user.email}> wants to become a member of your vendor ${vendor.id}. You can approve or ignore.`,
         ));
     },
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
+function acceptRequestJoinVendor(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['vendor', 'username'],
+  });
+
+  return request.userAuthPromise(
+    user => vendorApp.acceptRequestJoinVendor(event.pathParameters.username, event.pathParameters.vendor, user)
+      .then(() => services.getEmail().send(
+        event.pathParameters.username,
+        'Request to join vendor in Keboola Developer Portal',
+        'Keboola Developer Portal',
+        `Your request to join vendor ${event.pathParameters.vendor} was accepted.`,
+      )),
     event,
     context,
     callback,
@@ -202,6 +223,30 @@ function listUsers(event, context, callback) {
   );
 }
 
+function listUserRequests(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    pagination: true,
+    path: ['vendor'],
+  });
+
+  const vendor = event.pathParameters.vendor;
+  const headers = {};
+  return request.userAuthPromise(
+    user => vendorApp.listUserRequests(
+      vendor,
+      user,
+      _.get(event, 'queryStringParameters.offset', null),
+      _.get(event, 'queryStringParameters.limit', null),
+    ),
+    event,
+    context,
+    callback,
+    200,
+    headers
+  );
+}
+
 
 module.exports.vendors = (event, context, callback) => request.errorHandler(() => {
   switch (event.resource) {
@@ -218,7 +263,12 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
       return sendInvitation(event, context, callback);
     case '/vendors/{vendor}/invitations/{email}/{code}':
       return acceptInvitation(event, context, callback);
+    case '/vendors/{vendor}/user-requests':
+      return listUserRequests(event, context, callback);
     case '/vendors/{vendor}/users/{username}':
+      if (event.httpMethod === 'POST') {
+        return acceptRequestJoinVendor(event, context, callback);
+      }
       return removeUser(event, context, callback);
     case '/vendors/{vendor}/credentials':
       return createServiceUser(event, context, callback);

@@ -64,10 +64,25 @@ class Vendor {
     return this.db.checkVendorExists(vendor);
   }
 
-  join(user, vendor) {
+  adminJoinVendor(user, vendor) {
     return this.db.checkVendorExists(vendor)
       .then(() => this.services.getUserPoolWithDatabase(this.db))
       .then(userPool => userPool.addUserToVendor(user.email, vendor));
+  }
+
+  addUserRequestToVendor(username, vendor) {
+    return this.get(vendor)
+      .then(vendorData => this.services.getUserPoolWithDatabase(this.db)
+        .then(userPool => userPool.addUserRequestToVendor(username, vendor))
+        .then(() => vendorData));
+  }
+
+  acceptRequestJoinVendor(username, vendor, user) {
+    this.checkVendorAccess(user, vendor);
+    return this.get(vendor)
+      .then(() => this.services.getUserPoolWithDatabase(this.db))
+      .then(userPool => userPool.removeUserRequestToVendor(username, vendor)
+        .then(() => userPool.addUserToVendor(username, vendor)));
   }
 
   invite(vendor, email, user) {
@@ -196,6 +211,12 @@ class Vendor {
         }
         return userPool.listUsersForVendor(vendor, offset, limit);
       });
+  }
+
+  listUserRequests(vendor, user, offset = 0, limit = 1000) {
+    this.checkVendorAccess(user, vendor);
+    return this.services.getUserPoolWithDatabase(this.db)
+      .then(userPool => userPool.listUserRequestsForVendor(vendor, offset, limit));
   }
 
   checkVendorAccess(user, vendor) {
