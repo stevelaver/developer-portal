@@ -369,7 +369,7 @@ Remove other user or yourself from the vendor, service account will be deleted i
 + Response 204
 
 
-### Generate credentials for service account [POST /vendors/{vendor}/credentials]
+### Create service account [POST /vendors/{vendor}/credentials]
 
 Generates a service account which can be used e.g. for continuous integration and returns its username and password.
 
@@ -397,8 +397,10 @@ Generates a service account which can be used e.g. for continuous integration an
     + Body
 
             {
-                username: "service.{vendor}.{id}",
-                password: "{password}"
+                "username": "service.{vendor}.{id}",
+                "password": "{password}",
+                "description": "Service user for Travis CI",
+                "createdOn": ""
             }
 
 

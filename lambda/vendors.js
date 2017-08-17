@@ -149,7 +149,7 @@ function removeUser(event, context, callback) {
   );
 }
 
-function createCredentials(event, context, callback) {
+function createServiceUser(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: ['vendor'],
@@ -162,7 +162,7 @@ function createCredentials(event, context, callback) {
   const body = JSON.parse(event.body);
 
   return request.userAuthPromise(
-    user => vendorApp.createCredentials(
+    user => vendorApp.createServiceUser(
       event.pathParameters.vendor,
       body.name,
       body.description,
@@ -219,7 +219,7 @@ module.exports.vendors = (event, context, callback) => request.errorHandler(() =
     case '/vendors/{vendor}/users/{username}':
       return removeUser(event, context, callback);
     case '/vendors/{vendor}/credentials':
-      return createCredentials(event, context, callback);
+      return createServiceUser(event, context, callback);
     default:
       throw Services.getError().notFound();
   }

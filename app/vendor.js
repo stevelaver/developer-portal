@@ -161,7 +161,7 @@ class Vendor {
     });
   }
 
-  createCredentials(vendor, name, description, user, generator) {
+  createServiceUser(vendor, name, description, user, generator) {
     this.checkVendorAccess(user, vendor);
     const userPool = this.services.getUserPool();
     const username = `${vendor}+${name}`;
@@ -172,7 +172,12 @@ class Vendor {
         .then(userPoolDb => userPoolDb.signUp(username, password, `Service ${vendor}`, description, false)
           .then(() => userPool.confirmSignUp(username))
           .then(() => userPoolDb.addUserToVendor(username, vendor))
-          .then(() => ({ username, password })))
+          .then(() => ({
+            username,
+            password,
+            description,
+            createdOn: moment().toISOString(),
+          })))
         .catch((err) => {
           if (err.code === 'UsernameExistsException') {
             throw this.err.badRequest(`User with name ${username} already exists`);
