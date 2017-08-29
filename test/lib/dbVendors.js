@@ -1,11 +1,12 @@
 'use strict';
 
-import DbVendors from '../../lib/db/vendors';
+import DbVendors from '../../lib/db/dbVendors';
 
 require('longjohn');
 const db = require('../../lib/db');
 const dbMigrate = require('db-migrate');
 require('db-migrate-mysql');
+const error = require('../../lib/error');
 const expect = require('unexpected');
 const mysql = require('mysql');
 const Promise = require('bluebird');
@@ -42,7 +43,7 @@ describe('dbVendors', () => {
       })
       .then(() => db.init(rds))
       .then(() => {
-        dbVendors = new DbVendors(rds);
+        dbVendors = new DbVendors(rds, error);
       });
   });
 

@@ -1,7 +1,7 @@
 'use strict';
 
 import Identity from '../../lib/Identity';
-import Services from '../Services';
+import Services from '../services';
 import Vendor from '../../app/vendor';
 
 const _ = require('lodash');

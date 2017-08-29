@@ -1,6 +1,6 @@
 'use strict';
 
-import Access from '../../lib/Access';
+import Access from '../../lib/access';
 
 const db = require('../../lib/db');
 const dbMigrate = require('db-migrate');

@@ -131,12 +131,12 @@ describe('Apps', () => {
       // Public app profile should not exist
       .then(() => expect(axios({
         method: 'get',
-        url: `${process.env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
+        url: `${process.env.API_ENDPOINT}/apps/${appId1}`,
       }), 'to be rejected with error satisfying', { response: { status: 404 } }))
-      // Approve should fail
+      // Publishing request should fail
       .then(() => expect(axios({
         method: 'post',
-        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/publish`,
         headers: { Authorization: token },
       }), 'to be rejected with error satisfying', { response: { status: 400 } }))
       // Update to isPublic should fail
@@ -172,10 +172,10 @@ describe('Apps', () => {
         expect(res.data, 'to have key', 'name');
         expect(res.data, 'to have key', 'vendor');
       })
-      // Approve should fail on missing icon
+      // Publishing request should fail on missing icon
       .then(() => expect(axios({
         method: 'post',
-        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/publish`,
         headers: { Authorization: token },
       }), 'to be rejected with error satisfying', { response: { status: 400 } }))
       // Request url to upload icons
@@ -201,18 +201,27 @@ describe('Apps', () => {
       })
       // Wait few seconds if icon handling lambda has delay
       .then(() => wait.sleep(20000))
-      // Approve should succeed
+      // Publishing request should succeed
       .then(() => expect(axios({
         method: 'post',
-        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/approve`,
+        url: `${process.env.API_ENDPOINT}/vendors/${vendor}/apps/${appId1}/publish`,
         headers: { Authorization: token },
       }), 'to be fulfilled'))
+      // Request should exist in db
+      .then(() => rds.queryAsync('SELECT * FROM apps WHERE id=?', [appId1]))
+      .spread((res) => {
+        expect(res, 'not to be empty');
+        expect(res, 'to have key', 'publishRequestOn');
+        expect(res.publishRequestOn, 'not to be null');
+        expect(res, 'to have key', 'publishRequestBy');
+        expect(res.publishRequestBy, 'not to be null');
+      })
       // Manual approval
       .then(() => rds.queryAsync('UPDATE apps SET isPublic=1 WHERE id=?', [appId1]))
       // Public app profile should exist now
       .then(() => expect(axios({
         method: 'get',
-        url: `${process.env.API_ENDPOINT}/apps/${vendor}/${appId1}`,
+        url: `${process.env.API_ENDPOINT}/apps/${appId1}`,
       }), 'to be fulfilled'))
       // List versions
       .then(() => axios({
@@ -348,7 +357,7 @@ describe('Apps', () => {
       // Public app profile should not exist
       .then(() => expect(axios({
         method: 'get',
-        url: `${process.env.API_ENDPOINT}/apps/${vendor}/${appId3}`,
+        url: `${process.env.API_ENDPOINT}/apps/${appId3}`,
       }), 'to be rejected with error satisfying', { response: { status: 404 } }))
       .then(() => axios({
         method: 'get',

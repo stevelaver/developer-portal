@@ -98,12 +98,7 @@ functions:
       -
         http:
           method: get
-          path: "apps/{vendorOrApp}"
-          cors: true
-      -
-        http:
-          method: get
-          path: "apps/{vendorOrApp}/{app}"
+          path: "apps/{app}"
           cors: true
       -
         http:
@@ -155,7 +150,13 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
-          path: "admin/apps/{id}/approve"
+          path: "admin/apps/{id}/publish"
+          cors: true
+      -
+        http:
+          authorizer: ${self:custom.cognitoAuthorizer}
+          method: post
+          path: "admin/apps/{id}/reject"
           cors: true
       -
         http:
@@ -269,7 +270,7 @@ functions:
         http:
           authorizer: ${self:custom.cognitoAuthorizer}
           method: post
-          path: "vendors/{vendor}/apps/{app}/approve"
+          path: "vendors/{vendor}/apps/{app}/publish"
           cors: true
       -
         http:

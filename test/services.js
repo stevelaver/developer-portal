@@ -1,8 +1,9 @@
-import Access from '../lib/Access';
+import Access from '../lib/access';
 import Identity from '../lib/Identity';
-import UserPool from '../lib/UserPool';
-import UserPoolWithDatabase from '../lib/UserPoolWithDatabase';
-import DbUsers from '../lib/db/Users';
+import UserPool from '../lib/userPool';
+import UserPoolWithDatabase from '../lib/userPoolWithDatabase';
+import DbApps from '../lib/db/dbApps';
+import DbUsers from '../lib/db/dbUsers';
 
 const aws = require('aws-sdk');
 const base64 = require('base-64');
@@ -56,6 +57,10 @@ class Services {
 
   static getAccess(db) {
     return new Access(db, error);
+  }
+
+  static getDbApps(db) {
+    return new Promise(res => res(new DbApps(db.getConnection(), error)));
   }
 
   getECR(credentials) {

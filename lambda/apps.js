@@ -3,13 +3,12 @@
 import App from '../app/app';
 import Icon from '../app/icon';
 import Repository from '../app/repository';
-import Services from '../lib/Services';
+import Services from '../lib/services';
 
 require('longjohn');
 require('source-map-support').install();
 const _ = require('lodash');
 const joi = require('joi');
-const moment = require('moment');
 
 const db = require('../lib/db');
 const request = require('../lib/request');
@@ -121,7 +120,6 @@ function deleteApp(event, context, callback) {
       event.pathParameters.app,
       event.pathParameters.vendor,
       user,
-      moment,
     ),
     event,
     context,
@@ -144,7 +142,7 @@ function requestPublishing(event, context, callback) {
       event.pathParameters.vendor,
       user,
     )
-      .then(() => services.getNotification().approveApp(event.pathParameters.app)),
+      .then(() => services.getNotification().publishApp(event.pathParameters.app)),
     event,
     context,
     callback,
@@ -289,7 +287,7 @@ module.exports.apps = (event, context, callback) => request.errorHandler(() => {
         default:
           return update(event, context, callback);
       }
-    case '/vendors/{vendor}/apps/{app}/approve':
+    case '/vendors/{vendor}/apps/{app}/publish':
       return requestPublishing(event, context, callback);
     case '/vendors/{vendor}/apps/{app}/versions':
       return versions(event, context, callback);

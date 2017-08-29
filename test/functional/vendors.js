@@ -1,6 +1,6 @@
 'use strict';
 
-import Services from '../Services';
+import Services from '../services';
 
 require('longjohn');
 const _ = require('lodash');

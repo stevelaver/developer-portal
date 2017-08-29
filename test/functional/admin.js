@@ -1,6 +1,6 @@
 'use strict';
 
-import Services from '../Services';
+import Services from '../services';
 
 require('longjohn');
 const axios = require('axios');
@@ -139,7 +139,7 @@ describe('Admin', () => {
         });
       }));
 
-  it('Approve App', () =>
+  it('Publish App', () =>
     rds.queryAsync(
       'INSERT INTO `apps` SET id=?, vendor=?, name=?, isPublic=?',
       [appId, vendor, 'test', 0],
@@ -153,13 +153,40 @@ describe('Admin', () => {
       }), 'to be fulfilled'))
       .then((res) => {
         expect(res.status, 'to be', 200);
-        expect(res.data, 'to have key', 'isPublic');
-        expect(res.data.isPublic, 'to be', false);
+        expect(res.data, 'to have key', 'publishingRequest');
+        expect(res.data.publishingRequest, 'to be null');
       })
-      // Update app
+      // Reject publishing
       .then(() => expect(axios({
         method: 'post',
-        url: `${process.env.API_ENDPOINT}/admin/apps/${appId}/approve`,
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId}/reject`,
+        responseType: 'json',
+        headers: { Authorization: token },
+        data: {
+          reason: 'error',
+        },
+      }), 'to be fulfilled'))
+      // Get app detail
+      .then(() => expect(axios({
+        method: 'get',
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId}`,
+        responseType: 'json',
+        headers: { Authorization: token },
+      }), 'to be fulfilled'))
+      .then((res) => {
+        expect(res.status, 'to be', 200);
+        expect(res.data, 'to have key', 'publishingRequest');
+        expect(res.data.publishingRequest, 'to have key', 'createdBy');
+        expect(res.data.publishingRequest.createdBy, 'to be null');
+        expect(res.data.publishingRequest, 'to have key', 'createdOn');
+        expect(res.data.publishingRequest.createdOn, 'to be null');
+        expect(res.data.publishingRequest, 'to have key', 'rejectionReason');
+        expect(res.data.publishingRequest.rejectionReason, 'to be', 'error');
+      })
+      // Approve publishing
+      .then(() => expect(axios({
+        method: 'post',
+        url: `${process.env.API_ENDPOINT}/admin/apps/${appId}/publish`,
         responseType: 'json',
         headers: { Authorization: token },
       }), 'to be fulfilled'))
@@ -174,7 +201,8 @@ describe('Admin', () => {
         expect(res.status, 'to be', 200);
         expect(res.data, 'to have key', 'isPublic');
         expect(res.data.isPublic, 'to be', true);
-      }));
+      })
+  );
 
   const userEmail2 = `test-func-admin-u2${Date.now()}.test@keboola.com`;
   it('Delete User', () =>

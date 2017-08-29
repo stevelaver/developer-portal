@@ -2,7 +2,7 @@
 
 import { registryRequest } from 'simple-docker-registry-client';
 import Repository from '../../app/repository';
-import Services from '../Services';
+import Services from '../services';
 
 require('longjohn');
 const _ = require('lodash');

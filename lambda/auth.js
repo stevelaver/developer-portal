@@ -1,7 +1,7 @@
 'use strict';
 
 import Auth from '../app/auth';
-import Services from '../lib/Services';
+import Services from '../lib/services';
 
 require('longjohn');
 require('source-map-support').install();

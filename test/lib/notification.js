@@ -1,6 +1,6 @@
 'use strict';
 
-import Notification from '../../lib/Notification';
+import Notification from '../../lib/notification';
 
 const Promise = require('bluebird');
 
@@ -14,7 +14,7 @@ describe('notification', () => {
       post: sinon.stub().returns(Promise.resolve()),
     };
     const notification = new Notification(request, 'url', 'username');
-    notification.approveApp('app')
+    notification.publishApp('app')
       .then(() => {
         request.post.calledWith({
           uri: 'url',
@@ -22,7 +22,7 @@ describe('notification', () => {
           json: true,
           body: {
             username: 'username',
-            text: 'App app requires approval',
+            text: 'App app requires publishing',
           },
         });
       });

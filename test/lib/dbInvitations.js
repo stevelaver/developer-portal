@@ -1,11 +1,12 @@
 'use strict';
 
-import DbInvitations from '../../lib/db/invitations';
+import DbInvitations from '../../lib/db/dbInvitations';
 
 require('longjohn');
 const db = require('../../lib/db');
 const dbMigrate = require('db-migrate');
 require('db-migrate-mysql');
+const error = require('../../lib/error');
 const expect = require('unexpected');
 const mysql = require('mysql');
 const Promise = require('bluebird');
@@ -50,7 +51,7 @@ describe('dbInvitations', () => {
       })
       .then(() => db.init(rds))
       .then(() => {
-        dbInvitations = new DbInvitations(rds);
+        dbInvitations = new DbInvitations(rds, error);
       });
   });
 

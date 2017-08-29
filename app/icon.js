@@ -7,6 +7,7 @@ class Icon {
     this.db = db;
     this.env = env;
     this.err = Services.getError();
+    this.Services = Services;
   }
 
   getUploadLink(user, vendor, id) {
@@ -71,7 +72,8 @@ class Icon {
       .then(() => this.s3.deleteObject({ Bucket: bucket, Key: sourceKey }).promise())
       .then(() => this.resize(sharp, bucket, appId, 64))
       .then(() => this.resize(sharp, bucket, appId, 32))
-      .then(() => this.db.addAppIcon(appId))
+      .then(() => this.Services.getDbApps(this.db))
+      .then(dbApps => dbApps.addAppIcon(appId))
       .then(version => this.nameFileByVersion(bucket, appId, 32, version)
         .then(() => this.nameFileByVersion(bucket, appId, 64, version)));
   }

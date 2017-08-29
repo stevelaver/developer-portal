@@ -13,5 +13,7 @@ ratings:
   paths:
   - "**.js"
 exclude_paths:
+- .idea/
+- scripts/
 - test/
 - node_modules/

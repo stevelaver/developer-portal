@@ -1,6 +1,6 @@
 'use strict';
 
-import Services from '../lib/Services';
+import Services from '../lib/services';
 import Vendor from '../app/vendor';
 
 require('longjohn');

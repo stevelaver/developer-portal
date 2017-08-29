@@ -1,7 +1,7 @@
 'use strict';
 
 import App from '../app/app';
-import Services from '../lib/Services';
+import Services from '../lib/services';
 import Vendor from '../app/vendor';
 
 require('longjohn');
@@ -30,13 +30,12 @@ function landing(event, context, callback) {
 function detail(event, context, callback) {
   validation.validate(event, {
     path: {
-      vendorOrApp: joi.string().required(),
-      app: joi.string().optional(),
+      app: joi.string().required(),
     },
   });
 
   return request.responseDbPromise(
-    () => app.getAppWithVendor(_.get(event.pathParameters, 'app', event.pathParameters.vendorOrApp)),
+    () => app.getAppWithVendor(_.get(event.pathParameters, 'app', event.pathParameters.app)),
     event,
     context,
     callback
@@ -107,8 +106,7 @@ module.exports.public = (event, context, callback) => request.errorHandler(() =>
       return landing(event, context, callback);
     case '/apps':
       return list(event, context, callback);
-    case '/apps/{vendorOrApp}':
-    case '/apps/{vendorOrApp}/{app}':
+    case '/apps/{app}':
       return detail(event, context, callback);
     case '/stacks':
       return stacks(event, context, callback);

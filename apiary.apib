@@ -494,21 +494,17 @@ Lists requests to join the vendor.
 ## App [/vendors/{vendor}/apps]
 
 Manual approval from Keboola is required before an app is allowed to be published.
-Apps can be created and updated freely before requesting approval.
+Apps can be created and updated freely before requesting the approval.
 
 App needs to have a 64px icon in png format uploaded to S3. You get
-pre-signed url from `/apps/{vendor}/{app}/icon` API call.
+pre-signed upload url from `/apps/{vendor}/{app}/icon` API call.
 
 Apps are automatically versioned after each change. You can rollback to previous
 version any time.
 
-You have to publish the app manually (i.e. set `isPublished=true`) after app approval if you want it to be accessible publicly.
-
 You may publish the app in specific KBC stacks only by their enumerating in `permissions` attribute. List of available
-stacks can be [fetched here](#reference/0/public-api/list-stacks).
-
-You may also exclude the app from public listing (by setting `isPublic` attribute to `false`) and specify KBC project
-ids where it will be available.
+stacks can be [fetched here](#reference/0/public-api/list-stacks). You may also exclude the app from public listing and
+specify KBC project ids where it will be available.
 
 + Attributes
     + name (required) - Do not use the word `extractor` or `writer` in your app
@@ -646,6 +642,11 @@ ids where it will be available.
                 "name": "Keboola",
                 "address": "Křižíkova 488/115, Praha",
                 "email": "support@keboola.com"
+            },
+            "publishingRequest": {
+                "createdBy": "",
+                "createdOn": "",
+                "rejectionReason": ""
             }
         }
 
@@ -777,6 +778,31 @@ The icon should have dimensions 64x64px or it will be resized after upload.
             }
 
 
+### Request publishing [POST /vendors/{vendor}/apps/{app}/publish]
+
+This is a request for publishing the app to public listing. It will be sent only if the app has an icon uploaded and all
+these attributes set:
+- name
+- type
+- repository
+- shortDescription
+- longDescription
+- licenseUrl
+- documentationUrl
+
++ Parameters
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
 ### List all vendor apps [GET /vendors/{vendor}/apps?offset={offset}&limit={limit}]
 
 + Parameters
@@ -828,31 +854,6 @@ The icon should have dimensions 64x64px or it will be resized after upload.
 
 + Response 200
     [App][]
-
-
-### Request approval [POST /vendors/{vendor}/apps/{app}/approve]
-
-This is a request for publishing the app to public listing. It will be sent only if the app has an icon uploaded and all
-these attributes set:
-- name
-- type
-- repository
-- shortDescription
-- longDescription
-- licenseUrl
-- documentationUrl
-
-+ Parameters
-    + vendor
-    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
-
-+ Request
-
-    + Headers
-
-            Authorization: {your_token}
-
-+ Response 204
 
 
 ### List versions [GET /vendors/{vendor}/apps/{app}/versions?offset={offset}&limit={limit}]
@@ -1484,7 +1485,20 @@ Allows to update apps across vendors
 + Response 204
 
 
-### Approve app [POST /admin/apps/{app}/approve]
+### Approve app publishing [POST /admin/apps/{app}/publish]
+
++ Parameters
+    + app
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 204
+
+### Reject app publishing [POST /admin/apps/{app}/reject]
 
 + Parameters
     + app

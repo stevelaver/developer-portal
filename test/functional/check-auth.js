@@ -25,7 +25,7 @@ describe('Check if all intended endpoints have auth required', () => {
       // Update app
       .then(() => checkAuth('patch', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app`))
       // Approve app
-      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app/approve`))
+      .then(() => checkAuth('post', `${process.env.API_ENDPOINT}/vendors/keboola/apps/app/publish`))
       // List versions
       .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/vendors/keboola/apps/versions`))
       // Get version
@@ -37,7 +37,7 @@ describe('Check if all intended endpoints have auth required', () => {
 
   it('Check Admin', () =>
     // Approve app
-    checkAuth('post', `${process.env.API_ENDPOINT}/admin/apps/appId/approve`)
+    checkAuth('post', `${process.env.API_ENDPOINT}/admin/apps/appId/publish`)
       // Get app
       .then(() => checkAuth('get', `${process.env.API_ENDPOINT}/admin/apps/appId`))
       // List apps

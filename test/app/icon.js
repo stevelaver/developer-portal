@@ -1,7 +1,7 @@
 'use strict';
 
 import Icon from '../../app/icon';
-import Services from '../Services';
+import Services from '../services';
 
 require('longjohn');
 const _ = require('lodash');

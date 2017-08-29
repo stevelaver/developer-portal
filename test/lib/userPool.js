@@ -1,7 +1,7 @@
 'use strict';
 
 import Identity from '../../lib/Identity';
-import UserPool from '../../lib/UserPool';
+import UserPool from '../../lib/userPool';
 
 const aws = require('aws-sdk');
 const expect = require('unexpected');

@@ -1,6 +1,6 @@
 'use strict';
 
-import Log from '../../lib/Log';
+import Log from '../../lib/log';
 
 const expect = require('unexpected');
 const papertrail = require('winston-papertrail').Papertrail;

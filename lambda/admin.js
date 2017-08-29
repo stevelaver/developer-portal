@@ -1,7 +1,7 @@
 'use strict';
 
 import App from '../app/app';
-import Services from '../lib/Services';
+import Services from '../lib/services';
 import Vendor from '../app/vendor';
 
 require('longjohn');
@@ -114,7 +114,7 @@ function removeUserFromVendor(event, context, callback) {
   );
 }
 
-function approveApp(event, context, callback) {
+function publishApp(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: ['id'],
@@ -124,9 +124,34 @@ function approveApp(event, context, callback) {
     user => app.adminPublishApp(event.pathParameters.id, user)
       .then(vendor => services.getEmail().send(
         vendor.email,
-        'App approval in Keboola Developer Portal',
+        'App publishing in Keboola Developer Portal',
         'Keboola Developer Portal',
-        `Your app <strong>${event.pathParameters.id}</strong> has been approved.`,
+        `Your app <strong>${event.pathParameters.id}</strong> has been published.`,
+      )),
+    event,
+    context,
+    callback,
+    204
+  );
+}
+
+function rejectPublishingApp(event, context, callback) {
+  validation.validate(event, {
+    auth: true,
+    path: ['id'],
+    body: {
+      reason: validation.validateString('reason').required(),
+    },
+  });
+
+  const body = JSON.parse(event.body);
+  return request.adminAuthPromise(
+    user => app.adminRejectPublishingApp(event.pathParameters.id, user, body.reason)
+      .then(vendor => services.getEmail().send(
+        vendor.email,
+        'App publishing in Keboola Developer Portal',
+        'Keboola Developer Portal',
+        `Publishing of your app <strong>${event.pathParameters.id}</strong> has been rejected due to this reason:<br /><br />${body.reason}`,
       )),
     event,
     context,
@@ -145,7 +170,8 @@ function listApps(event, context, callback) {
   return request.adminAuthPromise(
     () => app.adminListApps(
       _.get(event, 'queryStringParameters.offset', null),
-      _.get(event, 'queryStringParameters.limit', null)
+      _.get(event, 'queryStringParameters.limit', null),
+      _.get(event, 'queryStringParameters.filter', null)
     ),
     event,
     context,
@@ -295,8 +321,10 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
       return addUserToVendor(event, context, callback);
     case '/admin/apps':
       return listApps(event, context, callback);
-    case '/admin/apps/{id}/approve':
-      return approveApp(event, context, callback);
+    case '/admin/apps/{id}/publish':
+      return publishApp(event, context, callback);
+    case '/admin/apps/{id}/reject':
+      return rejectPublishingApp(event, context, callback);
     case '/admin/apps/{id}':
       if (event.httpMethod === 'GET') {
         return detailApp(event, context, callback);

@@ -1,6 +1,6 @@
-import DbInvitations from '../lib/db/invitations';
-import DbVendors from '../lib/db/vendors';
-import DbUsers from '../lib/db/Users';
+import DbInvitations from '../lib/db/dbInvitations';
+import DbVendors from '../lib/db/dbVendors';
+import DbUsers from '../lib/db/dbUsers';
 
 const _ = require('lodash');
 const moment = require('moment');
