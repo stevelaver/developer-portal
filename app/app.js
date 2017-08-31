@@ -254,6 +254,7 @@ class App {
   listApps(vendor, user, offset = 0, limit = 1000) {
     const cfUri = process.env.CLOUDFRONT_URI;
     return this.access.checkVendor(user, vendor)
+      .then(() => this.db.checkVendorExists(vendor))
       .then(() => this.db.listApps(vendor, false, offset, limit))
       .then(res => res.map(r => App.formatIcons(r, cfUri)));
   }
