@@ -1188,9 +1188,7 @@ Shows the app if its flag `isPublic` is set to `true`
 
 
 
-## Admin API [/admin]
-
-Management of users and apps designated for Developer Portal staff only
+## Admin Users [/admin/users]
 
 ### List users [GET /admin/users?offset={offset}&limit={limit}]
 
@@ -1282,6 +1280,72 @@ It will send email confirmation to a user.
 + Response 204
 
 
+
+## Admin Apps [/admin/apps]
+
++ Model (application/json)
+
+        {
+            "id": "keboola.ex-adwords",
+            "name": "Google Adwords Reports",
+            "version": 2,
+            "type": "extractor",
+            "repository": {
+                "type": "quay",
+                "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                "tag": "latest",
+            },
+            "shortDescription": "Advertise with Google Ads",
+            "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
+            "icon": {
+                "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png"
+            },
+            "vendor": {
+                "id": "keboola",
+                "name": "Keboola",
+                "address": "Křižíkova 488/115, Praha",
+                "email": "support@keboola.com"
+            },
+            "licenseUrl": "https://github.com/keboola/adwords-extractor/LICENSE",
+            "documentationUrl": "https://github.com/keboola/adwords-extractor/README",
+            "requiredMemory": null,
+            "processTimeout": null,
+            "encryption": true,
+            "network": "bridge",
+            "defaultBucket": false,
+            "defaultBucketStage": "in",
+            "forwardToken": false,
+            "forwardTokenDetails": false,
+            "injectEnvironment": false,
+            "cpuShares": 1024,
+            "uiOptions": [
+                "genericUI",
+                "genericDockerUI-authorization"
+            ],
+            "imageParameters": {},
+            "testConfiguration": {},
+            "configurationSchema": {},
+            "configurationDescription": null,
+            "configurationFormat": "json",
+            "emptyConfiguration": {},
+            "actions": [],
+            "fees": false,
+            "limits": null,
+            "logger": "standard",
+            "loggerConfiguration": {},
+            "stagingStorageInput": "local",
+            "createdOn": "2016-09-09T09:26:15.000Z",
+            "createdBy": "keboola.dev.portal.test@gmail.com",
+            "isPublic": false,
+            "permissions": [
+                {
+                    "stack": "connection.keboola.com"
+                }
+            ]
+        }
+
+
 ### List apps [GET /admin/apps]
 
 + Request
@@ -1317,69 +1381,9 @@ It will send email confirmation to a user.
 
             Authorization: {your_token}
 
-+ Response 200 (application/json)
++ Response 200
+    [App][]
 
-    + Body
-
-            {
-                "id": "keboola.ex-adwords",
-                "name": "Google Adwords Reports",
-                "version": 2,
-                "type": "extractor",
-                "repository": {
-                    "type": "quay",
-                    "uri": "https://quay.io/repository/keboola/adwords-extractor",
-                    "tag": "latest",
-                },
-                "shortDescription": "Advertise with Google Ads",
-                "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
-                "icon": {
-                    "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
-                    "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png"
-                },
-                "vendor": {
-                    "id": "keboola",
-                    "name": "Keboola",
-                    "address": "Křižíkova 488/115, Praha",
-                    "email": "support@keboola.com"
-                },
-                "licenseUrl": "https://github.com/keboola/adwords-extractor/LICENSE",
-                "documentationUrl": "https://github.com/keboola/adwords-extractor/README",
-                "requiredMemory": null,
-                "processTimeout": null,
-                "encryption": true,
-                "network": "bridge",
-                "defaultBucket": false,
-                "defaultBucketStage": "in",
-                "forwardToken": false,
-                "forwardTokenDetails": false,
-                "injectEnvironment": false,
-                "cpuShares": 1024,
-                "uiOptions": [
-                    "genericUI",
-                    "genericDockerUI-authorization"
-                ],
-                "imageParameters": {},
-                "testConfiguration": {},
-                "configurationSchema": {},
-                "configurationDescription": null,
-                "configurationFormat": "json",
-                "emptyConfiguration": {},
-                "actions": [],
-                "fees": false,
-                "limits": null,
-                "logger": "standard",
-                "loggerConfiguration": {},
-                "stagingStorageInput": "local",
-                "createdOn": "2016-09-09T09:26:15.000Z",
-                "createdBy": "keboola.dev.portal.test@gmail.com",
-                "isPublic": false,
-                "permissions": [
-                    {
-                        "stack": "connection.keboola.com"
-                    }
-                ]
-            }
 
 
 ### Update app [PATCH /admin/apps/{app}]
@@ -1483,7 +1487,8 @@ Allows to update apps across vendors
                 "shortDescription": "Reads reports defined by awql queries"
             }
 
-+ Response 204
++ Response 200
+    [App][]
 
 
 ### Approve app publishing [POST /admin/apps/{app}/publish]
@@ -1497,7 +1502,8 @@ Allows to update apps across vendors
 
             Authorization: {admin_token}
 
-+ Response 204
++ Response 200
+    [App][]
 
 ### Reject app publishing [POST /admin/apps/{app}/reject]
 
@@ -1510,8 +1516,64 @@ Allows to update apps across vendors
 
             Authorization: {admin_token}
 
-+ Response 204
++ Response 200
+    [App][]
 
+### List app changes [GET /admin/changes?since={since}&until={until}]
+
+Returns list of last changes across all apps.
+
++ Parameters
+    + since (optional) - Date in YYYY-MM-DD format, default is `-24 hours`
+    + until (optional) - Date in YYYY-MM-DD format, default is `now`
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "test.test-app",
+                    "createdOn": "2017-02-22T15:59:22.000Z",
+                    "createdBy": "upload",
+                    "changes": [
+                        {
+                            "attribute": "icon32",
+                            "oldValue": null,
+                            "newValue": "test.test-app/32/2.png",
+                            "description": "Attribute icon32 changed"
+                        },
+                        {
+                            "attribute": "icon64",
+                            "oldValue": null,
+                            "newValue": "test.test-app/64/2.png",
+                            "description": "Attribute icon64 changed"
+                        }
+                    ]
+                },
+                {
+                    "id": "test.test-app",
+                    "createdOn": "2017-02-22T15:50:30.000Z",
+                    "createdBy": "keboola.dev.portal.test@gmail.com",
+                    "changes": [
+                        {
+                            "attribute": "id",
+                            "oldValue": null,
+                            "newValue": "test.test-app",
+                            "description": "App test.test-app created"
+                        }
+                    ]
+                }
+            ]
+
+
+## Admin Vendors [/admin/vendors]
 
 ### List vendors [GET /admin/vendors?offset={offset}&limit={limit}]
 
@@ -1582,57 +1644,3 @@ Allows to update apps across vendors
             }
 
 + Response 204
-
-
-### List app changes [GET /admin/changes?since={since}&until={until}]
-
-Returns list of last changes across all apps.
-
-+ Parameters
-    + since (optional) - Date in YYYY-MM-DD format, default is `-24 hours`
-    + until (optional) - Date in YYYY-MM-DD format, default is `now`
-
-+ Request
-
-    + Headers
-
-            Authorization: {admin_token}
-
-+ Response 200 (application/json)
-
-    + Body
-
-            [
-                {
-                    "id": "test.test-app",
-                    "createdOn": "2017-02-22T15:59:22.000Z",
-                    "createdBy": "upload",
-                    "changes": [
-                        {
-                            "attribute": "icon32",
-                            "oldValue": null,
-                            "newValue": "test.test-app/32/2.png",
-                            "description": "Attribute icon32 changed"
-                        },
-                        {
-                            "attribute": "icon64",
-                            "oldValue": null,
-                            "newValue": "test.test-app/64/2.png",
-                            "description": "Attribute icon64 changed"
-                        }
-                    ]
-                },
-                {
-                    "id": "test.test-app",
-                    "createdOn": "2017-02-22T15:50:30.000Z",
-                    "createdBy": "keboola.dev.portal.test@gmail.com",
-                    "changes": [
-                        {
-                            "attribute": "id",
-                            "oldValue": null,
-                            "newValue": "test.test-app",
-                            "description": "App test.test-app created"
-                        }
-                    ]
-                }
-            ]

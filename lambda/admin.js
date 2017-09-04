@@ -114,7 +114,7 @@ function removeUserFromVendor(event, context, callback) {
   );
 }
 
-function publishApp(event, context, callback) {
+function approvePublishingApp(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: ['id'],
@@ -127,11 +127,11 @@ function publishApp(event, context, callback) {
         'App publishing in Keboola Developer Portal',
         'Keboola Developer Portal',
         `Your app <strong>${event.pathParameters.id}</strong> has been published.`,
-      )),
+      ))
+      .then(() => app.adminGetAppWithVendor(event.pathParameters.id)),
     event,
     context,
-    callback,
-    204
+    callback
   );
 }
 
@@ -152,11 +152,11 @@ function rejectPublishingApp(event, context, callback) {
         'App publishing in Keboola Developer Portal',
         'Keboola Developer Portal',
         `Publishing of your app <strong>${event.pathParameters.id}</strong> has been rejected due to this reason:<br /><br />${body.reason}`,
-      )),
+      ))
+      .then(() => app.adminGetAppWithVendor(event.pathParameters.id)),
     event,
     context,
-    callback,
-    204
+    callback
   );
 }
 
@@ -179,7 +179,7 @@ function listApps(event, context, callback) {
   );
 }
 
-function detailApp(event, context, callback) {
+function getAppDetail(event, context, callback) {
   validation.validate(event, {
     auth: true,
     path: {
@@ -322,12 +322,12 @@ module.exports.admin = (event, context, callback) => request.errorHandler(() => 
     case '/admin/apps':
       return listApps(event, context, callback);
     case '/admin/apps/{id}/publish':
-      return publishApp(event, context, callback);
+      return approvePublishingApp(event, context, callback);
     case '/admin/apps/{id}/reject':
       return rejectPublishingApp(event, context, callback);
     case '/admin/apps/{id}':
       if (event.httpMethod === 'GET') {
-        return detailApp(event, context, callback);
+        return getAppDetail(event, context, callback);
       }
       return updateApp(event, context, callback);
     case '/admin/changes':
