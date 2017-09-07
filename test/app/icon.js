@@ -45,7 +45,8 @@ const iconApp = new Icon(Services, db, appEnv);
 
 const vendorId = `v${Date.now()}`;
 const appId = `app${Date.now()}`;
-const sourceKey = `icons/app${Date.now()}/test.png`;
+const filePrefix = 'developer-portal/icons';
+const sourceKey = `${filePrefix}/app${Date.now()}/test.png`;
 
 describe('Icon App', () => {
   before(() => {
@@ -77,19 +78,19 @@ describe('Icon App', () => {
       .then(() => wait.sleep(3000))
       .then(() => iconApp.upload(sharp, appId, appEnv.S3_BUCKET, sourceKey))
       .then(() => expect(
-        () => s3.headObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/32/2.png` }).promise(),
+        () => s3.headObject({ Bucket: appEnv.S3_BUCKET, Key: `${filePrefix}/${appId}/32/2.png` }).promise(),
         'to be fulfilled'
       ))
       .then(() => expect(
-        () => s3.headObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/64/2.png` }).promise(),
+        () => s3.headObject({ Bucket: appEnv.S3_BUCKET, Key: `${filePrefix}/${appId}/64/2.png` }).promise(),
         'to be fulfilled'
       )));
 
   after(() =>
-    s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/latest.png` }).promise()
-      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/32/2.png` }).promise())
-      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/64/2.png` }).promise())
-      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/32` }).promise())
-      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}/64` }).promise())
-      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `icons/${appId}` }).promise()));
+    s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `${filePrefix}/${appId}/latest.png` }).promise()
+      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `${filePrefix}/${appId}/32/2.png` }).promise())
+      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `${filePrefix}/${appId}/64/2.png` }).promise())
+      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `${filePrefix}/${appId}/32` }).promise())
+      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `${filePrefix}/${appId}/64` }).promise())
+      .then(() => s3.deleteObject({ Bucket: appEnv.S3_BUCKET, Key: `${filePrefix}/${appId}` }).promise()));
 });

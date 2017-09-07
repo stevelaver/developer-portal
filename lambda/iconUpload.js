@@ -26,19 +26,18 @@ module.exports.upload = (event, context, callback) => request.errorHandler(() =>
   const bucket = event.Records[0].s3.bucket.name;
   const key = event.Records[0].s3.object.key;
   const path = key.split('/');
-  const appId = path[1];
 
   if (
     event.Records[0].eventName !== 'ObjectCreated:Put'
-    || path.length !== 3
-    || path[0] !== 'icons'
-    || path[2] !== 'upload.png'
+    || path.length !== 4
+    || path[1] !== 'icons'
+    || path[3] !== 'upload.png'
   ) {
     return callback();
   }
   console.log(JSON.stringify(event));
   return request.responseDbPromise(
-    () => app.upload(sharp, appId, bucket, key),
+    () => app.upload(sharp, path[2], bucket, key),
     event,
     context,
     callback
