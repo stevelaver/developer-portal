@@ -307,8 +307,8 @@ class App {
   static formatIcons(input, cfUri) {
     const res = input;
     res.icon = {
-      32: input.icon32 ? `https://${cfUri}/icons/${input.icon32}` : null,
-      64: input.icon64 ? `https://${cfUri}/icons/${input.icon64}` : null,
+      32: input.icon32 ? `https://${cfUri}/developer-portal/icons/${input.icon32}` : null,
+      64: input.icon64 ? `https://${cfUri}/developer-portal/icons/${input.icon64}` : null,
     };
     delete res.icon32;
     delete res.icon64;

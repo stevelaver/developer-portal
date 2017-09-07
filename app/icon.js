@@ -1,5 +1,7 @@
 const Promise = require('bluebird');
 
+const bucketPrefix = 'developer-portal/icons';
+
 class Icon {
   constructor(Services, db, env) {
     this.access = Services.getAccess(db);
@@ -18,7 +20,7 @@ class Icon {
         const validity = 3600;
         return getSignedUrl('putObject', {
           Bucket: this.env.S3_BUCKET,
-          Key: `icons/${id}/upload.png`,
+          Key: `${bucketPrefix}/${id}/upload.png`,
           Expires: validity,
           ContentType: 'image/png',
           ACL: 'public-read',
@@ -33,7 +35,7 @@ class Icon {
   resize(sharp, bucket, appId, size) {
     return this.s3.getObject({
       Bucket: bucket,
-      Key: `icons/${appId}/latest.png`,
+      Key: `${bucketPrefix}/${appId}/latest.png`,
       ResponseContentType: 'image/png',
     }).promise()
       .then(data => sharp(data.Body).resize(size, size).toBuffer())
@@ -41,16 +43,16 @@ class Icon {
         Body: buffer,
         Bucket: bucket,
         ContentType: 'image/png',
-        Key: `icons/${appId}/${size}/latest.png`,
+        Key: `${bucketPrefix}/${appId}/${size}/latest.png`,
         ACL: 'public-read',
       }).promise());
   }
 
   nameFileByVersion(bucket, appId, size, version) {
     return this.s3.copyObject({
-      CopySource: `${bucket}/icons/${appId}/${size}/latest.png`,
+      CopySource: `${bucket}/${bucketPrefix}/${appId}/${size}/latest.png`,
       Bucket: bucket,
-      Key: `icons/${appId}/${size}/${version}.png`,
+      Key: `${bucketPrefix}/${appId}/${size}/${version}.png`,
       ACL: 'public-read',
     }).promise();
   }
@@ -66,7 +68,7 @@ class Icon {
       .then(() => this.s3.copyObject({
         CopySource: `${bucket}/${sourceKey}`,
         Bucket: bucket,
-        Key: `icons/${appId}/latest.png`,
+        Key: `${bucketPrefix}/${appId}/latest.png`,
         ACL: 'public-read',
       }).promise())
       .then(() => this.s3.deleteObject({ Bucket: bucket, Key: sourceKey }).promise())
