@@ -53,7 +53,9 @@ class App {
         publishRequestBy: user.email,
         publishRequestOn: moment().format('YYYY-MM-DD HH:mm:ss'),
         publishRequestRejectionReason: null,
-      }, user.email));
+      }, user.email))
+      .then(() => this.db.getAppWithVendor(id))
+      .then(data => App.formatIcons(data, this.env.CLOUDFRONT_URI));
   }
 
   createApp(bodyIn, vendor, user) {

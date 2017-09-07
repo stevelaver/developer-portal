@@ -142,11 +142,11 @@ function requestPublishing(event, context, callback) {
       event.pathParameters.vendor,
       user,
     )
-      .then(() => services.getNotification().publishApp(event.pathParameters.app)),
+      .then(appData => services.getNotification().publishApp(event.pathParameters.app)
+        .then(() => appData)),
     event,
     context,
-    callback,
-    204
+    callback
   );
 }
 
