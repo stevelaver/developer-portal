@@ -279,14 +279,13 @@ class Setup {
 
       const result = {};
       _.each(res.Stacks[0].Outputs, (item) => {
-        if (_.includes(['RdsUri', 'RdsPort', 'CloudFrontUri', 'ServiceEndpoint'], item.OutputKey)) {
+        if (_.includes(['RdsUri', 'RdsPort', 'ServiceEndpoint'], item.OutputKey)) {
           result[item.OutputKey] = item.OutputValue;
         }
       });
 
       env.RDS_HOST = result.RdsUri;
       env.RDS_PORT = result.RdsPort;
-      env.CLOUDFRONT_URI = result.CloudFrontUri;
       env.API_ENDPOINT = result.ServiceEndpoint;
       fs.writeFile(
         `${__dirname}/../.env`,

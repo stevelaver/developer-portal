@@ -571,29 +571,6 @@ resources:
           -
             Key: KeboolaStack
             Value: ${env:KEBOOLA_STACK}
-    CloudFront:
-      Type: AWS::CloudFront::Distribution
-      Properties:
-        DistributionConfig:
-          Origins:
-            -
-              DomainName: ${env:S3_BUCKET}.s3.amazonaws.com
-              Id: "S3-${env:S3_BUCKET}"
-              S3OriginConfig:
-                OriginAccessIdentity: ""
-          Enabled: "true"
-          DefaultCacheBehavior:
-            AllowedMethods:
-              - GET
-              - HEAD
-            TargetOriginId: "S3-${env:S3_BUCKET}"
-            ForwardedValues:
-              QueryString: "false"
-              Cookies:
-                Forward: none
-            ViewerProtocolPolicy: https-only
-          ViewerCertificate:
-            CloudFrontDefaultCertificate: "true"
   Outputs:
     RdsUri:
       Description: "RDS Endpoint"
@@ -603,10 +580,6 @@ resources:
       Description: "RDS Port"
       Value:
         "Fn::GetAtt": ["Rds", "Endpoint.Port"]
-    CloudFrontUri:
-      Description: "CloudFront Uri"
-      Value:
-        "Fn::GetAtt": ["CloudFront", "DomainName"]
     SMSRoleArn:
       Description: "SMS Role Arn"
       Value:
