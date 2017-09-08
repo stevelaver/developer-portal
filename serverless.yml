@@ -124,22 +124,6 @@ functions:
         schedule:
           rate: rate(15 minutes)
           enabled: ${env:WARMUP_ENABLED}
-      -
-        http:
-          method: get
-          path: "{anything}"
-      -
-        http:
-          method: post
-          path: "{anything}"
-      -
-        http:
-          method: put
-          path: "{anything}"
-      -
-        http:
-          method: patch
-          path: "{anything}"
 
   admin:
     handler: admin.admin
