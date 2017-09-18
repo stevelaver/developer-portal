@@ -10,7 +10,6 @@ const _ = require('lodash');
 const joi = require('joi');
 
 const db = require('../lib/db');
-const landingHtml = require('../views/landing.html');
 const request = require('../lib/request');
 
 const services = new Services(process.env);
@@ -21,8 +20,8 @@ const vendorApp = new Vendor(services, db, process.env, Services.getError());
 
 function landing(event, context, callback) {
   return callback(null, {
-    headers: { 'Content-Type': 'text/html' },
-    body: landingHtml({ apiEndpoint: process.env.API_ENDPOINT }),
+    headers: { },
+    body: 'Keboola Developer Portal',
     statusCode: 200,
   });
 }
